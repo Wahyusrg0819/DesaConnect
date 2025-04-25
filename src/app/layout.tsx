@@ -24,15 +24,15 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className={`${roboto.variable}`}> {/* Apply font variable */}
-      <body className="antialiased font-sans bg-secondary"> {/* Use sans-serif as fallback, apply background */}
+    <html lang="en" className={`${roboto.variable}`}>
+      <body className="antialiased font-sans bg-secondary">
         <div className="flex flex-col min-h-screen">
           <Header />
           <main className="flex-grow container mx-auto px-4 py-8">
             {children}
           </main>
           <Footer />
-          <Toaster /> {/* Add Toaster component */}
+          <Toaster />
         </div>
       </body>
     </html>

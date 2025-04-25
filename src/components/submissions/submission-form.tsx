@@ -24,7 +24,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
-import { createSubmission } from "@/lib/actions/submissions"; // Import server action
+// import { createSubmission } from "@/lib/actions/submissions"; // Removed server action import
 import { useRouter } from 'next/navigation';
 import { Loader2 } from 'lucide-react';
 
@@ -88,7 +88,6 @@ export default function SubmissionForm({ categories }: SubmissionFormProps) {
   async function onSubmit(values: SubmissionFormValues) {
     setIsSubmitting(true);
 
-    // Use FormData to handle file upload along with other data
     const formData = new FormData();
     formData.append('name', values.name || '');
     formData.append('contactInfo', values.contactInfo || '');
@@ -99,21 +98,27 @@ export default function SubmissionForm({ categories }: SubmissionFormProps) {
     }
 
     try {
-      const result = await createSubmission(formData); // Pass FormData to server action
+      // Use fetch API to send data to the new API route
+      const response = await fetch('/api/submissions', {
+        method: 'POST',
+        body: formData,
+      });
 
-      if (result.success && result.referenceId) {
+      const result = await response.json();
+
+      if (response.ok && result.success && result.referenceId) {
         toast({
           title: "Laporan Berhasil Dikirim",
           description: `ID Referensi Anda: ${result.referenceId}. Silakan simpan ID ini untuk melacak status laporan Anda.`,
-          variant: "default", // Use default (greenish) style
-          duration: 10000, // Keep toast longer
+          variant: "default",
+          duration: 10000,
         });
-        form.reset(); // Reset form fields
-        setFile(null); // Clear file state
-        // Optionally redirect to tracking page or home page
+        form.reset();
+        setFile(null);
         router.push(`/track?id=${result.referenceId}`);
       } else {
-        throw new Error(result.error || "Gagal mengirim laporan.");
+        // Handle API errors
+        throw new Error(result.message || "Gagal mengirim laporan.");
       }
     } catch (error: any) {
       toast({

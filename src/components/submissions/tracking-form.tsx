@@ -18,15 +18,29 @@ import { useToast } from "@/hooks/use-toast";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Loader2, Search, CalendarDays, Tag, FileText, AlertCircle } from 'lucide-react';
-import { getSubmissionByReferenceId } from "@/lib/actions/submissions"; // Import server action
-import type { Submission } from '@/lib/types';
+// import { getSubmissionByReferenceId } from "@/lib/actions/submissions"; // Removed server action import
+// import type { Submission } from '@/lib/types'; // Removed type import
 import { format } from 'date-fns';
 import { id } from 'date-fns/locale';
 import { useSearchParams } from 'next/navigation';
 
+// Define a type based on the expected API response structure (matching Mongoose model)
+interface SubmissionData {
+  _id: string;
+  name?: string;
+  contactInfo?: string;
+  category: string;
+  description: string;
+  createdAt: string;
+  referenceId: string;
+  status?: 'pending' | 'in progress' | 'resolved'; // status can be optional
+  fileUrl?: string;
+}
+
 const formSchema = z.object({
   referenceId: z.string().min(1, { message: "ID Referensi tidak boleh kosong." })
-    .regex(/^ID-\d{5,}$/, { message: "Format ID Referensi tidak valid (contoh: ID-00123)." }), // Example regex, adjust as needed
+    // Adjust regex based on your generated ID format (currently 8 alphanumeric chars)
+    .regex(/^[A-Z0-9]{8}$/, { message: "Format ID Referensi tidak valid (contoh: ABC123DE)." }),
 });
 
 type TrackingFormValues = z.infer<typeof formSchema>;
@@ -37,7 +51,7 @@ export default function TrackingForm() {
   const initialId = searchParams.get('id') || ''; // Get ID from URL param if present
 
   const [isLoading, setIsLoading] = React.useState(false);
-  const [submission, setSubmission] = React.useState<Submission | null>(null);
+  const [submission, setSubmission] = React.useState<SubmissionData | null>(null);
   const [error, setError] = React.useState<string | null>(null);
 
   const form = useForm<TrackingFormValues>({
@@ -52,16 +66,19 @@ export default function TrackingForm() {
     setError(null);
     setSubmission(null);
     try {
-      const result = await getSubmissionByReferenceId(id);
-      if (result.success && result.submission) {
-        setSubmission(result.submission);
+      const response = await fetch(`/api/submissions/${id}`);
+      const result = await response.json();
+
+      if (response.ok) {
+         // The API route returns the submission object directly on success
+        setSubmission(result as SubmissionData);
       } else {
-        setError(result.error || "Laporan tidak ditemukan.");
+        // Handle errors from the API route (e.g., 404 not found)
+        setError(result.message || "Laporan tidak ditemukan.");
         setSubmission(null); // Ensure submission is cleared on error
-        // Optionally show toast for not found
          toast({
            title: "Laporan Tidak Ditemukan",
-           description: `Laporan dengan ID ${id} tidak ditemukan.`,
+           description: result.message || `Laporan dengan ID ${id} tidak ditemukan.`,
            variant: "destructive",
          });
       }
@@ -88,6 +105,11 @@ export default function TrackingForm() {
       } else {
          setError("Format ID Referensi di URL tidak valid.");
          form.reset({ referenceId: '' }); // Clear invalid ID from form
+          toast({
+            title: "ID Referensi Tidak Valid",
+            description: "Format ID Referensi di URL tidak sesuai.",
+            variant: "destructive",
+          });
       }
     }
      // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -97,7 +119,9 @@ export default function TrackingForm() {
     fetchSubmission(values.referenceId);
   }
 
-   const getStatusBadgeVariant = (status: string): "default" | "secondary" | "destructive" | "outline" => {
+   const getStatusBadgeVariant = (status: string | undefined | null): "default" | "secondary" | "destructive" | "outline" => {
+        // Add check if status is a string before calling toLowerCase()
+        if (typeof status !== 'string') return 'outline';
         switch (status.toLowerCase()) {
         case 'resolved':
             return 'default'; // Green (using primary color via theme)
@@ -110,7 +134,9 @@ export default function TrackingForm() {
         }
     };
 
-    const getStatusTextColor = (status: string): string => {
+    const getStatusTextColor = (status: string | undefined | null): string => {
+        // Add check if status is a string before calling toLowerCase()
+        if (typeof status !== 'string') return 'text-muted-foreground';
         switch (status.toLowerCase()) {
         case 'resolved':
             return 'text-primary'; // Green text
@@ -135,7 +161,7 @@ export default function TrackingForm() {
               <FormItem>
                 <FormLabel>ID Referensi</FormLabel>
                 <FormControl>
-                  <Input placeholder="Contoh: ID-00123" {...field} disabled={isLoading} />
+                  <Input placeholder="Contoh: ABC123DE" {...field} disabled={isLoading} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -182,6 +208,19 @@ export default function TrackingForm() {
             <CardDescription>Status terakhir laporan Anda.</CardDescription>
           </CardHeader>
           <CardContent className="space-y-3 text-sm">
+            {/* Optional: Display Name and Contact Info if available */}
+             {submission.name && (
+                 <div className="flex items-center gap-2">
+                     <span className="font-medium">Nama:</span>
+                     <span>{submission.name}</span>
+                 </div>
+             )}
+              {submission.contactInfo && (
+                 <div className="flex items-center gap-2">
+                     <span className="font-medium">Kontak:</span>
+                     <span>{submission.contactInfo}</span>
+                 </div>
+             )}
             <div className="flex items-center gap-2">
                <Tag className="h-4 w-4 text-muted-foreground" />
                <span className="font-medium">Kategori:</span>
@@ -190,6 +229,7 @@ export default function TrackingForm() {
              <div className="flex items-center gap-2">
                <CalendarDays className="h-4 w-4 text-muted-foreground" />
                <span className="font-medium">Tanggal Dibuat:</span>
+               {/* Ensure createdAt is treated as a Date object */}
                <span>{format(new Date(submission.createdAt), 'dd MMMM yyyy, HH:mm', { locale: id })}</span>
             </div>
              <div className="flex items-start gap-2">
@@ -197,6 +237,7 @@ export default function TrackingForm() {
                <span className="font-medium">Deskripsi:</span>
                <p className="text-muted-foreground">{submission.description}</p>
             </div>
+             {/* Display file link only if fileUrl exists */}
              {submission.fileUrl && (
                 <div className="flex items-center gap-2">
                      <span className="font-medium">Lampiran:</span>
@@ -207,6 +248,7 @@ export default function TrackingForm() {
              )}
 
           </CardContent>
+           {/* Display status using the status field from the fetched data */}
            <CardFooter className="bg-secondary/50 p-4 rounded-b-lg flex justify-between items-center">
                 <span className="font-medium text-foreground">Status Saat Ini:</span>
                 <Badge variant={getStatusBadgeVariant(submission.status)} className={`capitalize text-base px-3 py-1 ${getStatusTextColor(submission.status)}`}>

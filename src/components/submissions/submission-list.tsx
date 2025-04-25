@@ -28,7 +28,6 @@ interface SubmissionListProps {
   submissions: Submission[];
   categories: string[];
   statuses: string[];
-  // categoryIcons removed from props
   currentPage: number;
   totalPages: number;
   totalCount: number;
@@ -45,7 +44,6 @@ export default function SubmissionList({
   submissions,
   categories,
   statuses,
-  // categoryIcons removed
   currentPage,
   totalPages,
   totalCount,
@@ -56,7 +54,7 @@ export default function SubmissionList({
   const pathname = usePathname();
   const searchParams = useSearchParams();
 
-  // Local state for input values, synced with URL params on interaction
+  // Local state for input values
   const [searchTerm, setSearchTerm] = React.useState(currentFilters.search || '');
   const [selectedCategory, setSelectedCategory] = React.useState(currentFilters.category || 'all');
   const [selectedStatus, setSelectedStatus] = React.useState(currentFilters.status || 'all');
@@ -72,33 +70,57 @@ export default function SubmissionList({
           newSearchParams.set(key, String(value));
         }
       }
-      // Reset page to 1 when filters/search/sort change
-      if (params.category !== undefined || params.status !== undefined || params.search !== undefined || params.sortBy !== undefined) {
-        newSearchParams.set('page', '1');
+      // Reset page to 1 when filters/search/sort change, unless it's only a page change
+      if (params.page === undefined || Object.keys(params).length > 1) {
+         newSearchParams.set('page', '1');
       }
       return newSearchParams.toString();
     },
     [searchParams]
   );
 
-  const handleFilterChange = () => {
+  const handleFilterChange = React.useCallback(() => {
     const queryString = createQueryString({
       category: selectedCategory,
       status: selectedStatus,
       sortBy: selectedSortBy,
       search: searchTerm,
-      page: 1, // Reset page on filter change
     });
     router.push(`${pathname}?${queryString}`);
-  };
+  }, [createQueryString, pathname, router, selectedCategory, selectedStatus, selectedSortBy, searchTerm]);
 
-   const handleSearch = (event?: React.FormEvent<HTMLFormElement>) => {
-        event?.preventDefault(); // Prevent default form submission if used
-        handleFilterChange();
-   }
+  // Debounce search term updates
+  React.useEffect(() => {
+    const handler = setTimeout(() => {
+      // Only trigger filter change if searchTerm has actually changed from the URL param
+      if (searchTerm !== (currentFilters.search || '')) {
+         handleFilterChange();
+      }
+    }, 500); // 500ms debounce delay
+
+    return () => {
+      clearTimeout(handler);
+    };
+  }, [searchTerm, handleFilterChange, currentFilters.search]);
+
+
+  const handleSearchSubmit = (event?: React.FormEvent<HTMLFormElement>) => {
+       event?.preventDefault(); // Prevent default form submission if used
+       // Trigger filter change immediately on form submit (Enter key)
+       if (searchTerm !== (currentFilters.search || '')) {
+           handleFilterChange();
+       }
+  }
+
 
   const handlePageChange = (page: number) => {
-    const queryString = createQueryString({ page });
+    const queryString = createQueryString({
+        category: selectedCategory,
+        status: selectedStatus,
+        sortBy: selectedSortBy,
+        search: searchTerm,
+        page: page // Keep current filters, only change page
+    });
     router.push(`${pathname}?${queryString}`);
   };
 
@@ -143,7 +165,7 @@ export default function SubmissionList({
         </CardHeader>
         <CardContent className="space-y-4 md:space-y-0 md:flex md:flex-wrap md:items-end md:gap-4">
           {/* Search Input */}
-          <form onSubmit={handleSearch} className="flex-grow md:flex-grow-0 md:w-full lg:w-auto lg:flex-1 min-w-[200px]">
+          <form onSubmit={handleSearchSubmit} className="flex-grow md:flex-grow-0 md:w-full lg:w-auto lg:flex-1 min-w-[200px]">
              <div className="relative">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <Input
@@ -160,7 +182,7 @@ export default function SubmissionList({
           {/* Category Filter */}
           <div className="flex-grow md:flex-grow-0 min-w-[150px]">
             <label htmlFor="category-select" className="text-sm font-medium text-muted-foreground mb-1 block">Kategori</label>
-            <Select value={selectedCategory} onValueChange={(value) => { setSelectedCategory(value); handleFilterChange(); }}>
+            <Select value={selectedCategory} onValueChange={(value) => { setSelectedCategory(value); }}>
               <SelectTrigger id="category-select">
                 <SelectValue placeholder="Semua Kategori" />
               </SelectTrigger>
@@ -176,7 +198,7 @@ export default function SubmissionList({
           {/* Status Filter */}
           <div className="flex-grow md:flex-grow-0 min-w-[150px]">
              <label htmlFor="status-select" className="text-sm font-medium text-muted-foreground mb-1 block">Status</label>
-            <Select value={selectedStatus} onValueChange={(value) => { setSelectedStatus(value); handleFilterChange(); }}>
+            <Select value={selectedStatus} onValueChange={(value) => { setSelectedStatus(value); }}>
               <SelectTrigger id="status-select">
                 <SelectValue placeholder="Semua Status" />
               </SelectTrigger>
@@ -192,7 +214,7 @@ export default function SubmissionList({
           {/* Sort By */}
           <div className="flex-grow md:flex-grow-0 min-w-[150px]">
              <label htmlFor="sortby-select" className="text-sm font-medium text-muted-foreground mb-1 block">Urutkan</label>
-            <Select value={selectedSortBy} onValueChange={(value) => { setSelectedSortBy(value); handleFilterChange(); }}>
+            <Select value={selectedSortBy} onValueChange={(value) => { setSelectedSortBy(value); }}>
               <SelectTrigger id="sortby-select">
                 <SelectValue placeholder="Urutkan Berdasarkan" />
               </SelectTrigger>
@@ -206,10 +228,10 @@ export default function SubmissionList({
             </Select>
           </div>
 
-          {/* Apply Filters Button (Optional, can auto-apply on change) */}
-          {/* <Button onClick={handleFilterChange} className="bg-accent hover:bg-accent/90 text-accent-foreground">
-            <Filter className="mr-2 h-4 w-4" /> Terapkan Filter
-          </Button> */}
+          {/* Apply Filters Button - Now always visible and triggers handleFilterChange */}
+           <Button onClick={handleFilterChange} className="bg-accent hover:bg-accent/90 text-accent-foreground">
+             <Filter className="mr-2 h-4 w-4" /> Terapkan Filter
+           </Button>
         </CardContent>
          <CardFooter className="text-sm text-muted-foreground">
             Menampilkan {submissions.length} dari {totalCount} laporan.
@@ -275,8 +297,7 @@ export default function SubmissionList({
           <PaginationContent>
             <PaginationItem>
               <PaginationPrevious
-                href={currentPage > 1 ? `${pathname}?${createQueryString({ page: currentPage - 1 })}` : '#'}
-                aria-disabled={currentPage <= 1}
+                href={currentPage > 1 ? `${pathname}?${createQueryString({ page: currentPage - 1, category: selectedCategory, status: selectedStatus, sortBy: selectedSortBy, search: searchTerm })}` : '#'} adherence-disabled={currentPage <= 1}
                 tabIndex={currentPage <= 1 ? -1 : undefined}
                 className={currentPage <= 1 ? "pointer-events-none opacity-50" : undefined}
                 onClick={(e) => { if (currentPage <= 1) e.preventDefault(); }}
@@ -287,7 +308,7 @@ export default function SubmissionList({
              {Array.from({ length: totalPages }, (_, i) => i + 1).map(page => (
                  <PaginationItem key={page}>
                     <PaginationLink
-                        href={`${pathname}?${createQueryString({ page: page })}`}
+                        href={`${pathname}?${createQueryString({ page: page, category: selectedCategory, status: selectedStatus, sortBy: selectedSortBy, search: searchTerm })}`}
                         isActive={currentPage === page}
                         aria-current={currentPage === page ? "page" : undefined}
                     >
@@ -299,8 +320,7 @@ export default function SubmissionList({
 
             <PaginationItem>
               <PaginationNext
-                href={currentPage < totalPages ? `${pathname}?${createQueryString({ page: currentPage + 1 })}` : '#'}
-                 aria-disabled={currentPage >= totalPages}
+                href={currentPage < totalPages ? `${pathname}?${createQueryString({ page: currentPage + 1, category: selectedCategory, status: selectedStatus, sortBy: selectedSortBy, search: searchTerm })}` : '#'} adherence-disabled={currentPage >= totalPages}
                  tabIndex={currentPage >= totalPages ? -1 : undefined}
                  className={currentPage >= totalPages ? "pointer-events-none opacity-50" : undefined}
                  onClick={(e) => { if (currentPage >= totalPages) e.preventDefault(); }}

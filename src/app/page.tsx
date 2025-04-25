@@ -1,9 +1,7 @@
 import SubmissionList from '@/components/submissions/submission-list';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from '@/components/ui/separator';
-import { fetchSubmissions } from '@/lib/actions/submissions'; // Assume this action exists
-
-// Category icons definition moved to SubmissionList component
+import { fetchSubmissions } from '@/lib/actions/submissions';
 
 export default async function Home({
   searchParams,
@@ -19,6 +17,7 @@ export default async function Home({
   const limit = typeof searchParams?.limit === 'string' ? parseInt(searchParams.limit, 10) : 10; // Default items per page
 
   // Fetch submissions based on parameters
+  // Note: fetchSubmissions is assumed to fetch from the new MongoDB backend
   const { submissions, totalCount, totalPages } = await fetchSubmissions({
     category,
     status,
@@ -34,7 +33,7 @@ export default async function Home({
   const statuses = ['Pending', 'In Progress', 'Resolved']; // Example statuses
 
   return (
-    <div className="space-y-8">
+    <div className="container mx-auto py-8 space-y-8"> {/* Added container, mx-auto, py-8 for better layout */}
       <Card className="shadow-lg rounded-lg overflow-hidden bg-card">
         <CardHeader>
           <CardTitle className="text-3xl font-bold text-primary">Selamat Datang di DesaConnect</CardTitle>
@@ -42,9 +41,6 @@ export default async function Home({
             Sampaikan aspirasi dan keluhan Anda untuk Desa Pangkalan Baru yang lebih baik.
           </CardDescription>
         </CardHeader>
-        <CardContent>
-          <p>Lihat laporan yang sudah masuk, filter berdasarkan kategori atau status, atau cari laporan spesifik.</p>
-        </CardContent>
       </Card>
 
       <Separator />
@@ -54,7 +50,6 @@ export default async function Home({
         submissions={submissions}
         categories={categories}
         statuses={statuses}
-        // categoryIcons removed - now defined within SubmissionList
         currentPage={page}
         totalPages={totalPages}
         totalCount={totalCount}

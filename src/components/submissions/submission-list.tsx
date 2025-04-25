@@ -163,9 +163,9 @@ export default function SubmissionList({
         <CardHeader>
           <CardTitle className="text-xl font-semibold flex items-center gap-2"><Filter className="h-5 w-5 text-primary"/> Filter & Cari Laporan</CardTitle>
         </CardHeader>
-        <CardContent className="space-y-4 md:space-y-0 md:flex md:flex-wrap md:items-end md:gap-4">
+        <CardContent className="flex flex-col md:flex-row md:items-end gap-4">
           {/* Search Input */}
-          <form onSubmit={handleSearchSubmit} className="flex-grow md:flex-grow-0 md:w-full lg:w-auto lg:flex-1 min-w-[200px]">
+          <form onSubmit={handleSearchSubmit} className="flex-grow">
              <div className="relative">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <Input
@@ -179,59 +179,61 @@ export default function SubmissionList({
             <button type="submit" hidden />
           </form>
 
-          {/* Category Filter */}
-          <div className="flex-grow md:flex-grow-0 min-w-[150px]">
-            <label htmlFor="category-select" className="text-sm font-medium text-muted-foreground mb-1 block">Kategori</label>
-            <Select value={selectedCategory} onValueChange={(value) => { setSelectedCategory(value); }}>
-              <SelectTrigger id="category-select">
-                <SelectValue placeholder="Semua Kategori" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">Semua Kategori</SelectItem>
-                {categories.map((cat) => (
-                  <SelectItem key={cat} value={cat}>{cat}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
+          {/* Filter Controls */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:flex-row gap-4 flex-wrap">
+            {/* Category Filter */}
+            <div className="flex-grow-0 min-w-[150px]">
+              <label htmlFor="category-select" className="text-sm font-medium text-muted-foreground mb-1 block">Kategori</label>
+              <Select value={selectedCategory} onValueChange={(value) => { setSelectedCategory(value); }}>
+                <SelectTrigger id="category-select">
+                  <SelectValue placeholder="Semua Kategori" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Semua Kategori</SelectItem>
+                  {categories.map((cat) => (
+                    <SelectItem key={cat} value={cat}>{cat}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
 
-          {/* Status Filter */}
-          <div className="flex-grow md:flex-grow-0 min-w-[150px]">
-             <label htmlFor="status-select" className="text-sm font-medium text-muted-foreground mb-1 block">Status</label>
-            <Select value={selectedStatus} onValueChange={(value) => { setSelectedStatus(value); }}>
-              <SelectTrigger id="status-select">
-                <SelectValue placeholder="Semua Status" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">Semua Status</SelectItem>
-                {statuses.map((stat) => (
-                  <SelectItem key={stat} value={stat}>{stat}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
+            {/* Status Filter */}
+            <div className="flex-grow-0 min-w-[150px]">
+               <label htmlFor="status-select" className="text-sm font-medium text-muted-foreground mb-1 block">Status</label>
+              <Select value={selectedStatus} onValueChange={(value) => { setSelectedStatus(value); }}>
+                <SelectTrigger id="status-select">
+                  <SelectValue placeholder="Semua Status" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Semua Status</SelectItem>
+                  {statuses.map((stat) => (
+                    <SelectItem key={stat} value={stat}>{stat}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
 
-          {/* Sort By */}
-          <div className="flex-grow md:flex-grow-0 min-w-[150px]">
-             <label htmlFor="sortby-select" className="text-sm font-medium text-muted-foreground mb-1 block">Urutkan</label>
-            <Select value={selectedSortBy} onValueChange={(value) => { setSelectedSortBy(value); }}>
-              <SelectTrigger id="sortby-select">
-                <SelectValue placeholder="Urutkan Berdasarkan" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="date_desc">Terbaru</SelectItem>
-                <SelectItem value="date_asc">Terlama</SelectItem>
-                {/* Add priority sorting if implemented */}
-                {/* <SelectItem value="priority_desc">Prioritas Tinggi</SelectItem> */}
-                {/* <SelectItem value="priority_asc">Prioritas Rendah</SelectItem> */}
-              </SelectContent>
-            </Select>
+            {/* Sort By */}
+            <div className="flex-grow-0 min-w-[150px]">
+               <label htmlFor="sortby-select" className="text-sm font-medium text-muted-foreground mb-1 block">Urutkan</label>
+              <Select value={selectedSortBy} onValueChange={(value) => { setSelectedSortBy(value); }}>
+                <SelectTrigger id="sortby-select">
+                  <SelectValue placeholder="Urutkan Berdasarkan" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="date_desc">Terbaru</SelectItem>
+                  <SelectItem value="date_asc">Terlama</SelectItem>
+                  {/* Add priority sorting if implemented */}
+                  {/* <SelectItem value="priority_desc">Prioritas Tinggi</SelectItem> */}
+                  {/* <SelectItem value="priority_asc">Prioritas Rendah</SelectItem> */}
+                </SelectContent>
+              </Select>
+            </div>
+             {/* Apply Filters Button */}
+             <Button onClick={handleFilterChange} className="bg-primary hover:bg-primary/90 text-primary-foreground w-full sm:w-auto md:mt-0">
+               <Filter className="mr-2 h-4 w-4" /> Terapkan Filter
+             </Button>
           </div>
-
-          {/* Apply Filters Button - Now always visible and triggers handleFilterChange */}
-           <Button onClick={handleFilterChange} className="bg-accent hover:bg-accent/90 text-accent-foreground">
-             <Filter className="mr-2 h-4 w-4" /> Terapkan Filter
-           </Button>
         </CardContent>
          <CardFooter className="text-sm text-muted-foreground">
             Menampilkan {submissions.length} dari {totalCount} laporan.
@@ -244,27 +246,25 @@ export default function SubmissionList({
           submissions.map((submission) => (
             <Accordion type="single" collapsible key={submission.id} className="w-full">
              <AccordionItem value={`item-${submission.id}`} className="border bg-card rounded-lg shadow-sm overflow-hidden">
-                 <AccordionTrigger className="px-4 py-3 hover:bg-secondary/50 group">
-                   <div className="flex flex-col md:flex-row md:items-center justify-between w-full gap-2 md:gap-4">
-                     <div className="flex items-center flex-1 min-w-0">
-                       {getCategoryIcon(submission.category)}
-                       <div className="flex-1 min-w-0">
-                         <p className="text-sm font-medium text-foreground truncate" title={submission.description}>
-                            Laporan #{submission.referenceId}: {submission.description.substring(0, 60)}{submission.description.length > 60 ? '...' : ''}
-                         </p>
-                         <div className="flex items-center gap-2 text-xs text-muted-foreground mt-1">
-                            <Tag className="h-3 w-3"/> {submission.category}
-                         </div>
-                       </div>
+                 <AccordionTrigger className="flex flex-col md:flex-row md:items-center justify-between w-full px-4 py-3 text-left hover:bg-secondary/50 transition-colors group">
+                   <div className="flex items-center flex-1 min-w-0 gap-3">
+                     {getCategoryIcon(submission.category)}
+                     <div className="flex-1 min-w-0">
+                       <p className="text-sm font-medium text-foreground truncate" title={submission.description}>
+                          Laporan #{submission.referenceId}: {submission.description.substring(0, 80)}{submission.description.length > 80 ? '...' : ''}
+                       </p>
+                        <div className="flex items-center gap-2 text-xs text-muted-foreground mt-1">
+                           <Tag className="h-3 w-3"/> {submission.category}
+                        </div>
                      </div>
-                     <div className="flex items-center gap-4 text-sm justify-end md:justify-start mt-2 md:mt-0">
-                       <Badge variant={getStatusBadgeVariant(submission.status)} className={`capitalize ${getStatusTextColor(submission.status)}`}>
-                         {submission.status}
-                       </Badge>
-                       <div className="flex items-center gap-1 text-muted-foreground text-xs whitespace-nowrap">
-                         <CalendarDays className="h-3 w-3"/>
-                         {formatDistanceToNow(new Date(submission.createdAt), { addSuffix: true, locale: id })}
-                       </div>
+                   </div>
+                   <div className="flex items-center gap-4 text-sm justify-end md:justify-start mt-2 md:mt-0 pr-8">
+                     <Badge variant={getStatusBadgeVariant(submission.status)} className={`capitalize ${getStatusTextColor(submission.status)}`}>
+                       {submission.status}
+                     </Badge>
+                     <div className="flex items-center gap-1 text-muted-foreground text-xs whitespace-nowrap">
+                       <CalendarDays className="h-3 w-3"/>
+                       {formatDistanceToNow(new Date(submission.createdAt), { addSuffix: true, locale: id })}
                      </div>
                    </div>
                  </AccordionTrigger>
@@ -282,7 +282,7 @@ export default function SubmissionList({
           ))
         ) : (
           <Card className="text-center py-12 bg-card">
-             <CardContent className="space-y-2">
+             <CardContent className="space-y-3">
                 <AlertCircle className="mx-auto h-12 w-12 text-muted-foreground" />
                 <p className="text-lg font-semibold">Tidak Ada Laporan</p>
                 <p className="text-muted-foreground">Belum ada laporan yang sesuai dengan filter Anda.</p>
@@ -297,7 +297,8 @@ export default function SubmissionList({
           <PaginationContent>
             <PaginationItem>
               <PaginationPrevious
-                href={currentPage > 1 ? `${pathname}?${createQueryString({ page: currentPage - 1, category: selectedCategory, status: selectedStatus, sortBy: selectedSortBy, search: searchTerm })}` : '#'} adherence-disabled={currentPage <= 1}
+                href={currentPage > 1 ? `${pathname}?${createQueryString({ page: currentPage - 1, category: selectedCategory, status: selectedStatus, sortBy: selectedSortBy, search: searchTerm })}` : '#'}
+                aria-disabled={currentPage <= 1}
                 tabIndex={currentPage <= 1 ? -1 : undefined}
                 className={currentPage <= 1 ? "pointer-events-none opacity-50" : undefined}
                 onClick={(e) => { if (currentPage <= 1) e.preventDefault(); }}
@@ -320,7 +321,8 @@ export default function SubmissionList({
 
             <PaginationItem>
               <PaginationNext
-                href={currentPage < totalPages ? `${pathname}?${createQueryString({ page: currentPage + 1, category: selectedCategory, status: selectedStatus, sortBy: selectedSortBy, search: searchTerm })}` : '#'} adherence-disabled={currentPage >= totalPages}
+                href={currentPage < totalPages ? `${pathname}?${createQueryString({ page: currentPage + 1, category: selectedCategory, status: selectedStatus, sortBy: selectedSortBy, search: searchTerm })}` : '#'}
+                 aria-disabled={currentPage >= totalPages}
                  tabIndex={currentPage >= totalPages ? -1 : undefined}
                  className={currentPage >= totalPages ? "pointer-events-none opacity-50" : undefined}
                  onClick={(e) => { if (currentPage >= totalPages) e.preventDefault(); }}

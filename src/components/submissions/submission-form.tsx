@@ -27,6 +27,7 @@ import { useToast } from "@/hooks/use-toast";
 // import { createSubmission } from "@/lib/actions/submissions"; // Removed server action import
 import { useRouter } from 'next/navigation';
 import { Loader2 } from 'lucide-react';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 
 // Define validation schema
 const formSchema = z.object({
@@ -132,113 +133,121 @@ export default function SubmissionForm({ categories }: SubmissionFormProps) {
   }
 
   return (
-    <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-        <FormField
-          control={form.control}
-          name="name"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Nama (Opsional)</FormLabel>
-              <FormControl>
-                <Input placeholder="Masukkan nama Anda" {...field} disabled={isSubmitting} />
-              </FormControl>
-              <FormDescription>
-                Nama Anda tidak akan ditampilkan secara publik jika tidak diizinkan.
-              </FormDescription>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-        <FormField
-          control={form.control}
-          name="contactInfo"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Info Kontak (Opsional - Email/Telepon)</FormLabel>
-              <FormControl>
-                <Input placeholder="Masukkan email atau nomor telepon" {...field} disabled={isSubmitting} />
-              </FormControl>
-              <FormDescription>
-                Kami akan menggunakan ini untuk menghubungi Anda jika perlu informasi lebih lanjut (tidak akan dipublikasikan).
-              </FormDescription>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-        <FormField
-          control={form.control}
-          name="category"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Kategori *</FormLabel>
-              <Select onValueChange={field.onChange} defaultValue={field.value} disabled={isSubmitting}>
-                <FormControl>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Pilih kategori laporan" />
-                  </SelectTrigger>
-                </FormControl>
-                <SelectContent>
-                  {categories.map((category) => (
-                    <SelectItem key={category} value={category}>
-                      {category}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-        <FormField
-          control={form.control}
-          name="description"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Deskripsi Laporan *</FormLabel>
-              <FormControl>
-                <Textarea
-                  placeholder="Jelaskan aspirasi atau keluhan Anda secara detail..."
-                  className="resize-y min-h-[100px]"
-                  {...field}
-                  disabled={isSubmitting}
-                />
-              </FormControl>
-               <FormDescription>
-                Berikan detail yang jelas agar kami dapat memahami dan menindaklanjuti laporan Anda.
-              </FormDescription>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
+    <Card className="w-full max-w-lg mx-auto">
+      <CardHeader>
+        <CardTitle className="text-2xl font-bold">Buat Laporan Baru</CardTitle>
+        <CardDescription>Isi formulir di bawah ini untuk mengirimkan laporan Anda.</CardDescription>
+      </CardHeader>
+      <CardContent>
+        <Form {...form}>
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+            <FormField
+              control={form.control}
+              name="name"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Nama (Opsional)</FormLabel>
+                  <FormControl>
+                    <Input placeholder="Masukkan nama Anda" {...field} disabled={isSubmitting} />
+                  </FormControl>
+                  <FormDescription>
+                    Nama Anda tidak akan ditampilkan secara publik jika tidak diizinkan.
+                  </FormDescription>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="contactInfo"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Info Kontak (Opsional - Email/Telepon)</FormLabel>
+                  <FormControl>
+                    <Input placeholder="Masukkan email atau nomor telepon" {...field} disabled={isSubmitting} />
+                  </FormControl>
+                  <FormDescription>
+                    Kami akan menggunakan ini untuk menghubungi Anda jika perlu informasi lebih lanjut (tidak akan dipublikasikan).
+                  </FormDescription>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="category"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Kategori *</FormLabel>
+                  <Select onValueChange={field.onChange} defaultValue={field.value} disabled={isSubmitting}>
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Pilih kategori laporan" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      {categories.map((category) => (
+                        <SelectItem key={category} value={category}>
+                          {category}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="description"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Deskripsi Laporan *</FormLabel>
+                  <FormControl>
+                    <Textarea
+                      placeholder="Jelaskan aspirasi atau keluhan Anda secara detail..."
+                      className="resize-y min-h-[100px]"
+                      {...field}
+                      disabled={isSubmitting}
+                    />
+                  </FormControl>
+                   <FormDescription>
+                    Berikan detail yang jelas agar kami dapat memahami dan menindaklanjuti laporan Anda.
+                  </FormDescription>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
 
-         <FormItem>
-              <FormLabel>Lampiran (Opsional - Foto/Dokumen)</FormLabel>
-              <FormControl>
-                  <Input
-                    type="file"
-                    onChange={handleFileChange}
-                    disabled={isSubmitting}
-                    accept="image/*,application/pdf,.doc,.docx" // Specify acceptable file types
-                  />
-              </FormControl>
-              <FormDescription>
-                Unggah file pendukung jika ada (maks. 5MB). Format: JPG, PNG, PDF, DOC, DOCX.
-              </FormDescription>
-              <FormMessage />
-          </FormItem>
+             <FormItem>
+                  <FormLabel>Lampiran (Opsional - Foto/Dokumen)</FormLabel>
+                  <FormControl>
+                      <Input
+                        type="file"
+                        onChange={handleFileChange}
+                        disabled={isSubmitting}
+                        accept="image/*,application/pdf,.doc,.docx" // Specify acceptable file types
+                      />
+                  </FormControl>
+                  <FormDescription>
+                    Unggah file pendukung jika ada (maks. 5MB). Format: JPG, PNG, PDF, DOC, DOCX.
+                  </FormDescription>
+                  <FormMessage />
+              </FormItem>
 
-        <Button type="submit" className="w-full bg-primary hover:bg-primary/90 text-primary-foreground" disabled={isSubmitting}>
-          {isSubmitting ? (
-            <>
-              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              Mengirim...
-            </>
-          ) : (
-            'Kirim Laporan'
-          )}
-        </Button>
-      </form>
-    </Form>
+            <Button type="submit" className="w-full bg-primary hover:bg-primary/90 text-primary-foreground" disabled={isSubmitting}>
+              {isSubmitting ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Mengirim...
+                </>
+              ) : (
+                'Kirim Laporan'
+              )}
+            </Button>
+          </form>
+        </Form>
+      </CardContent>
+    </Card>
   );
 }

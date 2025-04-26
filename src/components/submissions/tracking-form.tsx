@@ -38,6 +38,7 @@ export default function TrackingForm() {
   const [isLoading, setIsLoading] = React.useState(false);
   const [submission, setSubmission] = React.useState<Submission | null>(null);
   const [error, setError] = React.useState<string | null>(null);
+  const [formattedDate, setFormattedDate] = React.useState<string>('Memuat tanggal...');
 
   const form = useForm<TrackingFormValues>({
     resolver: zodResolver(formSchema),
@@ -46,10 +47,26 @@ export default function TrackingForm() {
     },
   });
 
+  // Format tanggal setelah komponen di-mount untuk menghindari hydration error
+  React.useEffect(() => {
+    if (submission?.createdAt) {
+      try {
+        const date = new Date(submission.createdAt);
+        setFormattedDate(format(date, 'd MMMM yyyy, HH:mm', { locale: id }));
+      } catch (err) {
+        console.error('Error formatting date:', err);
+        setFormattedDate('Tanggal tidak tersedia');
+      }
+    } else {
+      setFormattedDate('Tanggal tidak tersedia');
+    }
+  }, [submission?.createdAt]);
+
   const fetchSubmission = async (id: string) => {
     setIsLoading(true);
     setError(null);
     setSubmission(null);
+    setFormattedDate('Memuat tanggal...');
     try {
       const response = await fetch(`/api/submissions/${id}`);
       const result = await response.json();
@@ -203,9 +220,7 @@ export default function TrackingForm() {
                     <CardDescription className="text-sm">
                       <span className="flex items-center mt-1">
                         <CalendarDays className="h-4 w-4 mr-1 text-gray-400" />
-                        {submission.createdAt instanceof Date 
-                          ? format(submission.createdAt, 'd MMMM yyyy, HH:mm', { locale: id })
-                          : 'Tanggal tidak tersedia'}
+                        {formattedDate}
                       </span>
                     </CardDescription>
                   </div>

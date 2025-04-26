@@ -31,7 +31,7 @@ export default function RootLayout({
 }) {
   return (
     <html lang="id" className={roboto.className}>
-      <body className="min-h-screen flex flex-col">
+      <body className="min-h-screen flex flex-col" suppressHydrationWarning>
         <SupabaseProvider>
           <div className="flex flex-col flex-grow">
             <Header />

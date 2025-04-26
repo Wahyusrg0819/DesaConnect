@@ -11,26 +11,44 @@ function getAllowedAdminEmails(): string[] {
   return adminEmailsString.split(',').map(email => email.trim().toLowerCase()).filter(Boolean);
 }
 
-// Simple cache for admin status - expires after 5 minutes
+// Simple cache for admin status - expires after 15 minutes
 const adminCache = new Map<string, { isAdmin: boolean, timestamp: number }>();
-const CACHE_TTL = 5 * 60 * 1000; // 5 minutes in milliseconds
+const CACHE_TTL = 15 * 60 * 1000; // 15 minutes in milliseconds
 
 // Fungsi untuk memeriksa apakah user adalah admin yang sah
 export const isAuthorizedAdmin = async (email: string | null | undefined): Promise<boolean> => {
   if (!email || typeof email !== 'string') return false;
   
   const normalizedEmail = email.trim().toLowerCase();
-  
+  const startTime = Date.now();
+
   // Check cache first
   const cachedResult = adminCache.get(normalizedEmail);
   if (cachedResult && (Date.now() - cachedResult.timestamp) < CACHE_TTL) {
+    console.log(`[PERF] Using cached admin status for ${normalizedEmail}, elapsed: ${Date.now() - startTime}ms`);
     return cachedResult.isAdmin;
   }
   
-  let isAdmin = false;
+  // Initialize with fallback from environment variables first (faster)
+  // This moves the env check before the database check for better performance
+  const allowedEmails = getAllowedAdminEmails();
+  let isAdmin = allowedEmails.some(allowedEmail => allowedEmail === normalizedEmail);
   
-  // First, check if user is in the admin_list table
+  if (isAdmin) {
+    console.log(`[PERF] Admin found in environment variables: ${normalizedEmail}, elapsed: ${Date.now() - startTime}ms`);
+    // Cache the result
+    adminCache.set(normalizedEmail, { 
+      isAdmin, 
+      timestamp: Date.now() 
+    });
+    return true;
+  }
+  
+  // If not found in environment variables, check database
   try {
+    console.log(`[PERF] Checking database for admin status: ${normalizedEmail}`);
+    const dbCheckStart = Date.now();
+    
     const { data, error } = await supabase
       .from('admin_list')
       .select('email')
@@ -39,19 +57,13 @@ export const isAuthorizedAdmin = async (email: string | null | undefined): Promi
       
     if (!error && data) {
       isAdmin = true;
+      console.log(`[PERF] Admin found in database: ${normalizedEmail}, db elapsed: ${Date.now() - dbCheckStart}ms, total: ${Date.now() - startTime}ms`);
     } else if (error && error.code !== 'PGRST116') { // PGRST116 is "No rows returned" - not really an error
       console.error('Database error checking admin status:', error);
       // Only log real DB errors, not "not found"
     }
   } catch (err) {
     console.error('Exception checking admin_list table:', err);
-    // Continue to fallback check
-  }
-  
-  // If not found in database, fallback to environment variables
-  if (!isAdmin) {
-    const allowedEmails = getAllowedAdminEmails();
-    isAdmin = allowedEmails.some(allowedEmail => allowedEmail === normalizedEmail);
   }
   
   // Cache the result
@@ -60,6 +72,7 @@ export const isAuthorizedAdmin = async (email: string | null | undefined): Promi
     timestamp: Date.now() 
   });
   
+  console.log(`[PERF] Admin check complete for ${normalizedEmail}, result: ${isAdmin}, total elapsed: ${Date.now() - startTime}ms`);
   return isAdmin;
 };
 

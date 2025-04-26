@@ -7,40 +7,44 @@ export interface InternalComment {
 
 // Define the main Submission type (the shape we want for the frontend)
 export interface Submission {
-  id: string; // Unique internal ID (string)
+  id: string; // Unique internal ID (UUID for Supabase)
   referenceId: string; // Unique user-facing ID
   name?: string; // Submitter's name (optional)
   contactInfo?: string; // Submitter's contact info (optional, email/phone)
   category: string;
   description: string;
-  status: 'Pending' | 'In Progress' | 'Resolved';
-  createdAt: string; // ISO date string
+  status: string; // 'pending', 'in progress', 'resolved'
+  createdAt: Date; // Date object, changed from string for flexibility
   fileUrl?: string | null;
   priority: 'Urgent' | 'Regular';
   internalComments?: InternalComment[];
-  // __v is typically excluded from the final type for the frontend
 }
 
-// Define the type for a Mongoose Document (often includes _id, __v)
-// We can import Mongoose types for this if needed, but for a lean() result,
-// we primarily care about the schema fields + _id and __v if they are present.
-// A simple approach is to extend the base Submission interface for lean results
-// or define a separate one if the lean shape is significantly different.
+// Supabase Database types
+export interface SupabaseSubmission {
+  id: string; // UUID
+  reference_id: string;
+  name: string;
+  contact_info?: string;
+  category: string;
+  description: string;
+  status: string;
+  created_at: string; // ISO date string from Supabase
+  file_url?: string;
+  priority: string;
+  internal_comments: InternalComment[];
+}
 
-// Let's define a type that represents the structure returned by Mongoose .lean()
-// It's similar to Submission but with MongoDB ObjectId for _id and potentially __v.
-// We can use this type when casting results before mapping.
-
+// Keep MongoDB types for backward compatibility if needed
 import { Document, Types } from 'mongoose';
 
-// This interface represents the structure of the document as it comes from Mongoose BEFORE mapping to the plain Submission type.
-// It includes the MongoDB _id (as ObjectId) and __v.
+// This interface represents the structure of the document as it comes from Mongoose
 export interface SubmissionDocument extends Document {
   name?: string;
   contactInfo?: string;
   category: string;
   description: string;
-  createdAt: Date; // Mongoose returns Date objects by default (before .lean() mapping)
+  createdAt: Date; // Mongoose returns Date objects by default
   referenceId: string;
   status: 'pending' | 'in progress' | 'resolved'; // Mongoose schema has lowercase enum
   fileUrl?: string | null;

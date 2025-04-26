@@ -9,20 +9,20 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Pagination, PaginationContent, PaginationEllipsis, PaginationItem, PaginationLink, PaginationNext, PaginationPrevious } from "@/components/ui/pagination";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { useRouter, usePathname, useSearchParams } from 'next/navigation';
-import { Search, Filter, ArrowUpDown, CalendarDays, Tag, CheckCircle, Loader2, AlertCircle } from 'lucide-react';
+import { Search, Filter, ArrowUpDown, CalendarDays, Tag, CheckCircle, Loader2, AlertCircle, Sparkles, RefreshCw, MapPin, MessageSquare, Wrench, BookOpen, Stethoscope, HeartHandshake, Info } from 'lucide-react';
 import type { Submission } from '@/lib/types'; // Assuming types are defined here
 import { formatDistanceToNow } from 'date-fns';
 import { id } from 'date-fns/locale'; // Import Indonesian locale for date formatting
+import Link from 'next/link';
 
-// Define category icons within the Client Component
+// Define category icons based on blueprint
 const categoryIcons: Record<string, React.ElementType> = {
-  Infrastructure: () => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-wrench"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg>, // Wrench
-  Education: () => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-book-open"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>, // BookOpen
-  Health: () => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-stethoscope"><path d="M4.8 2.3A.3.3 0 1 0 5 2H4a2 2 0 0 0-2 2v5a6 6 0 0 0 6 6v0a6 6 0 0 0 6-6V4a2 2 0 0 0-2-2h-1a.2.2 0 1 0 .3.3"/><path d="M8 15v1a6 6 0 0 0 6 6v0a6 6 0 0 0 6-6v-4"/><circle cx="20" cy="10" r="2"/></svg>, // Stethoscope
-  'Social Welfare': () => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-heart-handshake"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/><path d="M12 5 9.04 7.96a2.17 2.17 0 0 0 0 3.08v0c.82.82 2.13.85 3 .07l2.07-1.9a2.82 2.82 0 0 1 3.79 0l2.96 2.66"/><path d="m18 15-2-2"/><path d="m15 18-2-2"/></svg>, // HeartHandshake
-  Other: () => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-info"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>, // Info
+  Infrastructure: Wrench,
+  Education: BookOpen,
+  Health: Stethoscope,
+  'Social Welfare': HeartHandshake,
+  Other: Info,
 };
-
 
 interface SubmissionListProps {
   submissions: Submission[];
@@ -59,6 +59,7 @@ export default function SubmissionList({
   const [selectedCategory, setSelectedCategory] = React.useState(currentFilters.category || 'all');
   const [selectedStatus, setSelectedStatus] = React.useState(currentFilters.status || 'all');
   const [selectedSortBy, setSelectedSortBy] = React.useState(currentFilters.sortBy || 'date_desc');
+  const [isLoading, setIsLoading] = React.useState(false);
 
   const createQueryString = React.useCallback(
     (params: Record<string, string | number | undefined>) => {
@@ -80,6 +81,7 @@ export default function SubmissionList({
   );
 
   const handleFilterChange = React.useCallback(() => {
+    setIsLoading(true);
     const queryString = createQueryString({
       category: selectedCategory,
       status: selectedStatus,
@@ -87,6 +89,8 @@ export default function SubmissionList({
       search: searchTerm,
     });
     router.push(`${pathname}?${queryString}`);
+    // Simulate loading state for better UX
+    setTimeout(() => setIsLoading(false), 300);
   }, [createQueryString, pathname, router, selectedCategory, selectedStatus, selectedSortBy, searchTerm]);
 
   // Debounce search term updates
@@ -114,6 +118,7 @@ export default function SubmissionList({
 
 
   const handlePageChange = (page: number) => {
+    setIsLoading(true);
     const queryString = createQueryString({
         category: selectedCategory,
         status: selectedStatus,
@@ -122,214 +127,370 @@ export default function SubmissionList({
         page: page // Keep current filters, only change page
     });
     router.push(`${pathname}?${queryString}`);
+    // Simulate loading state for better UX
+    setTimeout(() => setIsLoading(false), 300);
   };
 
-  const getStatusBadgeVariant = (status: string): "default" | "secondary" | "destructive" | "outline" => {
+  // Color mapping based on blueprint
+  const getStatusBadgeColor = (status: string): string => {
     switch (status.toLowerCase()) {
       case 'resolved':
-        return 'default'; // Green (using primary color via theme)
+        return 'bg-[#4CAF50] text-white'; // Green from blueprint
       case 'in progress':
-        return 'secondary'; // Use theme's secondary (maybe yellow/orange if customized)
+        return 'bg-yellow-500 text-white'; // Yellow for in progress
       case 'pending':
-        return 'outline'; // Neutral outline
+        return 'bg-[#F0F0F0] text-gray-700'; // Light gray from blueprint
       default:
-        return 'outline';
+        return 'bg-[#F0F0F0] text-gray-700';
     }
   };
 
-    const getStatusTextColor = (status: string): string => {
-        switch (status.toLowerCase()) {
-        case 'resolved':
-            return 'text-primary'; // Green text
-        case 'in progress':
-            return 'text-yellow-600 dark:text-yellow-400'; // Example: Yellowish text
-        case 'pending':
-            return 'text-muted-foreground'; // Gray text
-        default:
-            return 'text-muted-foreground';
-        }
-    };
+  const getStatusIcon = (status: string) => {
+    switch (status.toLowerCase()) {
+      case 'resolved':
+        return <CheckCircle className="h-4 w-4" />;
+      case 'in progress':
+        return <RefreshCw className="h-4 w-4" />;
+      case 'pending':
+        return <AlertCircle className="h-4 w-4" />;
+      default:
+        return <AlertCircle className="h-4 w-4" />;
+    }
+  };
 
-   const getCategoryIcon = (category: string) => {
-     const Icon = categoryIcons[category] || categoryIcons['Other'];
-     return <Icon className="h-5 w-5 mr-2 text-muted-foreground group-hover:text-primary transition-colors" />;
-   };
-
+  const getCategoryIcon = (category: string) => {
+    const Icon = categoryIcons[category] || categoryIcons['Other'];
+    return <Icon className="h-5 w-5 text-[#4CAF50]" />;
+  };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-8">
       {/* Filters and Search Section */}
-      <Card className="shadow-md rounded-lg bg-card">
-        <CardHeader>
-          <CardTitle className="text-xl font-semibold flex items-center gap-2"><Filter className="h-5 w-5 text-primary"/> Filter & Cari Laporan</CardTitle>
+      <Card className="shadow-md rounded-lg border-0 overflow-hidden bg-white">
+        <CardHeader className="pb-2 border-b border-[#F0F0F0]">
+          <CardTitle className="text-xl font-semibold flex items-center gap-2">
+            <Filter className="h-5 w-5 text-[#4CAF50]"/> 
+            <span>Filter & Cari Laporan</span>
+          </CardTitle>
+          <CardDescription>
+            Gunakan filter untuk menemukan laporan yang relevan
+          </CardDescription>
         </CardHeader>
-        <CardContent className="flex flex-col md:flex-row md:items-end gap-4">
-          {/* Search Input */}
-          <form onSubmit={handleSearchSubmit} className="flex-grow">
-             <div className="relative">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-              <Input
-                placeholder="Cari berdasarkan kata kunci..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-10 w-full"
-              />
-            </div>
-            {/* Hidden submit button for form submission on enter */}
-            <button type="submit" hidden />
-          </form>
+        <CardContent className="pt-6">
+          <div className="space-y-6">
+            {/* Search Input */}
+            <form onSubmit={handleSearchSubmit} className="w-full">
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+                <Input
+                  placeholder="Cari berdasarkan kata kunci..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="pl-10 w-full rounded-lg border-[#F0F0F0] focus-visible:ring-[#2196F3]/50"
+                />
+              </div>
+              {/* Hidden submit button for form submission on enter */}
+              <button type="submit" hidden />
+            </form>
 
-          {/* Filter Controls */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:flex-row gap-4 flex-wrap">
-            {/* Category Filter */}
-            <div className="flex-grow-0 min-w-[150px]">
-              <label htmlFor="category-select" className="text-sm font-medium text-muted-foreground mb-1 block">Kategori</label>
-              <Select value={selectedCategory} onValueChange={(value) => { setSelectedCategory(value); }}>
-                <SelectTrigger id="category-select">
-                  <SelectValue placeholder="Semua Kategori" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">Semua Kategori</SelectItem>
-                  {categories.map((cat) => (
-                    <SelectItem key={cat} value={cat}>{cat}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
+            {/* Filter Controls */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+              {/* Category Filter */}
+              <div>
+                <label htmlFor="category-select" className="text-sm font-medium text-gray-500 mb-1.5 block">Kategori</label>
+                <Select value={selectedCategory} onValueChange={(value) => { setSelectedCategory(value); }}>
+                  <SelectTrigger id="category-select" className="w-full rounded-lg border-[#F0F0F0]">
+                    <SelectValue placeholder="Semua Kategori" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">Semua Kategori</SelectItem>
+                    {categories.map((cat) => (
+                      <SelectItem key={cat} value={cat} className="flex items-center">
+                        <div className="flex items-center gap-2">
+                          {getCategoryIcon(cat)}
+                          <span>{cat}</span>
+                        </div>
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
 
-            {/* Status Filter */}
-            <div className="flex-grow-0 min-w-[150px]">
-               <label htmlFor="status-select" className="text-sm font-medium text-muted-foreground mb-1 block">Status</label>
-              <Select value={selectedStatus} onValueChange={(value) => { setSelectedStatus(value); }}>
-                <SelectTrigger id="status-select">
-                  <SelectValue placeholder="Semua Status" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">Semua Status</SelectItem>
-                  {statuses.map((stat) => (
-                    <SelectItem key={stat} value={stat}>{stat}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
+              {/* Status Filter */}
+              <div>
+                <label htmlFor="status-select" className="text-sm font-medium text-gray-500 mb-1.5 block">Status</label>
+                <Select value={selectedStatus} onValueChange={(value) => { setSelectedStatus(value); }}>
+                  <SelectTrigger id="status-select" className="w-full rounded-lg border-[#F0F0F0]">
+                    <SelectValue placeholder="Semua Status" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">Semua Status</SelectItem>
+                    {statuses.map((stat) => (
+                      <SelectItem key={stat} value={stat}>
+                        <div className="flex items-center gap-2">
+                          {getStatusIcon(stat)}
+                          <span>{stat}</span>
+                        </div>
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
 
-            {/* Sort By */}
-            <div className="flex-grow-0 min-w-[150px]">
-               <label htmlFor="sortby-select" className="text-sm font-medium text-muted-foreground mb-1 block">Urutkan</label>
-              <Select value={selectedSortBy} onValueChange={(value) => { setSelectedSortBy(value); }}>
-                <SelectTrigger id="sortby-select">
-                  <SelectValue placeholder="Urutkan Berdasarkan" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="date_desc">Terbaru</SelectItem>
-                  <SelectItem value="date_asc">Terlama</SelectItem>
-                  {/* Add priority sorting if implemented */}
-                  {/* <SelectItem value="priority_desc">Prioritas Tinggi</SelectItem> */}
-                  {/* <SelectItem value="priority_asc">Prioritas Rendah</SelectItem> */}
-                </SelectContent>
-              </Select>
+              {/* Sort By */}
+              <div>
+                <label htmlFor="sortby-select" className="text-sm font-medium text-gray-500 mb-1.5 block">Urutkan</label>
+                <Select value={selectedSortBy} onValueChange={(value) => { setSelectedSortBy(value); }}>
+                  <SelectTrigger id="sortby-select" className="w-full rounded-lg border-[#F0F0F0]">
+                    <SelectValue placeholder="Urutkan Berdasarkan" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="date_desc">
+                      <div className="flex items-center gap-2">
+                        <ArrowUpDown className="h-4 w-4" />
+                        <span>Terbaru</span>
+                      </div>
+                    </SelectItem>
+                    <SelectItem value="date_asc">
+                      <div className="flex items-center gap-2">
+                        <ArrowUpDown className="h-4 w-4" />
+                        <span>Terlama</span>
+                      </div>
+                    </SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
             </div>
-             {/* Apply Filters Button */}
-             <Button onClick={handleFilterChange} className="bg-primary hover:bg-primary/90 text-primary-foreground w-full sm:w-auto md:mt-0">
-               <Filter className="mr-2 h-4 w-4" /> Terapkan Filter
-             </Button>
+            
+            {/* Apply Filters Button - Blueprint accent color blue #2196F3 */}
+            <Button 
+              onClick={handleFilterChange} 
+              className="w-full sm:w-auto px-6 rounded-lg shadow-sm bg-[#2196F3] hover:bg-[#2196F3]/90 text-white transition-all"
+              disabled={isLoading}
+            >
+              {isLoading ? (
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              ) : (
+                <Filter className="mr-2 h-4 w-4" />
+              )}
+              Terapkan Filter
+            </Button>
           </div>
         </CardContent>
-         <CardFooter className="text-sm text-muted-foreground">
-            Menampilkan {submissions.length} dari {totalCount} laporan.
+        <CardFooter className="text-sm text-gray-500 border-t border-[#F0F0F0] bg-[#F0F0F0]/30">
+          <div className="flex items-center gap-2">
+            <Sparkles className="h-4 w-4 text-[#4CAF50]" />
+            Menampilkan {submissions.length} dari {totalCount} laporan
+          </div>
         </CardFooter>
       </Card>
 
-      {/* Submissions List */}
-      <div className="space-y-4">
-        {submissions.length > 0 ? (
-          submissions.map((submission) => (
-            <Accordion type="single" collapsible key={submission.id} className="w-full">
-             <AccordionItem value={`item-${submission.id}`} className="border bg-card rounded-lg shadow-sm overflow-hidden">
-                 <AccordionTrigger className="flex flex-col md:flex-row md:items-center justify-between w-full px-4 py-3 text-left hover:bg-secondary/50 transition-colors group">
-                   <div className="flex items-center flex-1 min-w-0 gap-3">
-                     {getCategoryIcon(submission.category)}
-                     <div className="flex-1 min-w-0">
-                       <p className="text-sm font-medium text-foreground truncate" title={submission.description}>
-                          Laporan #{submission.referenceId}: {submission.description.substring(0, 80)}{submission.description.length > 80 ? '...' : ''}
-                       </p>
-                        <div className="flex items-center gap-2 text-xs text-muted-foreground mt-1">
-                           <Tag className="h-3 w-3"/> {submission.category}
-                        </div>
-                     </div>
-                   </div>
-                   <div className="flex items-center gap-4 text-sm justify-end md:justify-start mt-2 md:mt-0 pr-8">
-                     <Badge variant={getStatusBadgeVariant(submission.status)} className={`capitalize ${getStatusTextColor(submission.status)}`}>
-                       {submission.status}
-                     </Badge>
-                     <div className="flex items-center gap-1 text-muted-foreground text-xs whitespace-nowrap">
-                       <CalendarDays className="h-3 w-3"/>
-                       {formatDistanceToNow(new Date(submission.createdAt), { addSuffix: true, locale: id })}
-                     </div>
-                   </div>
-                 </AccordionTrigger>
-                 <AccordionContent className="px-4 pb-4 pt-0 text-muted-foreground text-sm space-y-2">
-                    <p>{submission.description}</p>
-                    {submission.fileUrl && (
-                         <Button variant="link" size="sm" asChild className="p-0 h-auto text-accent hover:text-accent/80">
-                            <a href={submission.fileUrl} target="_blank" rel="noopener noreferrer">Lihat Lampiran</a>
-                        </Button>
+      {/* Submissions Display Section */}
+      {isLoading ? (
+        <div className="flex items-center justify-center py-12">
+          <Loader2 className="h-8 w-8 text-[#4CAF50] animate-spin" />
+          <span className="ml-2 text-gray-600">Memuat data...</span>
+        </div>
+      ) : submissions.length === 0 ? (
+        <div className="flex flex-col items-center justify-center py-12 text-center">
+          <AlertCircle className="h-12 w-12 text-gray-400 mb-3" />
+          <h3 className="text-lg font-semibold text-gray-700 mb-1">Tidak Ada Laporan Ditemukan</h3>
+          <p className="text-gray-500 max-w-md">
+            Tidak ada laporan yang sesuai dengan kriteria pencarian Anda. Coba ubah filter atau istilah pencarian.
+          </p>
+        </div>
+      ) : (
+        <div className="space-y-4">
+          {submissions.map((submission) => (
+            <Card key={submission.id} className="overflow-hidden hover:shadow-md transition-shadow border-l-4 border-l-[#4CAF50] rounded-lg">
+              <div className="grid md:grid-cols-[1fr_auto] gap-4">
+                <div className="p-4 md:p-5">
+                  <div className="flex flex-wrap items-center gap-2 mb-2">
+                    <Badge 
+                      className={getStatusBadgeColor(submission.status)} 
+                      variant="secondary"
+                    >
+                      <div className="flex items-center gap-1.5">
+                        {getStatusIcon(submission.status)}
+                        <span>{submission.status}</span>
+                      </div>
+                    </Badge>
+                    
+                    <Badge variant="outline" className="border-gray-200 bg-gray-50 text-gray-700">
+                      <div className="flex items-center gap-1.5">
+                        {getCategoryIcon(submission.category)}
+                        <span>{submission.category}</span>
+                      </div>
+                    </Badge>
+                    
+                    <Badge variant="outline" className="border-gray-200 bg-gray-50 text-gray-500">
+                      <div className="flex items-center gap-1.5">
+                        <CalendarDays className="h-3 w-3" />
+                        <span>
+                          {formatDistanceToNow(submission.createdAt, { 
+                            addSuffix: true, 
+                            locale: id 
+                          })}
+                        </span>
+                      </div>
+                    </Badge>
+                  </div>
+                  
+                  <h3 className="text-gray-800 font-semibold mb-3 flex items-center">
+                    <span className="mr-2">Laporan ID: {submission.referenceId}</span>
+                    {submission.priority === "Urgent" && (
+                      <Badge className="bg-red-100 text-red-800 border-red-200">
+                        Prioritas Tinggi
+                      </Badge>
                     )}
-                     {/* Add internal comments display here if needed for admins */}
-                 </AccordionContent>
-               </AccordionItem>
-            </Accordion>
-          ))
-        ) : (
-          <Card className="text-center py-12 bg-card">
-             <CardContent className="space-y-3">
-                <AlertCircle className="mx-auto h-12 w-12 text-muted-foreground" />
-                <p className="text-lg font-semibold">Tidak Ada Laporan</p>
-                <p className="text-muted-foreground">Belum ada laporan yang sesuai dengan filter Anda.</p>
-             </CardContent>
-          </Card>
-        )}
-      </div>
+                  </h3>
+                  
+                  <Accordion type="single" collapsible className="border-b-0">
+                    <AccordionItem value="description" className="border-b-0">
+                      <AccordionTrigger className="text-sm py-1 px-0 font-normal text-[#2196F3] hover:text-[#1976D2] hover:no-underline">
+                        Lihat Detail Laporan
+                      </AccordionTrigger>
+                      <AccordionContent className="text-gray-700 whitespace-pre-line">
+                        <div className="bg-gray-50 p-3 rounded-md border border-gray-100 my-2">
+                          {submission.description.length > 300 
+                            ? `${submission.description.substring(0, 300)}...` 
+                            : submission.description
+                          }
+                        </div>
+                        
+                        {submission.fileUrl && (
+                          <div className="mt-2 flex items-center">
+                            <a 
+                              href={submission.fileUrl} 
+                              target="_blank" 
+                              rel="noopener noreferrer"
+                              className="text-[#2196F3] hover:underline flex items-center gap-1.5 text-sm"
+                            >
+                              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-paperclip">
+                                <path d="m21.44 11.05-9.19 9.19a6 6 0 0 1-8.49-8.49l8.57-8.57A4 4 0 1 1 18 8.84l-8.59 8.57a2 2 0 0 1-2.83-2.83l8.49-8.47"/>
+                              </svg>
+                              Lihat Lampiran
+                            </a>
+                          </div>
+                        )}
+                        
+                        <div className="flex justify-between items-center mt-3 pt-2 border-t border-gray-100">
+                          <div className="flex items-center text-gray-500 text-sm">
+                            <MapPin className="h-3.5 w-3.5 mr-1" /> 
+                            Desa Pangkalan Baru
+                          </div>
+                          
+                          <div className="flex items-center gap-1 text-sm text-gray-500">
+                            <MessageSquare className="h-3.5 w-3.5" />
+                            <span>
+                              {submission.internalComments?.length || 0} komentar
+                            </span>
+                          </div>
+                        </div>
+                      </AccordionContent>
+                    </AccordionItem>
+                  </Accordion>
+                  
+                  {/* Progress Indicator */}
+                  <div className="mt-4 pt-2">
+                    <div className="flex items-center justify-between mb-1.5">
+                      <span className="text-xs font-medium text-gray-500">
+                        Status Penanganan
+                      </span>
+                      <span className="text-xs font-medium text-gray-700">
+                        {submission.status === 'pending' ? '0%' : 
+                         submission.status === 'in progress' ? '50%' : '100%'}
+                      </span>
+                    </div>
+                    <div className="w-full bg-gray-200 rounded-full h-2">
+                      <div 
+                        className={`h-2 rounded-full ${
+                          submission.status === 'pending' ? 'w-0 bg-gray-300' : 
+                          submission.status === 'in progress' ? 'w-1/2 bg-yellow-500' : 
+                          'w-full bg-[#4CAF50]'
+                        }`}
+                      ></div>
+                    </div>
+                  </div>
+                </div>
+                
+                {/* Action Buttons on right side for larger screens */}
+                <div className="bg-gray-50 flex flex-col md:justify-center items-center py-4 px-5 border-t md:border-t-0 md:border-l border-gray-200">
+                  <Button 
+                    asChild 
+                    variant="default"
+                    className="w-full bg-[#2196F3] hover:bg-[#1976D2] text-white"
+                  >
+                    <Link href={`/track?id=${submission.referenceId}`}>
+                      Lacak Status
+                    </Link>
+                  </Button>
+                </div>
+              </div>
+            </Card>
+          ))}
+        </div>
+      )}
 
       {/* Pagination */}
       {totalPages > 1 && (
-        <Pagination>
-          <PaginationContent>
-            <PaginationItem>
-              <PaginationPrevious
-                href={currentPage > 1 ? `${pathname}?${createQueryString({ page: currentPage - 1, category: selectedCategory, status: selectedStatus, sortBy: selectedSortBy, search: searchTerm })}` : '#'}
-                aria-disabled={currentPage <= 1}
-                tabIndex={currentPage <= 1 ? -1 : undefined}
-                className={currentPage <= 1 ? "pointer-events-none opacity-50" : undefined}
-                onClick={(e) => { if (currentPage <= 1) e.preventDefault(); }}
-              />
-            </PaginationItem>
+        <div className="flex justify-center mt-6">
+          <Pagination>
+            <PaginationContent>
+              <PaginationItem>
+                <PaginationPrevious
+                  href={currentPage > 1 ? `${pathname}?${createQueryString({ page: currentPage - 1, category: selectedCategory, status: selectedStatus, sortBy: selectedSortBy, search: searchTerm })}` : '#'}
+                  aria-disabled={currentPage <= 1}
+                  tabIndex={currentPage <= 1 ? -1 : undefined}
+                  className={`${currentPage <= 1 ? "pointer-events-none opacity-50" : ""} text-[#2196F3]`}
+                  onClick={(e) => { 
+                    if (currentPage <= 1) {
+                      e.preventDefault();
+                    } else {
+                      e.preventDefault();
+                      handlePageChange(currentPage - 1);
+                    }
+                  }}
+                />
+              </PaginationItem>
 
-            {/* Simplified Pagination Logic - Consider a more robust solution for many pages */}
-             {Array.from({ length: totalPages }, (_, i) => i + 1).map(page => (
-                 <PaginationItem key={page}>
-                    <PaginationLink
-                        href={`${pathname}?${createQueryString({ page: page, category: selectedCategory, status: selectedStatus, sortBy: selectedSortBy, search: searchTerm })}`}
-                        isActive={currentPage === page}
-                        aria-current={currentPage === page ? "page" : undefined}
-                    >
-                        {page}
-                    </PaginationLink>
+              {/* Simplified Pagination Logic - Consider a more robust solution for many pages */}
+              {Array.from({ length: totalPages }, (_, i) => i + 1).map(page => (
+                <PaginationItem key={page}>
+                  <PaginationLink
+                    href={`${pathname}?${createQueryString({ page: page, category: selectedCategory, status: selectedStatus, sortBy: selectedSortBy, search: searchTerm })}`}
+                    isActive={currentPage === page}
+                    aria-current={currentPage === page ? "page" : undefined}
+                    className={currentPage === page ? "bg-[#4CAF50] text-white hover:bg-[#4CAF50]/90" : "text-gray-700 hover:bg-[#F0F0F0]"}
+                    onClick={(e) => {
+                      e.preventDefault();
+                      handlePageChange(page);
+                    }}
+                  >
+                    {page}
+                  </PaginationLink>
                 </PaginationItem>
-             ))}
+              ))}
 
-
-            <PaginationItem>
-              <PaginationNext
-                href={currentPage < totalPages ? `${pathname}?${createQueryString({ page: currentPage + 1, category: selectedCategory, status: selectedStatus, sortBy: selectedSortBy, search: searchTerm })}` : '#'}
-                 aria-disabled={currentPage >= totalPages}
-                 tabIndex={currentPage >= totalPages ? -1 : undefined}
-                 className={currentPage >= totalPages ? "pointer-events-none opacity-50" : undefined}
-                 onClick={(e) => { if (currentPage >= totalPages) e.preventDefault(); }}
-              />
-            </PaginationItem>
-          </PaginationContent>
-        </Pagination>
+              <PaginationItem>
+                <PaginationNext
+                  href={currentPage < totalPages ? `${pathname}?${createQueryString({ page: currentPage + 1, category: selectedCategory, status: selectedStatus, sortBy: selectedSortBy, search: searchTerm })}` : '#'}
+                  aria-disabled={currentPage >= totalPages}
+                  tabIndex={currentPage >= totalPages ? -1 : undefined}
+                  className={`${currentPage >= totalPages ? "pointer-events-none opacity-50" : ""} text-[#2196F3]`}
+                  onClick={(e) => { 
+                    if (currentPage >= totalPages) {
+                      e.preventDefault(); 
+                    } else {
+                      e.preventDefault();
+                      handlePageChange(currentPage + 1);
+                    }
+                  }}
+                />
+              </PaginationItem>
+            </PaginationContent>
+          </Pagination>
+        </div>
       )}
     </div>
   );

@@ -1,39 +1,47 @@
-import type {Metadata} from 'next';
-import { Roboto } from 'next/font/google'; // Import Roboto
-import './globals.css';
-import { Toaster } from "@/components/ui/toaster"; // Import Toaster
+import type { Metadata, Viewport } from "next";
+import { Roboto } from "next/font/google";
+import "./globals.css";
+import { Toaster } from "@/components/ui/toaster";
 import Header from '@/components/layout/header';
 import Footer from '@/components/layout/footer';
+import SupabaseProvider from '@/components/providers/supabase-provider';
 
 // Configure Roboto font
 const roboto = Roboto({
-  weight: ['400', '700'], // Include weights needed
   subsets: ['latin'],
-  variable: '--font-roboto', // Define CSS variable
+  weight: ['400', '500', '700'],
   display: 'swap',
 });
 
 export const metadata: Metadata = {
-  title: 'DesaConnect - Aspirasi & Keluhan Desa Pangkalan Baru',
-  description: 'Sistem Layanan Aspirasi dan Keluhan Masyarakat Berbasis Website Desa Pangkalan Baru',
+  title: "DesaConnect - Sistem Layanan Aspirasi dan Keluhan Masyarakat",
+  description: "Platform aspirasi dan keluhan masyarakat untuk Desa Pangkalan Baru",
+};
+
+export const viewport: Viewport = {
+  width: 'device-width',
+  initialScale: 1,
+  maximumScale: 1,
 };
 
 export default function RootLayout({
   children,
-}: Readonly<{
+}: {
   children: React.ReactNode;
-}>) {
+}) {
   return (
-    <html lang="en" className={`${roboto.variable}`}>
-      <body className="antialiased font-sans bg-secondary">
-        <div className="flex flex-col min-h-screen">
-          <Header />
-          <main className="flex-grow container mx-auto px-4 py-8">
-            {children}
-          </main>
-          <Footer />
-          <Toaster />
-        </div>
+    <html lang="id" className={roboto.className}>
+      <body className="min-h-screen flex flex-col">
+        <SupabaseProvider>
+          <div className="flex flex-col flex-grow">
+            <Header />
+              <main className="flex-grow">
+                {children}
+              </main>
+              <Footer />
+              <Toaster />
+          </div>
+        </SupabaseProvider>
       </body>
     </html>
   );

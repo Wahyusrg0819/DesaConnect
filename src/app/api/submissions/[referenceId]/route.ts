@@ -1,26 +1,24 @@
 import { NextResponse } from 'next/server';
-import dbConnect from '@/lib/mongodb';
-import Submission from '@/models/Submission';
+import { getSubmissionByReferenceId } from '@/lib/actions/submissions';
 
 export async function GET(
   request: Request,
   { params }: { params: { referenceId: string } }
 ) {
-  await dbConnect();
-
   const { referenceId } = params;
 
   try {
-    const submission = await Submission.findOne({ referenceId: referenceId });
+    // Gunakan server action Supabase
+    const result = await getSubmissionByReferenceId(referenceId);
 
-    if (!submission) {
+    if (!result.success || !result.submission) {
       return NextResponse.json(
-        { message: 'Submission not found' },
+        { message: result.error || 'Submission not found' },
         { status: 404 }
       );
     }
 
-    return NextResponse.json(submission);
+    return NextResponse.json({ success: true, submission: result.submission });
   } catch (error) {
     if (error instanceof Error) {
       return NextResponse.json({ message: error.message }, { status: 500 });

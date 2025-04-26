@@ -22,6 +22,9 @@ const registerSchema = z.object({
 
 // Login admin
 export async function loginAdmin(formData: FormData): Promise<{ success: boolean; error?: string }> {
+  const startTime = Date.now();
+  console.log('[PERF] Starting loginAdmin execution');
+  
   try {
     const rawData = {
       email: formData.get('email') as string,
@@ -40,12 +43,14 @@ export async function loginAdmin(formData: FormData): Promise<{ success: boolean
     if (!validatedData.email || typeof validatedData.email !== 'string') {
       return { success: false, error: 'Email tidak valid' };
     }
+    
+    console.log(`[PERF] Input validation completed in ${Date.now() - startTime}ms`);
 
     // Khusus untuk tahap development/debugging
     if (validatedData.email === 'wahyumuliadisiregar@student.uir.ac.id' && 
         validatedData.password === 'Admin123456') {
       
-      console.log('Login berhasil dengan hard-coded credential untuk debugging');
+      console.log('[PERF] Using dev hardcoded credentials');
       
       try {
         // Set admin_session cookie
@@ -58,7 +63,7 @@ export async function loginAdmin(formData: FormData): Promise<{ success: boolean
           maxAge: 60 * 60 * 24, // 1 day in seconds
         });
         
-        console.log('Cookie admin_session berhasil di-set');
+        console.log(`[PERF] Login success with hardcoded credentials, total time: ${Date.now() - startTime}ms`);
         return { success: true };
       } catch (cookieError) {
         console.error('Error setting admin_session cookie:', cookieError);
@@ -68,14 +73,20 @@ export async function loginAdmin(formData: FormData): Promise<{ success: boolean
 
     // Check admin status using DB
     try {
+      const adminCheckStart = Date.now();
+      console.log('[PERF] Starting admin status check');
+      
       const isAdmin = await isAuthorizedAdmin(validatedData.email);
+      console.log(`[PERF] Admin check completed in ${Date.now() - adminCheckStart}ms`);
       
       if (!isAdmin) {
+        console.log(`[PERF] Login failed: not an admin, total time: ${Date.now() - startTime}ms`);
         return { success: false, error: 'Email tidak terdaftar sebagai admin' };
       }
       
       // If email is in admin list, set up a cookie session
       try {
+        const cookieStart = Date.now();
         // Set cookie dengan opsi yang benar
         const cookieStore = await cookies();
         cookieStore.set('admin_session', validatedData.email, {
@@ -86,7 +97,7 @@ export async function loginAdmin(formData: FormData): Promise<{ success: boolean
           maxAge: 60 * 60 * 24, // 1 day in seconds
         });
         
-        console.log('Cookie admin_session berhasil di-set');
+        console.log(`[PERF] Cookie set in ${Date.now() - cookieStart}ms, total login time: ${Date.now() - startTime}ms`);
         return { success: true };
       } catch (cookieError) {
         console.error('Error setting cookie:', cookieError);
@@ -94,10 +105,12 @@ export async function loginAdmin(formData: FormData): Promise<{ success: boolean
       }
     } catch (adminCheckError) {
       console.error('Error checking admin status:', adminCheckError);
+      console.log(`[PERF] Login failed with error, total time: ${Date.now() - startTime}ms`);
       return { success: false, error: 'Gagal memeriksa status admin' };
     }
   } catch (error: any) {
     console.error('Error in loginAdmin:', error);
+    console.log(`[PERF] Login failed with generic error, total time: ${Date.now() - startTime}ms`);
     return { success: false, error: error.message || 'Terjadi kesalahan saat login' };
   }
 }

@@ -1,4 +1,4 @@
-import { createMiddlewareClient } from '@supabase/auth-helpers-nextjs';
+import { createServerClient } from '@supabase/ssr';
 import { NextRequest, NextResponse } from "next/server";
 import { isAuthorizedAdmin } from '@/lib/auth-utils';
 
@@ -85,8 +85,22 @@ export async function middleware(request: NextRequest) {
     
     // If no admin_session cookie, try Supabase auth as a fallback
     try {
-      // Buat client Supabase untuk middleware
-      const supabase = createMiddlewareClient({ req: request, res: response });
+      // Create a Supabase client using the new @supabase/ssr package
+      const supabase = createServerClient(
+        process.env.NEXT_PUBLIC_SUPABASE_URL!,
+        process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+        {
+          cookies: {
+            get: (name) => request.cookies.get(name)?.value,
+            set: (name, value, options) => {
+              response.cookies.set({ name, value, ...options });
+            },
+            remove: (name, options) => {
+              response.cookies.delete({ name, ...options });
+            },
+          },
+        }
+      );
       
       // Dapatkan session user dari Supabase
       const { data: { session }, error: sessionError } = await supabase.auth.getSession();

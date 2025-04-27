@@ -5,6 +5,7 @@ import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
 import { ensureTablesExist } from '@/lib/supabase';
 import type { SupabaseClient, User } from '@supabase/supabase-js';
 import type { Database } from '@/lib/database.types';
+import GlobalLoading from "@/components/ui/global-loading";
 
 type SupabaseContext = {
   supabase: SupabaseClient<Database>;
@@ -62,7 +63,7 @@ export default function SupabaseProvider({
 
   return (
     <Context.Provider value={{ supabase, user, isLoading }}>
-      {isInitialized ? children : <div>Memuat...</div>}
+      {isInitialized ? children : <GlobalLoading />}
     </Context.Provider>
   );
 }

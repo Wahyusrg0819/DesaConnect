@@ -33,12 +33,18 @@ type TrackingFormValues = z.infer<typeof formSchema>;
 export default function TrackingForm() {
   const { toast } = useToast();
   const searchParams = useSearchParams();
-  const initialId = searchParams.get('id') || '';
+  const [initialId, setInitialId] = React.useState('');
 
   const [isLoading, setIsLoading] = React.useState(false);
   const [submission, setSubmission] = React.useState<Submission | null>(null);
   const [error, setError] = React.useState<string | null>(null);
   const [formattedDate, setFormattedDate] = React.useState<string>('Memuat tanggal...');
+
+  // Handle searchParams in useEffect to avoid hydration issues
+  React.useEffect(() => {
+    const id = searchParams.get('id');
+    setInitialId(id || '');
+  }, [searchParams]);
 
   const form = useForm<TrackingFormValues>({
     resolver: zodResolver(formSchema),
@@ -46,6 +52,11 @@ export default function TrackingForm() {
       referenceId: initialId,
     },
   });
+
+  // Update form value when initialId changes
+  React.useEffect(() => {
+    form.setValue('referenceId', initialId);
+  }, [initialId, form]);
 
   // Format tanggal setelah komponen di-mount untuk menghindari hydration error
   React.useEffect(() => {

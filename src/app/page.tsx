@@ -11,26 +11,21 @@ export default async function Home({
 }: {
   searchParams?: { [key: string]: string | string[] | undefined };
 }) {
-  // Extract search parameters for filtering, sorting, searching, and pagination
-  const category = typeof searchParams?.category === 'string' ? searchParams.category : undefined;
-  const status = typeof searchParams?.status === 'string' ? searchParams.status : undefined;
-  const sortBy = typeof searchParams?.sortBy === 'string' ? searchParams.sortBy : 'date_desc'; // Default sort
-  const search = typeof searchParams?.search === 'string' ? searchParams.search : undefined;
-  const page = typeof searchParams?.page === 'string' ? parseInt(searchParams.page, 10) : 1;
-  const limit = typeof searchParams?.limit === 'string' ? parseInt(searchParams.limit, 10) : 10; // Default items per page
-
-  // Fetch submissions based on parameters
-  const { submissions, totalCount, totalPages } = await fetchSubmissions({
-    category,
-    status,
-    sortBy,
-    search,
-    page,
-    limit,
+  // Extract and await search parameters for filtering, sorting, searching, and pagination
+  const params = await Promise.resolve({
+    category: typeof searchParams?.category === 'string' ? searchParams.category : undefined,
+    status: typeof searchParams?.status === 'string' ? searchParams.status : undefined,
+    sortBy: typeof searchParams?.sortBy === 'string' ? searchParams.sortBy : 'date_desc', // Default sort
+    search: typeof searchParams?.search === 'string' ? searchParams.search : undefined,
+    page: typeof searchParams?.page === 'string' ? parseInt(searchParams.page, 10) : 1,
+    limit: typeof searchParams?.limit === 'string' ? parseInt(searchParams.limit, 10) : 10 // Default items per page
   });
 
+  // Fetch submissions based on parameters
+  const { submissions, totalCount, totalPages } = await fetchSubmissions(params);
+
   const categories = ['Infrastructure', 'Education', 'Health', 'Social Welfare', 'Other']; // Example categories
-  const statuses = ['Pending', 'In Progress', 'Resolved']; // Example statuses
+  const statuses = ['Pending', 'In Progress', 'Resolved'];
 
   // Category icons mapping based on blueprint
   const getCategoryIcon = (category: string) => {
@@ -45,106 +40,109 @@ export default async function Home({
 
   return (
     <div className="flex flex-col min-h-screen">
-      {/* Hero Section - Lebih simpel */}
-      <section className="bg-[#4CAF50] text-white py-14 md:py-16">
-        <div className="container mx-auto px-4">
-          <div className="flex flex-col md:flex-row items-center justify-between gap-8">
+      {/* Hero Section */}
+      <section className="bg-[#4CAF50] text-white py-20">
+        <div className="max-w-6xl mx-auto px-6 lg:px-8">
+          <div className="flex flex-col md:flex-row items-center justify-between gap-12">
             <div className="max-w-2xl">
-              <h1 className="text-3xl md:text-4xl font-bold mb-4">Selamat Datang di DesaConnect</h1>
-              <p className="text-lg mb-8 text-white">
-                Platform aspirasi dan keluhan untuk Desa Pangkalan Baru.
+              <h1 className="text-4xl md:text-5xl font-bold mb-6">Selamat Datang di DesaConnect</h1>
+              <p className="text-xl mb-8 text-white/90 leading-relaxed">
+                Platform aspirasi dan keluhan untuk membangun Desa Pangkalan Baru yang lebih baik.
               </p>
               <div className="flex flex-col sm:flex-row gap-4">
                 <Link href="/submit" passHref>
-                  <Button size="lg" className="bg-[#2196F3] hover:bg-[#1976D2] text-white rounded-lg transition-colors shadow-md">
-                    <MessageSquarePlus className="mr-2 h-5 w-5" /> Buat Laporan Baru
+                  <Button size="lg" className="bg-white hover:bg-gray-100 text-[#4CAF50] rounded-lg transition-all shadow-lg hover:shadow-xl w-full sm:w-auto">
+                    <MessageSquarePlus className="mr-2 h-5 w-5" /> Buat Laporan
                   </Button>
                 </Link>
                 <Link href="/track" passHref>
-                  <Button size="lg" variant="secondary" className="bg-white text-[#4CAF50] hover:bg-gray-100 rounded-lg transition-colors shadow-md">
+                  <Button size="lg" variant="outline" className="bg-[#2196F3] hover:bg-[#1976D2] text-white border-white/30 hover:border-white/50 rounded-lg transition-all w-full sm:w-auto">
                     <Activity className="mr-2 h-5 w-5" /> Lacak Laporan
                   </Button>
                 </Link>
               </div>
             </div>
-            <div className="relative hidden md:block">
-              <div className="bg-white rounded-full p-5 shadow-md">
-                <MessageSquarePlus className="text-[#4CAF50] h-20 w-20" />
+            <div className="relative hidden lg:block">
+              <div className="bg-white/10 backdrop-blur-lg rounded-2xl p-8 shadow-2xl">
+                <MessageSquarePlus className="text-white h-24 w-24" />
               </div>
             </div>
           </div>
         </div>
       </section>
 
-      {/* Section Cara Kerja - Lebih simpel */}
-      <section className="py-10 bg-white">
-        <div className="container mx-auto px-4">
-          <h2 className="text-2xl font-bold mb-6 text-center text-gray-800">Bagaimana Cara Kerjanya?</h2>
+      {/* Section Cara Kerja */}
+      <section className="py-20 bg-white">
+        <div className="max-w-6xl mx-auto px-6 lg:px-8">
+          <div className="text-center max-w-2xl mx-auto mb-12">
+            <h2 className="text-3xl font-bold mb-4 text-gray-900">Bagaimana Cara Kerjanya?</h2>
+            <p className="text-gray-600">Proses pelaporan yang mudah dan transparan untuk semua warga desa</p>
+          </div>
           
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <div className="flex flex-col items-center text-center p-5">
-              <div className="bg-[#4CAF50]/10 p-3 rounded-full mb-3">
-                <MessageSquarePlus className="h-8 w-8 text-[#4CAF50]" />
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+            <div className="flex flex-col items-center text-center p-6 rounded-xl bg-gray-50">
+              <div className="bg-[#4CAF50]/10 p-4 rounded-full mb-4">
+                <MessageSquarePlus className="h-10 w-10 text-[#4CAF50]" />
               </div>
-              <h3 className="text-lg font-semibold mb-1">1. Buat Laporan</h3>
-              <p className="text-gray-600 text-sm">Sampaikan keluhan atau aspirasi Anda</p>
+              <h3 className="text-xl font-semibold mb-3">1. Buat Laporan</h3>
+              <p className="text-gray-600">Sampaikan keluhan atau aspirasi Anda dengan mudah melalui platform kami</p>
             </div>
             
-            <div className="flex flex-col items-center text-center p-5">
-              <div className="bg-[#2196F3]/10 p-3 rounded-full mb-3">
-                <Activity className="h-8 w-8 text-[#2196F3]" />
+            <div className="flex flex-col items-center text-center p-6 rounded-xl bg-gray-50">
+              <div className="bg-[#2196F3]/10 p-4 rounded-full mb-4">
+                <Activity className="h-10 w-10 text-[#2196F3]" />
               </div>
-              <h3 className="text-lg font-semibold mb-1">2. Tindak Lanjut</h3>
-              <p className="text-gray-600 text-sm">Petugas memproses laporan Anda</p>
+              <h3 className="text-xl font-semibold mb-3">2. Tindak Lanjut</h3>
+              <p className="text-gray-600">Tim kami akan segera memproses dan menindaklanjuti laporan Anda</p>
             </div>
             
-            <div className="flex flex-col items-center text-center p-5">
-              <div className="bg-green-500/10 p-3 rounded-full mb-3">
-                <CheckCircle2 className="h-8 w-8 text-green-500" />
+            <div className="flex flex-col items-center text-center p-6 rounded-xl bg-gray-50">
+              <div className="bg-green-500/10 p-4 rounded-full mb-4">
+                <CheckCircle2 className="h-10 w-10 text-green-500" />
               </div>
-              <h3 className="text-lg font-semibold mb-1">3. Penyelesaian</h3>
-              <p className="text-gray-600 text-sm">Laporan Anda diselesaikan</p>
+              <h3 className="text-xl font-semibold mb-3">3. Penyelesaian</h3>
+              <p className="text-gray-600">Dapatkan update progress dan penyelesaian dari laporan Anda</p>
             </div>
           </div>
         </div>
       </section>
 
-      {/* Stats Section - Lebih simpel */}
-      <section className="py-10 bg-[#F0F0F0]">
-        <div className="container mx-auto px-4">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
-            <Card className="bg-white shadow-md border-0 rounded-lg overflow-hidden">
-              <CardContent className="p-5 flex items-center gap-3">
-                <div className="rounded-full bg-[#4CAF50]/10 p-2">
-                  <MessageSquarePlus className="h-6 w-6 text-[#4CAF50]" />
+      {/* Stats Section */}
+      <section className="py-16 bg-gray-50">
+        <div className="max-w-6xl mx-auto px-6 lg:px-8">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+            <Card className="bg-white shadow-lg border-0 rounded-xl overflow-hidden hover:shadow-xl transition-all">
+              <CardContent className="p-6 flex items-center gap-4">
+                <div className="rounded-full bg-[#4CAF50]/10 p-3">
+                  <MessageSquarePlus className="h-8 w-8 text-[#4CAF50]" />
                 </div>
                 <div>
-                  <p className="text-2xl font-bold text-gray-800">{totalCount}</p>
-                  <p className="text-gray-500 text-sm">Total Laporan</p>
+                  <p className="text-3xl font-bold text-gray-900">{totalCount}</p>
+                  <p className="text-gray-600">Total Laporan</p>
                 </div>
               </CardContent>
             </Card>
             
-            <Card className="bg-white shadow-md border-0 rounded-lg overflow-hidden">
-              <CardContent className="p-5 flex items-center gap-3">
-                <div className="rounded-full bg-yellow-500/10 p-2">
-                  <Activity className="h-6 w-6 text-yellow-500" />
+            <Card className="bg-white shadow-lg border-0 rounded-xl overflow-hidden hover:shadow-xl transition-all">
+              <CardContent className="p-6 flex items-center gap-4">
+                <div className="rounded-full bg-yellow-500/10 p-3">
+                  <Activity className="h-8 w-8 text-yellow-500" />
                 </div>
                 <div>
-                  <p className="text-2xl font-bold text-gray-800">{submissions.filter(s => s.status === 'In Progress').length}</p>
-                  <p className="text-gray-500 text-sm">Sedang Diproses</p>
+                  <p className="text-3xl font-bold text-gray-900">{submissions.filter(s => s.status === 'In Progress').length}</p>
+                  <p className="text-gray-600">Sedang Diproses</p>
                 </div>
               </CardContent>
             </Card>
             
-            <Card className="bg-white shadow-md border-0 rounded-lg overflow-hidden">
-              <CardContent className="p-5 flex items-center gap-3">
-                <div className="rounded-full bg-green-500/10 p-2">
-                  <CheckCircle2 className="h-6 w-6 text-green-500" />
+            <Card className="bg-white shadow-lg border-0 rounded-xl overflow-hidden hover:shadow-xl transition-all">
+              <CardContent className="p-6 flex items-center gap-4">
+                <div className="rounded-full bg-green-500/10 p-3">
+                  <CheckCircle2 className="h-8 w-8 text-green-500" />
                 </div>
                 <div>
-                  <p className="text-2xl font-bold text-gray-800">{submissions.filter(s => s.status === 'Resolved').length}</p>
-                  <p className="text-gray-500 text-sm">Terselesaikan</p>
+                  <p className="text-3xl font-bold text-gray-900">{submissions.filter(s => s.status === 'Resolved').length}</p>
+                  <p className="text-gray-600">Terselesaikan</p>
                 </div>
               </CardContent>
             </Card>
@@ -152,28 +150,32 @@ export default async function Home({
         </div>
       </section>
 
-      {/* Categories Preview Section - Lebih simpel */}
-      <section className="py-10 bg-white">
-        <div className="container mx-auto px-4">
-          <h2 className="text-2xl font-bold mb-6 text-center text-gray-800">Kategori Laporan</h2>
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-4">
+      {/* Categories Section */}
+      <section className="py-20 bg-white">
+        <div className="max-w-6xl mx-auto px-6 lg:px-8">
+          <div className="text-center max-w-2xl mx-auto mb-12">
+            <h2 className="text-3xl font-bold mb-4 text-gray-900">Kategori Laporan</h2>
+            <p className="text-gray-600">Pilih kategori yang sesuai dengan laporan Anda</p>
+          </div>
+          
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-6">
             {categories.map((category) => (
               <Link 
                 key={category} 
                 href={`/?category=${category}`} 
-                className="flex flex-col items-center p-4 bg-white rounded-lg shadow-sm hover:shadow-md transition-all border border-gray-100"
+                className="flex flex-col items-center p-6 bg-white rounded-xl shadow-md hover:shadow-xl transition-all border border-gray-100 group"
               >
                 <div className={`
-                  ${category === 'Infrastructure' ? 'bg-blue-500/10' : ''}
-                  ${category === 'Education' ? 'bg-yellow-500/10' : ''}
-                  ${category === 'Health' ? 'bg-red-500/10' : ''}
-                  ${category === 'Social Welfare' ? 'bg-purple-500/10' : ''}
-                  ${category === 'Other' ? 'bg-gray-500/10' : ''}
-                  p-3 rounded-full mb-2
+                  ${category === 'Infrastructure' ? 'bg-blue-500/10 group-hover:bg-blue-500/20' : ''}
+                  ${category === 'Education' ? 'bg-yellow-500/10 group-hover:bg-yellow-500/20' : ''}
+                  ${category === 'Health' ? 'bg-red-500/10 group-hover:bg-red-500/20' : ''}
+                  ${category === 'Social Welfare' ? 'bg-purple-500/10 group-hover:bg-purple-500/20' : ''}
+                  ${category === 'Other' ? 'bg-gray-500/10 group-hover:bg-gray-500/20' : ''}
+                  p-4 rounded-full mb-4 transition-colors
                 `}>
                   {getCategoryIcon(category)}
                 </div>
-                <span className="font-medium text-center text-sm text-gray-800">{category}</span>
+                <span className="font-medium text-center text-gray-900">{category}</span>
               </Link>
             ))}
           </div>
@@ -181,73 +183,64 @@ export default async function Home({
       </section>
 
       {/* Recent Submissions Section */}
-      <section className="py-12 bg-[#F0F0F0]">
-        <div className="container mx-auto px-4"> 
-          <div className="flex flex-col md:flex-row items-start md:items-center justify-between mb-6">
+      <section className="py-20 bg-gray-50">
+        <div className="max-w-6xl mx-auto px-6 lg:px-8">
+          <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between mb-12">
             <div>
-              <h2 className="text-2xl font-bold text-gray-800 mb-2">Laporan Terbaru</h2>
+              <h2 className="text-3xl font-bold text-gray-900 mb-4">Laporan Terbaru</h2>
               <p className="text-gray-600">Lihat laporan terbaru dari masyarakat Desa Pangkalan Baru</p>
             </div>
-            <Link href="/submissions" className="mt-3 md:mt-0 inline-flex items-center px-4 py-2 bg-white hover:bg-gray-50 text-[#2196F3] rounded-lg shadow-sm transition-colors border border-[#2196F3]/20">
-              Lihat Semua 
-              <ArrowRight className="h-4 w-4 ml-2" />
+            <Link 
+              href="/submissions" 
+              className="mt-4 lg:mt-0 inline-flex items-center px-6 py-3 bg-white hover:bg-gray-50 text-[#4CAF50] rounded-lg shadow-md hover:shadow-lg transition-all border border-[#4CAF50]/20"
+            >
+              Lihat Semua Laporan
+              <ArrowRight className="h-5 w-5 ml-2" />
             </Link>
           </div>
           
-          {/* Custom section header cards */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-            <Card className="bg-gradient-to-br from-[#4CAF50]/10 to-white border-0 shadow-sm overflow-hidden">
-              <CardContent className="p-5 flex items-center">
-                <div className="rounded-full bg-[#4CAF50]/20 p-3 mr-4">
-                  <MessageSquarePlus className="h-6 w-6 text-[#4CAF50]" />
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
+            <Card className="bg-gradient-to-br from-[#4CAF50]/5 to-white border-0 shadow-lg hover:shadow-xl transition-all overflow-hidden rounded-xl">
+              <CardContent className="p-6 flex items-center gap-6">
+                <div className="rounded-full bg-[#4CAF50]/10 p-4">
+                  <MessageSquarePlus className="h-8 w-8 text-[#4CAF50]" />
                 </div>
                 <div>
-                  <h4 className="font-medium mb-1">Buat Laporan</h4>
-                  <p className="text-sm text-gray-600">Ajukan laporan Anda</p>
-                </div>
-                <div className="ml-auto">
-                  <Link href="/submit">
-                    <Button variant="ghost" size="sm" className="rounded-full h-8 w-8 p-0">
-                      <ArrowRight className="h-4 w-4" />
-                    </Button>
-                  </Link>
+                  <h4 className="text-xl font-semibold mb-2">Buat Laporan Baru</h4>
+                  <p className="text-gray-600">Sampaikan aspirasi atau keluhan Anda untuk Desa yang lebih baik</p>
                 </div>
               </CardContent>
             </Card>
-            
-            <Card className="bg-gradient-to-br from-[#2196F3]/10 to-white border-0 shadow-sm overflow-hidden">
-              <CardContent className="p-5 flex items-center">
-                <div className="rounded-full bg-[#2196F3]/20 p-3 mr-4">
-                  <Activity className="h-6 w-6 text-[#2196F3]" />
+
+            <Card className="bg-gradient-to-br from-[#2196F3]/5 to-white border-0 shadow-lg hover:shadow-xl transition-all overflow-hidden rounded-xl">
+              <CardContent className="p-6 flex items-center gap-6">
+                <div className="rounded-full bg-[#2196F3]/10 p-4">
+                  <Activity className="h-8 w-8 text-[#2196F3]" />
                 </div>
                 <div>
-                  <h4 className="font-medium mb-1">Lacak Laporan</h4>
-                  <p className="text-sm text-gray-600">Pantau status laporan</p>
-                </div>
-                <div className="ml-auto">
-                  <Link href="/track">
-                    <Button variant="ghost" size="sm" className="rounded-full h-8 w-8 p-0">
-                      <ArrowRight className="h-4 w-4" />
-                    </Button>
-                  </Link>
+                  <h4 className="text-xl font-semibold mb-2">Lacak Laporan</h4>
+                  <p className="text-gray-600">Pantau status dan perkembangan laporan Anda</p>
                 </div>
               </CardContent>
             </Card>
           </div>
 
-          {/* Pass fetched data and parameters to the SubmissionList component */}
-          <div className="bg-white p-5 rounded-lg shadow-md">
-            <SubmissionList
-              submissions={submissions}
-              categories={categories}
-              statuses={statuses}
-              currentPage={page}
-              totalPages={totalPages}
-              totalCount={totalCount}
-              limit={limit}
-              currentFilters={{ category, status, sortBy, search }}
-            />
-          </div>
+          {/* Submissions List */}
+          <SubmissionList 
+            submissions={submissions}
+            categories={categories}
+            statuses={statuses}
+            currentPage={params.page}
+            totalPages={totalPages}
+            totalCount={totalCount}
+            limit={params.limit}
+            currentFilters={{ 
+              category: params.category, 
+              status: params.status, 
+              sortBy: params.sortBy, 
+              search: params.search 
+            }}
+          />
         </div>
       </section>
     </div>

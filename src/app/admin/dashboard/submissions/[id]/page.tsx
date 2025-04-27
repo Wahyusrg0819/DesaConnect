@@ -98,42 +98,57 @@ export default async function SubmissionDetailPage({
   }
   
   return (
-    <div className="container py-8">
+    <div className="p-6 sm:p-8">
       <div className="flex flex-col space-y-6">
         {/* Header dan breadcrumb */}
-        <div className="flex justify-between items-center">
+        <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-4">
           <div>
-            <div className="flex items-center space-x-2 mb-2">
+            <div className="flex items-center gap-2 mb-2">
               <Link href="/admin/dashboard/submissions">
-                <Button variant="ghost" size="sm">
-                  <ArrowLeft className="h-4 w-4 mr-1" /> Kembali
+                <Button variant="ghost" size="icon" className="h-8 w-8 rounded-full">
+                  <ArrowLeft className="h-4 w-4" />
                 </Button>
               </Link>
-              <Separator orientation="vertical" className="h-6" />
-              <span className="text-muted-foreground">Detail Laporan</span>
+              <h1 className="text-2xl font-bold tracking-tight">Detail Laporan</h1>
             </div>
-            <h1 className="text-3xl font-bold tracking-tight">
-              {submission.reference_id}
-            </h1>
-            <div className="flex items-center space-x-2 mt-2">
-              <Badge className={statusColorMap[submission.status]}>
-                {submission.status}
-              </Badge>
-              <Badge className={priorityColorMap[submission.priority]}>
-                {submission.priority}
-              </Badge>
-              <Badge variant="outline">
-                <Calendar className="h-3 w-3 mr-1" /> {formatDate(submission.created_at)}
-              </Badge>
+            <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 sm:gap-3">
+              <div className="font-medium text-lg">{submission.reference_id}</div>
+              <div className="flex items-center gap-2">
+                <Badge className={`${statusColorMap[submission.status]} flex items-center gap-1.5`}>
+                  {submission.status === 'pending' && <Clock className="h-3.5 w-3.5" />}
+                  {submission.status === 'in progress' && <Clock className="h-3.5 w-3.5" />}
+                  {submission.status === 'resolved' && <CheckCircle2 className="h-3.5 w-3.5" />}
+                  <span>{submission.status}</span>
+                </Badge>
+                <Badge className={priorityColorMap[submission.priority]}>
+                  {submission.priority}
+                </Badge>
+                <Badge variant="outline" className="flex items-center gap-1.5">
+                  <Calendar className="h-3.5 w-3.5" />
+                  <span>{formatDate(submission.created_at)}</span>
+                </Badge>
+              </div>
             </div>
+          </div>
+          <div className="flex gap-2">
+            <Button variant="outline" className="flex items-center gap-2">
+              <FileText className="h-4 w-4" />
+              <span>Export PDF</span>
+            </Button>
+            <Link href={`/admin/dashboard/submissions/${id}/action`}>
+              <Button className="flex items-center gap-2 bg-primary">
+                <CheckCircle2 className="h-4 w-4" />
+                <span>Tindak Lanjut</span>
+              </Button>
+            </Link>
           </div>
         </div>
         
         {/* Notifikasi sukses */}
         {updated && (
-          <Alert className="bg-green-50 border-green-200">
+          <Alert className="bg-green-50 border-green-200 border-l-4 border-l-green-500">
             <CheckCircle2 className="h-4 w-4 text-green-600" />
-            <AlertTitle className="text-green-800">Berhasil diperbarui!</AlertTitle>
+            <AlertTitle className="text-green-800 font-medium">Berhasil diperbarui!</AlertTitle>
             <AlertDescription className="text-green-700">
               {updated === 'status' && 'Status laporan berhasil diperbarui.'}
               {updated === 'priority' && 'Prioritas laporan berhasil diperbarui.'}
@@ -144,7 +159,7 @@ export default async function SubmissionDetailPage({
         
         {/* Konten utama dengan Tabs */}
         <Tabs defaultValue="overview" className="w-full">
-          <TabsList className="mb-4">
+          <TabsList className="mb-4 w-full sm:w-auto inline-flex">
             <TabsTrigger value="overview">Ringkasan</TabsTrigger>
             <TabsTrigger value="management">Pengelolaan</TabsTrigger>
             <TabsTrigger value="comments">
@@ -157,102 +172,106 @@ export default async function SubmissionDetailPage({
           
           {/* Tab Overview */}
           <TabsContent value="overview">
-            <div className="grid gap-6 md:grid-cols-2">
+            <div className="grid gap-6 md:grid-cols-3">
               {/* Informasi Pelapor */}
-              <Card>
-                <CardHeader className="pb-3">
+              <Card className="md:col-span-1 shadow-sm border-0">
+                <CardHeader className="pb-3 border-b">
                   <div className="flex items-center">
-                    <User className="h-5 w-5 mr-2 text-muted-foreground" />
-                    <CardTitle>Informasi Pelapor</CardTitle>
+                    <div className="p-2 bg-blue-100 rounded-full mr-3">
+                      <User className="h-5 w-5 text-blue-600" />
+                    </div>
+                    <div>
+                      <CardTitle className="text-base">Informasi Pelapor</CardTitle>
+                      <CardDescription>Data pelapor yang mengirimkan laporan</CardDescription>
+                    </div>
                   </div>
-                  <CardDescription>Data pelapor yang mengirimkan laporan</CardDescription>
                 </CardHeader>
-                <CardContent>
-                  <Table>
-                    <TableBody>
-                      <TableRow>
-                        <TableHead className="w-[200px]">Nama Lengkap</TableHead>
-                        <TableCell className="font-medium">{submission.name}</TableCell>
-                      </TableRow>
-                      <TableRow>
-                        <TableHead>Kontak</TableHead>
-                        <TableCell>
-                          <div className="flex items-center">
-                            <Phone className="h-4 w-4 mr-2 text-muted-foreground" />
-                            {submission.contact_info}
-                          </div>
-                        </TableCell>
-                      </TableRow>
-                    </TableBody>
-                  </Table>
+                <CardContent className="pt-4">
+                  <div className="space-y-4">
+                    <div>
+                      <div className="text-sm text-muted-foreground mb-1">Nama Lengkap</div>
+                      <div className="font-medium">{submission.name || 'Tidak disebutkan'}</div>
+                    </div>
+                    <div>
+                      <div className="text-sm text-muted-foreground mb-1">Kontak</div>
+                      <div className="font-medium flex items-center">
+                        <Phone className="h-4 w-4 mr-2 text-muted-foreground" />
+                        {submission.contact_info || 'Tidak disebutkan'}
+                      </div>
+                    </div>
+                  </div>
                 </CardContent>
               </Card>
               
               {/* Informasi Laporan */}
-              <Card>
-                <CardHeader className="pb-3">
+              <Card className="md:col-span-2 shadow-sm border-0">
+                <CardHeader className="pb-3 border-b">
                   <div className="flex items-center">
-                    <FileText className="h-5 w-5 mr-2 text-muted-foreground" />
-                    <CardTitle>Detail Laporan</CardTitle>
+                    <div className="p-2 bg-green-100 rounded-full mr-3">
+                      <FileText className="h-5 w-5 text-green-600" />
+                    </div>
+                    <div>
+                      <CardTitle className="text-base">Detail Laporan</CardTitle>
+                      <CardDescription>Informasi mengenai laporan</CardDescription>
+                    </div>
                   </div>
-                  <CardDescription>Informasi mengenai laporan</CardDescription>
                 </CardHeader>
-                <CardContent>
-                  <Table>
-                    <TableBody>
-                      <TableRow>
-                        <TableHead className="w-[200px]">ID Referensi</TableHead>
-                        <TableCell className="font-medium">{submission.reference_id}</TableCell>
-                      </TableRow>
-                      <TableRow>
-                        <TableHead>Kategori</TableHead>
-                        <TableCell>
-                          <div className="flex items-center">
-                            <Tag className="h-4 w-4 mr-2 text-muted-foreground" />
-                            <Badge variant="outline">{submission.category}</Badge>
-                          </div>
-                        </TableCell>
-                      </TableRow>
-                      <TableRow>
-                        <TableHead>Tanggal</TableHead>
-                        <TableCell>
-                          <div className="flex items-center">
-                            <Calendar className="h-4 w-4 mr-2 text-muted-foreground" />
-                            {formatDate(submission.created_at)}
-                          </div>
-                        </TableCell>
-                      </TableRow>
-                    </TableBody>
-                  </Table>
+                <CardContent className="pt-4">
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div>
+                      <div className="text-sm text-muted-foreground mb-1">ID Referensi</div>
+                      <div className="font-medium">{submission.reference_id}</div>
+                    </div>
+                    <div>
+                      <div className="text-sm text-muted-foreground mb-1">Kategori</div>
+                      <div className="font-medium flex items-center">
+                        <Tag className="h-4 w-4 mr-2 text-muted-foreground" />
+                        <Badge variant="outline">{submission.category}</Badge>
+                      </div>
+                    </div>
+                    <div>
+                      <div className="text-sm text-muted-foreground mb-1">Tanggal</div>
+                      <div className="font-medium flex items-center">
+                        <Calendar className="h-4 w-4 mr-2 text-muted-foreground" />
+                        {formatDate(submission.created_at)}
+                      </div>
+                    </div>
+                  </div>
                 </CardContent>
               </Card>
               
               {/* Deskripsi Laporan */}
-              <Card className="md:col-span-2">
-                <CardHeader className="pb-3">
+              <Card className="md:col-span-3 shadow-sm border-0">
+                <CardHeader className="pb-3 border-b">
                   <div className="flex items-center">
-                    <MessageSquare className="h-5 w-5 mr-2 text-muted-foreground" />
-                    <CardTitle>Isi Laporan</CardTitle>
+                    <div className="p-2 bg-yellow-100 rounded-full mr-3">
+                      <MessageSquare className="h-5 w-5 text-yellow-600" />
+                    </div>
+                    <div>
+                      <CardTitle className="text-base">Isi Laporan</CardTitle>
+                      <CardDescription>Deskripsi masalah yang dilaporkan</CardDescription>
+                    </div>
                   </div>
-                  <CardDescription>Deskripsi masalah yang dilaporkan</CardDescription>
                 </CardHeader>
-                <CardContent>
-                  <div className="p-4 border rounded-md bg-gray-50 min-h-[200px] whitespace-pre-wrap">
+                <CardContent className="pt-4">
+                  <div className="p-4 border rounded-md bg-muted/20 min-h-[200px] whitespace-pre-wrap text-sm">
                     {submission.description}
                   </div>
                   
                   {submission.file_url && (
-                    <div className="mt-4 flex items-center">
-                      <Paperclip className="h-4 w-4 mr-2 text-muted-foreground" />
-                      <span className="font-medium mr-2">Lampiran:</span>
-                      <a 
-                        href={submission.file_url} 
-                        target="_blank" 
-                        rel="noopener noreferrer"
-                        className="text-blue-600 hover:underline flex items-center"
-                      >
-                        Lihat File 
-                      </a>
+                    <div className="mt-4 p-3 border rounded-md bg-blue-50 border-blue-200">
+                      <div className="flex items-center">
+                        <Paperclip className="h-4 w-4 mr-2 text-blue-600" />
+                        <span className="font-medium mr-2 text-blue-700">Lampiran:</span>
+                        <a 
+                          href={submission.file_url} 
+                          target="_blank" 
+                          rel="noopener noreferrer"
+                          className="text-blue-600 hover:text-blue-800 hover:underline"
+                        >
+                          Unduh Lampiran
+                        </a>
+                      </div>
                     </div>
                   )}
                 </CardContent>

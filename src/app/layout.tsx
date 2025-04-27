@@ -1,10 +1,11 @@
-import type { Metadata, Viewport } from "next";
 import { Roboto } from "next/font/google";
 import "./globals.css";
 import { Toaster } from "@/components/ui/toaster";
 import Header from '@/components/layout/header';
 import Footer from '@/components/layout/footer';
 import SupabaseProvider from '@/components/providers/supabase-provider';
+import ServiceWorkerProvider from '@/components/providers/service-worker-provider';
+import { metadata, viewport } from './metadata';
 
 // Configure Roboto font
 const roboto = Roboto({
@@ -13,16 +14,7 @@ const roboto = Roboto({
   display: 'swap',
 });
 
-export const metadata: Metadata = {
-  title: "DesaConnect - Sistem Layanan Aspirasi dan Keluhan Masyarakat",
-  description: "Platform aspirasi dan keluhan masyarakat untuk Desa Pangkalan Baru",
-};
-
-export const viewport: Viewport = {
-  width: 'device-width',
-  initialScale: 1,
-  maximumScale: 1,
-};
+export { metadata, viewport };
 
 export default function RootLayout({
   children,
@@ -31,8 +23,14 @@ export default function RootLayout({
 }) {
   return (
     <html lang="id" className={roboto.className}>
+      <head>
+        <link rel="manifest" href="/manifest.json" />
+        <meta name="theme-color" content="#2E7D32" />
+        <link rel="apple-touch-icon" href="/icons/icon-192x192.png" />
+      </head>
       <body className="min-h-screen flex flex-col" suppressHydrationWarning>
         <SupabaseProvider>
+          <ServiceWorkerProvider />
           <div className="flex flex-col flex-grow">
             <Header />
               <main className="flex-grow">

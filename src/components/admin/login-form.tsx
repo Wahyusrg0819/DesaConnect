@@ -13,6 +13,7 @@ import { AlertCircle } from 'lucide-react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { loginAdmin } from '@/lib/actions/auth-actions';
 import Link from 'next/link';
+import React from 'react';
 
 // Schema validasi untuk form login
 const loginSchema = z.object({
@@ -25,8 +26,17 @@ type LoginFormValues = z.infer<typeof loginSchema>;
 export default function LoginForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const [redirectPath, setRedirectPath] = React.useState('/admin/dashboard');
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(false);
+
+  // Handle searchParams in useEffect
+  React.useEffect(() => {
+    const redirect = searchParams.get('redirect');
+    if (redirect) {
+      setRedirectPath(redirect);
+    }
+  }, [searchParams]);
 
   const {
     register,
@@ -57,10 +67,7 @@ export default function LoginForm() {
       if (result.success) {
         console.log('Login successful, redirecting...');
         
-        // Get the redirect URL from query params or default to dashboard
-        const redirectPath = searchParams.get('redirect') || '/admin/dashboard';
-        
-        // Gunakan window.location untuk memastikan halaman benar-benar di-reload
+        // Use the stored redirectPath
         window.location.href = redirectPath;
       } else {
         console.error('Login failed:', result.error);

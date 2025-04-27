@@ -1,45 +1,76 @@
 'use client';
 
 import { createContext, useContext, useEffect, useState } from 'react';
-import { supabase } from '@/lib/supabase'; // Import Supabase client
-import { ensureTablesExist } from '@/lib/supabase'; // Import helper function
+import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
+import { ensureTablesExist } from '@/lib/supabase';
+import type { SupabaseClient, User } from '@supabase/supabase-js';
+import type { Database } from '@/lib/database.types';
 
-// Definisikan konteks Supabase
-const SupabaseContext = createContext<typeof supabase | undefined>(undefined);
-
-// Hook untuk menggunakan Supabase
-export const useSupabase = () => {
-  const context = useContext(SupabaseContext);
-  if (!context) {
-    throw new Error('useSupabase harus digunakan dalam SupabaseProvider');
-  }
-  return context;
+type SupabaseContext = {
+  supabase: SupabaseClient<Database>;
+  user: User | null;
+  isLoading: boolean;
 };
 
-// Provider untuk Supabase
-export function SupabaseProvider({ children }: { children: React.ReactNode }) {
+const Context = createContext<SupabaseContext | undefined>(undefined);
+
+export default function SupabaseProvider({ 
+  children 
+}: { 
+  children: React.ReactNode;
+}) {
+  const [supabase] = useState(() => createClientComponentClient());
+  const [user, setUser] = useState<User | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
   const [isInitialized, setIsInitialized] = useState(false);
 
   useEffect(() => {
-    // Jalankan setup saat komponen dimuat
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange(async (event, session) => {
+      console.log('Auth state changed:', event, session?.user?.email);
+      setUser(session?.user ?? null);
+      setIsLoading(false);
+    });
+
+    // Setup tables and check initial session
     const setupSupabase = async () => {
       try {
-        // Pastikan tabel yang dibutuhkan telah ada
+        setIsLoading(true);
+        // Get initial session
+        const { data: { session } } = await supabase.auth.getSession();
+        console.log('Initial session:', session?.user?.email);
+        setUser(session?.user ?? null);
+        
+        // Ensure tables exist
         await ensureTablesExist();
         setIsInitialized(true);
       } catch (error) {
-        console.error('Error menyiapkan Supabase:', error);
+        console.error('Error initializing Supabase:', error);
+        setIsInitialized(true); // Still set initialized to prevent infinite loading
+      } finally {
+        setIsLoading(false);
       }
     };
 
     setupSupabase();
-  }, []);
+
+    return () => {
+      subscription.unsubscribe();
+    };
+  }, [supabase]);
 
   return (
-    <SupabaseContext.Provider value={supabase}>
+    <Context.Provider value={{ supabase, user, isLoading }}>
       {isInitialized ? children : <div>Memuat...</div>}
-    </SupabaseContext.Provider>
+    </Context.Provider>
   );
 }
 
-export default SupabaseProvider; 
+export const useSupabase = () => {
+  const context = useContext(Context);
+  if (context === undefined) {
+    throw new Error('useSupabase must be used inside SupabaseProvider');
+  }
+  return context;
+}; 

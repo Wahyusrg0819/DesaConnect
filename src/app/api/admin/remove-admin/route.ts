@@ -1,0 +1,135 @@
+import { createClient } from '@supabase/supabase-js';
+import { NextRequest, NextResponse } from 'next/server';
+import { cookies } from 'next/headers';
+import { createServerComponentClient } from '@supabase/auth-helpers-nextjs';
+import { isAuthorizedAdmin } from '@/lib/auth-utils';
+
+// Membuat Supabase admin client dengan service role key
+function getAdminSupabaseClient() {
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const supabaseServiceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  
+  if (!supabaseUrl || !supabaseServiceRoleKey) {
+    throw new Error('Missing Supabase credentials');
+  }
+  
+  return createClient(supabaseUrl, supabaseServiceRoleKey);
+}
+
+export async function POST(request: NextRequest) {
+  try {
+    // Verifikasi bahwa request datang dari admin yang sudah login
+    const cookieStore = cookies();
+    const supabase = createServerComponentClient({ cookies: () => cookieStore });
+    
+    // Ambil session user saat ini
+    const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+    
+    if (sessionError) {
+      console.error('Session error:', sessionError);
+      return NextResponse.json(
+        { error: 'Error mendapatkan session: ' + sessionError.message },
+        { status: 500 }
+      );
+    }
+    
+    if (!session || !session.user) {
+      return NextResponse.json(
+        { error: 'Unauthorized - User not logged in' },
+        { status: 401 }
+      );
+    }
+    
+    // Verifikasi bahwa user adalah admin
+    const userEmail = session.user.email;
+    const isAdmin = await isAuthorizedAdmin(userEmail);
+    
+    if (!isAdmin) {
+      return NextResponse.json(
+        { error: 'Forbidden - User is not an admin' },
+        { status: 403 }
+      );
+    }
+    
+    // Parse request body
+    const body = await request.json();
+    const { email } = body;
+    
+    if (!email || typeof email !== 'string') {
+      return NextResponse.json(
+        { error: 'Email invalid or missing' },
+        { status: 400 }
+      );
+    }
+    
+    // Tidak boleh menghapus diri sendiri
+    if (userEmail?.toLowerCase() === email.toLowerCase()) {
+      return NextResponse.json(
+        { error: 'Anda tidak dapat menghapus diri sendiri dari daftar admin' },
+        { status: 400 }
+      );
+    }
+    
+    // Gunakan admin client untuk bypass RLS
+    const adminSupabase = getAdminSupabaseClient();
+    
+    // Cek dulu jumlah admin yang ada
+    const { data: adminCount, error: countError } = await adminSupabase
+      .from('admin_list')
+      .select('id', { count: 'exact', head: true });
+    
+    if (countError) {
+      console.error('Error checking admin count:', countError);
+      return NextResponse.json(
+        { error: 'Error checking admin count: ' + countError.message },
+        { status: 500 }
+      );
+    }
+    
+    // Pastikan selalu ada minimal satu admin
+    if (adminCount !== null && adminCount.count <= 1) {
+      return NextResponse.json(
+        { error: 'Tidak dapat menghapus admin terakhir dalam sistem' },
+        { status: 400 }
+      );
+    }
+    
+    // Hapus admin dari database
+    const { data, error } = await adminSupabase
+      .from('admin_list')
+      .delete()
+      .eq('email', email.toLowerCase())
+      .select();
+    
+    if (error) {
+      console.error('Error removing admin:', error);
+      return NextResponse.json(
+        { error: 'Error removing admin: ' + error.message },
+        { status: 500 }
+      );
+    }
+    
+    if (!data || data.length === 0) {
+      return NextResponse.json(
+        { error: 'Admin tidak ditemukan' },
+        { status: 404 }
+      );
+    }
+    
+    return NextResponse.json(
+      { 
+        success: true, 
+        message: 'Admin removed successfully',
+        data
+      },
+      { status: 200 }
+    );
+    
+  } catch (error: any) {
+    console.error('Error in remove-admin API route:', error);
+    return NextResponse.json(
+      { error: 'Error removing admin: ' + error.message },
+      { status: 500 }
+    );
+  }
+} 

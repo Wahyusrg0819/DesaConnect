@@ -1,7 +1,7 @@
 import SubmissionList from '@/components/submissions/submission-list';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from '@/components/ui/separator';
-import { fetchSubmissions } from '@/lib/actions/submissions';
+import { fetchSubmissions, getSubmissionStats } from '@/lib/actions/submissions';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
 import { MessageSquarePlus, Activity, ArrowRight, Wrench, BookOpen, Stethoscope, HeartHandshake, Info, CheckCircle2 } from 'lucide-react';
@@ -22,7 +22,11 @@ export default async function Home({
   });
 
   // Fetch submissions based on parameters
-  const { submissions, totalCount, totalPages } = await fetchSubmissions(params);
+  const { submissions, totalCount: oldTotalCount, totalPages } = await fetchSubmissions(params);
+
+  // Fetch global stats (sinkron dengan Supabase)
+  const statsResult = await getSubmissionStats();
+  const stats = statsResult.success && statsResult.stats ? statsResult.stats : { total: 0, byStatus: {}, byCategory: {} };
 
   const categories = ['Infrastructure', 'Education', 'Health', 'Social Welfare', 'Other']; // Example categories
   const statuses = ['Pending', 'In Progress', 'Resolved'];
@@ -117,7 +121,7 @@ export default async function Home({
                   <MessageSquarePlus className="h-8 w-8 text-[#4CAF50]" />
                 </div>
                 <div>
-                  <p className="text-3xl font-bold text-gray-900">{totalCount}</p>
+                  <p className="text-3xl font-bold text-gray-900">{stats.total}</p>
                   <p className="text-gray-600">Total Laporan</p>
                 </div>
               </CardContent>
@@ -129,7 +133,7 @@ export default async function Home({
                   <Activity className="h-8 w-8 text-yellow-500" />
                 </div>
                 <div>
-                  <p className="text-3xl font-bold text-gray-900">{submissions.filter(s => s.status === 'In Progress').length}</p>
+                  <p className="text-3xl font-bold text-gray-900">{stats.byStatus['in progress'] || 0}</p>
                   <p className="text-gray-600">Sedang Diproses</p>
                 </div>
               </CardContent>
@@ -141,7 +145,7 @@ export default async function Home({
                   <CheckCircle2 className="h-8 w-8 text-green-500" />
                 </div>
                 <div>
-                  <p className="text-3xl font-bold text-gray-900">{submissions.filter(s => s.status === 'Resolved').length}</p>
+                  <p className="text-3xl font-bold text-gray-900">{stats.byStatus['resolved'] || 0}</p>
                   <p className="text-gray-600">Terselesaikan</p>
                 </div>
               </CardContent>
@@ -232,7 +236,7 @@ export default async function Home({
             statuses={statuses}
             currentPage={params.page}
             totalPages={totalPages}
-            totalCount={totalCount}
+            totalCount={oldTotalCount}
             limit={params.limit}
             currentFilters={{ 
               category: params.category, 

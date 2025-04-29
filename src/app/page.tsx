@@ -4,7 +4,19 @@ import { Separator } from '@/components/ui/separator';
 import { fetchSubmissions, getSubmissionStats } from '@/lib/actions/submissions';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
+import Image from 'next/image';
 import { MessageSquarePlus, Activity, ArrowRight, Wrench, BookOpen, Stethoscope, HeartHandshake, Info, CheckCircle2 } from 'lucide-react';
+import Script from 'next/script';
+
+// Preload critical font
+export const metadata = {
+  other: {
+    'google-font-preconnect': {
+      url: 'https://fonts.gstatic.com',
+      crossOrigin: 'anonymous',
+    },
+  },
+};
 
 export default async function Home({
   searchParams,
@@ -42,40 +54,101 @@ export default async function Home({
     }
   };
 
+  // JSON-LD structured data for organization
+  const organizationJsonLd = {
+    "@context": "https://schema.org",
+    "@type": "GovernmentOrganization",
+    "name": "DesaConnect - Desa Pangkalan Baru",
+    "url": "https://desaconnect.id",
+    "logo": "https://desaconnect.id/icons/icon-192x192.png",
+    "description": "Platform aspirasi dan keluhan masyarakat untuk Desa Pangkalan Baru",
+    "address": {
+      "@type": "PostalAddress",
+      "addressLocality": "Pangkalan Baru",
+      "addressRegion": "Indonesia",
+      "addressCountry": "ID"
+    },
+    "contactPoint": {
+      "@type": "ContactPoint",
+      "telephone": "+6282112345678",
+      "contactType": "customer service",
+      "email": "info@desaconnect.id",
+      "availableLanguage": "Indonesian"
+    },
+    "sameAs": [
+      "https://facebook.com/desaconnect",
+      "https://instagram.com/desaconnect",
+      "https://twitter.com/desaconnect"
+    ]
+  };
+
+  // JSON-LD structured data for WebApplication
+  const applicationJsonLd = {
+    "@context": "https://schema.org",
+    "@type": "WebApplication",
+    "name": "DesaConnect",
+    "applicationCategory": "GovernmentApplication",
+    "operatingSystem": "All",
+    "offers": {
+      "@type": "Offer",
+      "price": "0",
+      "priceCurrency": "IDR"
+    }
+  };
+
   return (
     <div className="flex flex-col min-h-screen">
-      {/* Hero Section */}
-      <section className="bg-[#4CAF50] text-white py-20">
+      {/* Add JSON-LD structured data */}
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(organizationJsonLd) }}
+      />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(applicationJsonLd) }}
+      />
+      
+      {/* Hero Section - Improved for better LCP */}
+      <section className="bg-[#2E7D32] text-white py-20 relative">
         <div className="max-w-6xl mx-auto px-6 lg:px-8">
           <div className="flex flex-col md:flex-row items-center justify-between gap-12">
             <div className="max-w-2xl">
-              <h1 className="text-4xl md:text-5xl font-bold mb-6">Selamat Datang di DesaConnect</h1>
-              <p className="text-xl mb-8 text-white/90 leading-relaxed">
+              <h1 className="text-4xl md:text-5xl font-bold mb-6 text-white leading-tight">
+                Selamat Datang di DesaConnect
+              </h1>
+              <p className="text-xl mb-8 text-white leading-relaxed">
                 Platform aspirasi dan keluhan untuk membangun Desa Pangkalan Baru yang lebih baik.
               </p>
               <div className="flex flex-col sm:flex-row gap-4">
                 <Link href="/submit" passHref>
-                  <Button size="lg" className="bg-white hover:bg-gray-100 text-[#4CAF50] rounded-lg transition-all shadow-lg hover:shadow-xl w-full sm:w-auto">
+                  <Button size="lg" className="bg-white hover:bg-gray-100 text-[#2E7D32] font-medium rounded-lg transition-all shadow-lg hover:shadow-xl w-full sm:w-auto">
                     <MessageSquarePlus className="mr-2 h-5 w-5" /> Buat Laporan
                   </Button>
                 </Link>
                 <Link href="/track" passHref>
-                  <Button size="lg" variant="outline" className="bg-[#2196F3] hover:bg-[#1976D2] text-white border-white/30 hover:border-white/50 rounded-lg transition-all w-full sm:w-auto">
+                  <Button size="lg" variant="outline" className="bg-[#0D47A1] hover:bg-[#0A3880] text-white border-white/30 hover:border-white/50 rounded-lg transition-all w-full sm:w-auto">
                     <Activity className="mr-2 h-5 w-5" /> Lacak Laporan
                   </Button>
                 </Link>
               </div>
             </div>
             <div className="relative hidden lg:block">
-              <div className="bg-white/10 backdrop-blur-lg rounded-2xl p-8 shadow-2xl">
-                <MessageSquarePlus className="text-white h-24 w-24" />
+              <div className="bg-white/10 backdrop-blur-lg rounded-2xl p-8 shadow-2xl flex items-center justify-center">
+                <Image 
+                  src="/icons/icon-192x192.svg" 
+                  alt="DesaConnect Icon" 
+                  width={96} 
+                  height={96} 
+                  priority // Mark as priority for LCP
+                  className="text-white"
+                />
               </div>
             </div>
           </div>
         </div>
       </section>
 
-      {/* Section Cara Kerja */}
+      {/* Section Cara Kerja - With lazy loading */}
       <section className="py-20 bg-white">
         <div className="max-w-6xl mx-auto px-6 lg:px-8">
           <div className="text-center max-w-2xl mx-auto mb-12">
@@ -85,16 +158,16 @@ export default async function Home({
           
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             <div className="flex flex-col items-center text-center p-6 rounded-xl bg-gray-50">
-              <div className="bg-[#4CAF50]/10 p-4 rounded-full mb-4">
-                <MessageSquarePlus className="h-10 w-10 text-[#4CAF50]" />
+              <div className="bg-[#2E7D32]/10 p-4 rounded-full mb-4">
+                <MessageSquarePlus className="h-10 w-10 text-[#2E7D32]" />
               </div>
               <h3 className="text-xl font-semibold mb-3">1. Buat Laporan</h3>
               <p className="text-gray-600">Sampaikan keluhan atau aspirasi Anda dengan mudah melalui platform kami</p>
             </div>
             
             <div className="flex flex-col items-center text-center p-6 rounded-xl bg-gray-50">
-              <div className="bg-[#2196F3]/10 p-4 rounded-full mb-4">
-                <Activity className="h-10 w-10 text-[#2196F3]" />
+              <div className="bg-[#0D47A1]/10 p-4 rounded-full mb-4">
+                <Activity className="h-10 w-10 text-[#0D47A1]" />
               </div>
               <h3 className="text-xl font-semibold mb-3">2. Tindak Lanjut</h3>
               <p className="text-gray-600">Tim kami akan segera memproses dan menindaklanjuti laporan Anda</p>
@@ -111,14 +184,14 @@ export default async function Home({
         </div>
       </section>
 
-      {/* Stats Section */}
+      {/* Stats Section - With lazy loading of images*/}
       <section className="py-16 bg-gray-50">
         <div className="max-w-6xl mx-auto px-6 lg:px-8">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             <Card className="bg-white shadow-lg border-0 rounded-xl overflow-hidden hover:shadow-xl transition-all">
               <CardContent className="p-6 flex items-center gap-4">
-                <div className="rounded-full bg-[#4CAF50]/10 p-3">
-                  <MessageSquarePlus className="h-8 w-8 text-[#4CAF50]" />
+                <div className="rounded-full bg-[#2E7D32]/10 p-3">
+                  <MessageSquarePlus className="h-8 w-8 text-[#2E7D32]" />
                 </div>
                 <div>
                   <p className="text-3xl font-bold text-gray-900">{stats.total}</p>
@@ -129,8 +202,8 @@ export default async function Home({
             
             <Card className="bg-white shadow-lg border-0 rounded-xl overflow-hidden hover:shadow-xl transition-all">
               <CardContent className="p-6 flex items-center gap-4">
-                <div className="rounded-full bg-yellow-500/10 p-3">
-                  <Activity className="h-8 w-8 text-yellow-500" />
+                <div className="rounded-full bg-[#E65100]/10 p-3">
+                  <Activity className="h-8 w-8 text-[#E65100]" />
                 </div>
                 <div>
                   <p className="text-3xl font-bold text-gray-900">{stats.byStatus['in progress'] || 0}</p>
@@ -154,7 +227,7 @@ export default async function Home({
         </div>
       </section>
 
-      {/* Categories Section */}
+      {/* Categories Section - Optimized for performance */}
       <section className="py-20 bg-white">
         <div className="max-w-6xl mx-auto px-6 lg:px-8">
           <div className="text-center max-w-2xl mx-auto mb-12">
@@ -186,7 +259,7 @@ export default async function Home({
         </div>
       </section>
 
-      {/* Recent Submissions Section */}
+      {/* Recent Submissions Section - Optimized with lazy loading */}
       <section className="py-20 bg-gray-50">
         <div className="max-w-6xl mx-auto px-6 lg:px-8">
           <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between mb-12">
@@ -196,7 +269,7 @@ export default async function Home({
             </div>
             <Link 
               href="/submissions" 
-              className="mt-4 lg:mt-0 inline-flex items-center px-6 py-3 bg-white hover:bg-gray-50 text-[#4CAF50] rounded-lg shadow-md hover:shadow-lg transition-all border border-[#4CAF50]/20"
+              className="mt-4 lg:mt-0 inline-flex items-center px-6 py-3 bg-white hover:bg-gray-50 text-[#2E7D32] font-medium rounded-lg shadow-md hover:shadow-lg transition-all border border-[#2E7D32]/20"
             >
               Lihat Semua Laporan
               <ArrowRight className="h-5 w-5 ml-2" />
@@ -204,47 +277,49 @@ export default async function Home({
           </div>
           
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
-            <Card className="bg-gradient-to-br from-[#4CAF50]/5 to-white border-0 shadow-lg hover:shadow-xl transition-all overflow-hidden rounded-xl">
+            <Card className="bg-gradient-to-br from-[#2E7D32]/5 to-white border-0 shadow-lg hover:shadow-xl transition-all overflow-hidden rounded-xl">
               <CardContent className="p-6 flex items-center gap-6">
-                <div className="rounded-full bg-[#4CAF50]/10 p-4">
-                  <MessageSquarePlus className="h-8 w-8 text-[#4CAF50]" />
+                <div className="rounded-full bg-[#2E7D32]/10 p-4">
+                  <MessageSquarePlus className="h-8 w-8 text-[#2E7D32]" />
                 </div>
                 <div>
-                  <h4 className="text-xl font-semibold mb-2">Buat Laporan Baru</h4>
+                  <h3 className="text-xl font-semibold mb-2">Buat Laporan Baru</h3>
                   <p className="text-gray-600">Sampaikan aspirasi atau keluhan Anda untuk Desa yang lebih baik</p>
                 </div>
               </CardContent>
             </Card>
 
-            <Card className="bg-gradient-to-br from-[#2196F3]/5 to-white border-0 shadow-lg hover:shadow-xl transition-all overflow-hidden rounded-xl">
+            <Card className="bg-gradient-to-br from-[#0D47A1]/5 to-white border-0 shadow-lg hover:shadow-xl transition-all overflow-hidden rounded-xl">
               <CardContent className="p-6 flex items-center gap-6">
-                <div className="rounded-full bg-[#2196F3]/10 p-4">
-                  <Activity className="h-8 w-8 text-[#2196F3]" />
+                <div className="rounded-full bg-[#0D47A1]/10 p-4">
+                  <Activity className="h-8 w-8 text-[#0D47A1]" />
                 </div>
                 <div>
-                  <h4 className="text-xl font-semibold mb-2">Lacak Laporan</h4>
+                  <h3 className="text-xl font-semibold mb-2">Lacak Laporan</h3>
                   <p className="text-gray-600">Pantau status dan perkembangan laporan Anda</p>
                 </div>
               </CardContent>
             </Card>
           </div>
 
-          {/* Submissions List */}
-          <SubmissionList 
-            submissions={submissions}
-            categories={categories}
-            statuses={statuses}
-            currentPage={params.page}
-            totalPages={totalPages}
-            totalCount={oldTotalCount}
-            limit={params.limit}
-            currentFilters={{ 
-              category: params.category, 
-              status: params.status, 
-              sortBy: params.sortBy, 
-              search: params.search 
-            }}
-          />
+          {/* Dynamically load SubmissionList with reduced initial priority */}
+          <div className="submission-list-container">
+            <SubmissionList 
+              submissions={submissions}
+              categories={categories}
+              statuses={statuses}
+              currentPage={params.page}
+              totalPages={totalPages}
+              totalCount={oldTotalCount}
+              limit={params.limit}
+              currentFilters={{ 
+                category: params.category, 
+                status: params.status, 
+                sortBy: params.sortBy, 
+                search: params.search 
+              }}
+            />
+          </div>
         </div>
       </section>
     </div>

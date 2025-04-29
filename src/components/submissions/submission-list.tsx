@@ -14,6 +14,7 @@ import type { Submission } from '@/lib/types'; // Assuming types are defined her
 import { formatDistanceToNow } from 'date-fns';
 import { id } from 'date-fns/locale'; // Import Indonesian locale for date formatting
 import Link from 'next/link';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 // Define category icons based on blueprint
 const categoryIcons: Record<string, React.ElementType> = {
@@ -54,94 +55,393 @@ export default function SubmissionList({
   const pathname = usePathname();
   const searchParams = useSearchParams();
 
-  // Local state for input values
-  const [searchTerm, setSearchTerm] = React.useState(currentFilters.search || '');
-  const [selectedCategory, setSelectedCategory] = React.useState(currentFilters.category || 'all');
-  const [selectedStatus, setSelectedStatus] = React.useState(currentFilters.status || 'all');
-  const [selectedSortBy, setSelectedSortBy] = React.useState(currentFilters.sortBy || 'date_desc');
-  const [isLoading, setIsLoading] = React.useState(false);
+  // Local state for input values with proper initialization
+  const [searchTerm, setSearchTerm] = useState(currentFilters.search || '');
+  const [selectedCategory, setSelectedCategory] = useState(currentFilters.category || 'all');
+  const [selectedStatus, setSelectedStatus] = useState(currentFilters.status || 'all');
+  const [selectedSortBy, setSelectedSortBy] = useState(currentFilters.sortBy || 'date_desc');
+  const [isLoading, setIsLoading] = useState(false);
+  
+  // Flags to prevent redundant operations
+  const isFirstRender = useRef(true);
+  const navigationInProgress = useRef(false);
+  const searchDebounceTimer = useRef<NodeJS.Timeout | null>(null);
+  const filterChangeTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const lastAppliedFilters = useRef({
+    category: currentFilters.category || 'all',
+    status: currentFilters.status || 'all',
+    search: currentFilters.search || '',
+    sortBy: currentFilters.sortBy || 'date_desc',
+    page: currentPage
+  });
 
-  const createQueryString = React.useCallback(
+  // Status mapping for consistent values
+  const statusMap = {
+    'Pending': 'pending',
+    'In Progress': 'in progress',
+    'Resolved': 'resolved',
+    'pending': 'pending',
+    'in progress': 'in progress',
+    'resolved': 'resolved'
+  } as const;
+
+  // Reverse status mapping for display
+  const reverseStatusMap = {
+    'pending': 'Pending',
+    'in progress': 'In Progress',
+    'resolved': 'Resolved'
+  };
+
+  // Create URL query string with proper handling of filter values
+  const createQueryString = useCallback(
     (params: Record<string, string | number | undefined>) => {
       const newSearchParams = new URLSearchParams(searchParams?.toString());
-      for (const [key, value] of Object.entries(params)) {
+      
+      Object.entries(params).forEach(([key, value]) => {
         if (value === undefined || value === '' || value === 'all') {
           newSearchParams.delete(key);
         } else {
-          newSearchParams.set(key, String(value));
+          if (key === 'status' && typeof value === 'string') {
+            // Ensure status is properly formatted for the backend
+            const normalizedStatus = statusMap[value as keyof typeof statusMap] || value.toLowerCase();
+            newSearchParams.set(key, normalizedStatus);
+          } else {
+            newSearchParams.set(key, String(value));
+          }
         }
+      });
+      
+      // Ensure page is reset when filters change
+      if (!params.hasOwnProperty('page')) {
+        newSearchParams.set('page', '1');
       }
-      // Reset page to 1 when filters/search/sort change, unless it's only a page change
-      if (params.page === undefined || Object.keys(params).length > 1) {
-         newSearchParams.set('page', '1');
-      }
+      
       return newSearchParams.toString();
     },
-    [searchParams]
+    [searchParams, statusMap]
   );
 
-  const handleFilterChange = React.useCallback(() => {
+  // Handle filter changes with throttle to prevent excessive requests
+  const handleFilterChange = useCallback(
+    (resetPage: boolean = true) => {
+      // Skip if navigation already in progress
+      if (navigationInProgress.current) return;
+
+      // Clear any pending timeout to avoid multiple requests
+      if (filterChangeTimeoutRef.current) {
+        clearTimeout(filterChangeTimeoutRef.current);
+      }
+
+      // Build current filter state
+      const currentFilterState = {
+        category: selectedCategory,
+        status: selectedStatus,
+        search: searchTerm,
+        sortBy: selectedSortBy,
+        page: resetPage ? 1 : currentPage
+      };
+
+      // Skip if filters haven't changed
+      if (
+        currentFilterState.category === lastAppliedFilters.current.category &&
+        currentFilterState.status === lastAppliedFilters.current.status &&
+        currentFilterState.search === lastAppliedFilters.current.search &&
+        currentFilterState.sortBy === lastAppliedFilters.current.sortBy &&
+        currentFilterState.page === lastAppliedFilters.current.page
+      ) {
+        return;
+      }
+
+      // Set loading state immediately
+      setIsLoading(true);
+      
+      // Update last applied filters immediately to prevent duplicate requests
+      lastAppliedFilters.current = { ...currentFilterState };
+      
+      // Execute filter immediately without throttling for manual filter button press
+      const queryString = createQueryString({
+        category: selectedCategory,
+        status: selectedStatus,
+        search: searchTerm,
+        sortBy: selectedSortBy,
+        ...(resetPage ? { page: 1 } : { page: currentPage })
+      });
+      
+      try {
+        navigationInProgress.current = true;
+        
+        // Push route change - Next.js will automatically trigger a server fetch
+        router.push(`${pathname}?${queryString}`, { scroll: false });
+        
+        // Add safety timeout to ensure loading state is eventually reset even if 
+        // the route change doesn't complete properly
+        setTimeout(() => {
+          if (isLoading) {
+            setIsLoading(false);
+            navigationInProgress.current = false;
+          }
+        }, 5000); // 5-second safety timeout
+      } catch (error) {
+        console.error('Error updating filters:', error);
+        setIsLoading(false);
+        navigationInProgress.current = false;
+      }
+    },
+    [createQueryString, pathname, router, selectedCategory, selectedStatus, searchTerm, selectedSortBy, currentPage, isLoading]
+  );
+
+  // Reset filters to default
+  const handleResetFilters = useCallback(() => {
+    if (navigationInProgress.current) return;
+    
+    // Check if there are any active filters to reset
+    if (
+      selectedCategory === 'all' && 
+      selectedStatus === 'all' && 
+      !searchTerm && 
+      selectedSortBy === 'date_desc'
+    ) {
+      return; // Nothing to reset
+    }
+    
+    // Clear any pending timers
+    if (filterChangeTimeoutRef.current) {
+      clearTimeout(filterChangeTimeoutRef.current);
+    }
+    if (searchDebounceTimer.current) {
+      clearTimeout(searchDebounceTimer.current);
+    }
+    
+    // Update local state
+    setSelectedCategory('all');
+    setSelectedStatus('all');
+    setSearchTerm('');
+    setSelectedSortBy('date_desc');
+    
+    // Trigger filter change with clean values
+    setIsLoading(true);
+    
+    // Create a clean query string
+    const queryString = createQueryString({
+      page: 1,
+      // Explicitly set to undefined to ensure they're removed
+      category: undefined,
+      status: undefined,
+      search: undefined,
+      sortBy: undefined
+    });
+    
+    // Update last applied filters
+    lastAppliedFilters.current = {
+      category: 'all',
+      status: 'all',
+      search: '',
+      sortBy: 'date_desc',
+      page: 1
+    };
+    
+    navigationInProgress.current = true;
+    
+    try {
+      // Directly navigate without Promise.resolve wrapping
+      router.push(`${pathname}?${queryString}`, { scroll: false });
+      
+      // Add safety timeout to ensure loading state is reset even if navigation fails
+      setTimeout(() => {
+        if (isLoading) {
+          setIsLoading(false);
+          navigationInProgress.current = false;
+        }
+      }, 5000); // 5-second safety timeout
+    } catch (error) {
+      console.error('Error resetting filters:', error);
+      setIsLoading(false);
+      navigationInProgress.current = false;
+    }
+  }, [createQueryString, pathname, router, searchTerm, selectedCategory, selectedStatus, selectedSortBy, isLoading]);
+
+  // Handle search with improved immediate processing
+  useEffect(() => {
+    if (isFirstRender.current || navigationInProgress.current) return;
+    
+    // Skip if search term matches the last applied search
+    if (searchTerm === lastAppliedFilters.current.search) return;
+    
+    if (searchDebounceTimer.current) {
+      clearTimeout(searchDebounceTimer.current);
+    }
+    
+    // Set a visual indicator that search is happening without triggering loading state
+    searchDebounceTimer.current = setTimeout(() => {
+      handleFilterChange(true);
+    }, 500); // Reduced from 800ms to make search feel more responsive
+
+    return () => {
+      if (searchDebounceTimer.current) {
+        clearTimeout(searchDebounceTimer.current);
+      }
+    };
+  }, [searchTerm, handleFilterChange]);
+
+  // Listen for route changes to ensure loading state is properly managed
+  useEffect(() => {
+    // In Next.js App Router, we don't have access to router events directly
+    // Instead, we'll use a cleanup mechanism when the component unmounts
+    
+    // Create a flag to track if the component is still mounted
+    const isMounted = { current: true };
+    
+    // Add safety timeout to reset loading state if it gets stuck
+    const safetyTimer = setTimeout(() => {
+      if (isMounted.current && isLoading) {
+        setIsLoading(false);
+        navigationInProgress.current = false;
+      }
+    }, 5000);
+    
+    return () => {
+      isMounted.current = false;
+      clearTimeout(safetyTimer);
+    };
+  }, [isLoading]);
+
+  // Clean up all pending operations when component unmounts
+  useEffect(() => {
+    return () => {
+      // Clear any pending timers
+      if (filterChangeTimeoutRef.current) {
+        clearTimeout(filterChangeTimeoutRef.current);
+      }
+      if (searchDebounceTimer.current) {
+        clearTimeout(searchDebounceTimer.current);
+      }
+      
+      // Reset flags
+      navigationInProgress.current = false;
+    };
+  }, []);
+
+  // Initialize filters from URL on first render only
+  useEffect(() => {
+    if (!isFirstRender.current) return;
+    
+    const currentCategory = searchParams?.get('category') || 'all';
+    const currentStatus = searchParams?.get('status') || 'all';
+    const currentSearch = searchParams?.get('search') || '';
+    const currentSortBy = searchParams?.get('sortBy') || 'date_desc';
+
+    // Initialize last applied filters
+    lastAppliedFilters.current = {
+      category: currentCategory,
+      status: currentStatus,
+      search: currentSearch,
+      sortBy: currentSortBy,
+      page: currentPage
+    };
+
+    // Only update state if different from initial values
+    if (currentCategory !== selectedCategory) {
+      setSelectedCategory(currentCategory);
+    }
+    
+    if (currentStatus !== selectedStatus) {
+      setSelectedStatus(currentStatus);
+    }
+    
+    if (currentSearch !== searchTerm) {
+      setSearchTerm(currentSearch);
+    }
+    
+    if (currentSortBy !== selectedSortBy) {
+      setSelectedSortBy(currentSortBy);
+    }
+
+    isFirstRender.current = false;
+  }, [searchParams, currentPage]);
+
+  // Sync component state with URL parameters when they change externally
+  useEffect(() => {
+    if (isFirstRender.current || navigationInProgress.current) return;
+    
+    const urlCategory = searchParams?.get('category') || 'all';
+    const urlStatus = searchParams?.get('status') || 'all';
+    const urlSearch = searchParams?.get('search') || '';
+    const urlSortBy = searchParams?.get('sortBy') || 'date_desc';
+
+    // Only update if URL params have changed from what we know
+    const needsUpdate = 
+      urlCategory !== selectedCategory ||
+      urlStatus !== selectedStatus ||
+      urlSearch !== searchTerm ||
+      urlSortBy !== selectedSortBy;
+
+    if (needsUpdate) {
+      if (urlCategory !== selectedCategory) setSelectedCategory(urlCategory);
+      if (urlStatus !== selectedStatus) setSelectedStatus(urlStatus);
+      if (urlSearch !== searchTerm) setSearchTerm(urlSearch);
+      if (urlSortBy !== selectedSortBy) setSelectedSortBy(urlSortBy);
+      
+      // Update last applied filters
+      lastAppliedFilters.current = {
+        category: urlCategory,
+        status: urlStatus,
+        search: urlSearch,
+        sortBy: urlSortBy,
+        page: currentPage
+      };
+    }
+  }, [searchParams, currentPage]);
+
+  // Handle form submission
+  const handleSearchSubmit = (event?: React.FormEvent<HTMLFormElement>) => {
+    event?.preventDefault();
+    
+    // Skip if navigation is in progress
+    if (navigationInProgress.current) return;
+    
+    // Clear search debounce timer
+    if (searchDebounceTimer.current) {
+      clearTimeout(searchDebounceTimer.current);
+      searchDebounceTimer.current = null;
+    }
+    
+    handleFilterChange(true);
+  };
+
+  // Handle page changes
+  const handlePageChange = (page: number) => {
+    // Skip if navigation is in progress or page hasn't changed
+    if (navigationInProgress.current || page === currentPage) return;
+    
     setIsLoading(true);
     const queryString = createQueryString({
       category: selectedCategory,
       status: selectedStatus,
-      sortBy: selectedSortBy,
       search: searchTerm,
+      sortBy: selectedSortBy,
+      page
     });
-    router.push(`${pathname}?${queryString}`);
-    // Simulate loading state for better UX
-    setTimeout(() => setIsLoading(false), 300);
-  }, [createQueryString, pathname, router, selectedCategory, selectedStatus, selectedSortBy, searchTerm]);
-
-  // Debounce search term updates
-  React.useEffect(() => {
-    const handler = setTimeout(() => {
-      // Only trigger filter change if searchTerm has actually changed from the URL param
-      if (searchTerm !== (currentFilters.search || '')) {
-         handleFilterChange();
-      }
-    }, 500); // 500ms debounce delay
-
-    return () => {
-      clearTimeout(handler);
+    
+    // Update last applied filters
+    lastAppliedFilters.current = {
+      ...lastAppliedFilters.current,
+      page
     };
-  }, [searchTerm, handleFilterChange, currentFilters.search]);
-
-
-  const handleSearchSubmit = (event?: React.FormEvent<HTMLFormElement>) => {
-       event?.preventDefault(); // Prevent default form submission if used
-       // Trigger filter change immediately on form submit (Enter key)
-       if (searchTerm !== (currentFilters.search || '')) {
-           handleFilterChange();
-       }
-  }
-
-
-  const handlePageChange = (page: number) => {
-    setIsLoading(true);
-    const queryString = createQueryString({
-        category: selectedCategory,
-        status: selectedStatus,
-        sortBy: selectedSortBy,
-        search: searchTerm,
-        page: page // Keep current filters, only change page
-    });
-    router.push(`${pathname}?${queryString}`);
-    // Simulate loading state for better UX
-    setTimeout(() => setIsLoading(false), 300);
+    
+    router.push(`${pathname}?${queryString}`, { scroll: false });
   };
 
   // Color mapping based on blueprint
   const getStatusBadgeColor = (status: string): string => {
     switch (status.toLowerCase()) {
       case 'resolved':
-        return 'bg-[#1B5E20] text-white'; // Darker Green for better contrast
+        return 'bg-[#1B5E20] text-white hover:bg-[#1B5E20]/90';
       case 'in progress':
-        return 'bg-[#7F4700] text-white'; // Even darker orange for better contrast
+        return 'bg-[#7F4700] text-white hover:bg-[#7F4700]/90';
       case 'pending':
-        return 'bg-[#424242] text-white'; // Darker Gray for better contrast
+        return 'bg-[#424242] text-white hover:bg-[#424242]/90';
       default:
-        return 'bg-[#424242] text-white';
+        return 'bg-[#424242] text-white hover:bg-[#424242]/90';
     }
   };
 
@@ -170,15 +470,12 @@ export default function SubmissionList({
         <CardHeader className="pb-2 border-b border-[#F0F0F0]">
           <CardTitle className="text-xl font-semibold flex items-center gap-2">
             <Filter className="h-5 w-5 text-[#4CAF50]"/> 
-            <span>Filter & Cari Laporan</span>
+            <span>Filter Laporan</span>
           </CardTitle>
-          <CardDescription>
-            Gunakan filter untuk menemukan laporan yang relevan
-          </CardDescription>
         </CardHeader>
         <CardContent className="pt-6">
           <div className="space-y-6">
-            {/* Search Input */}
+            {/* Search Input with immediate feedback */}
             <form onSubmit={handleSearchSubmit} className="w-full">
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
@@ -189,16 +486,21 @@ export default function SubmissionList({
                   className="pl-10 w-full rounded-lg border-[#F0F0F0] focus-visible:ring-[#2196F3]/50"
                 />
               </div>
-              {/* Hidden submit button for form submission on enter */}
-              <button type="submit" hidden />
             </form>
 
-            {/* Filter Controls */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-              {/* Category Filter */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              {/* Category Filter with active state indication */}
               <div>
-                <label htmlFor="category-select" className="text-sm font-medium text-gray-500 mb-1.5 block">Kategori</label>
-                <Select value={selectedCategory} onValueChange={(value) => { setSelectedCategory(value); }}>
+                <label htmlFor="category-select" className="text-sm font-medium text-gray-500 mb-1.5 block">
+                  Kategori {selectedCategory !== 'all' && `(${selectedCategory})`}
+                </label>
+                <Select 
+                  value={selectedCategory} 
+                  onValueChange={(value) => {
+                    if (value === selectedCategory) return;
+                    setSelectedCategory(value);
+                  }}
+                >
                   <SelectTrigger id="category-select" className="w-full rounded-lg border-[#F0F0F0]">
                     <SelectValue placeholder="Semua Kategori" />
                   </SelectTrigger>
@@ -218,8 +520,16 @@ export default function SubmissionList({
 
               {/* Status Filter */}
               <div>
-                <label htmlFor="status-select" className="text-sm font-medium text-gray-500 mb-1.5 block">Status</label>
-                <Select value={selectedStatus} onValueChange={(value) => { setSelectedStatus(value); }}>
+                <label htmlFor="status-select" className="text-sm font-medium text-gray-500 mb-1.5 block">
+                  Status {selectedStatus !== 'all' && `(${selectedStatus})`}
+                </label>
+                <Select 
+                  value={selectedStatus} 
+                  onValueChange={(value) => {
+                    if (value === selectedStatus) return;
+                    setSelectedStatus(value);
+                  }}
+                >
                   <SelectTrigger id="status-select" className="w-full rounded-lg border-[#F0F0F0]">
                     <SelectValue placeholder="Semua Status" />
                   </SelectTrigger>
@@ -228,7 +538,7 @@ export default function SubmissionList({
                     {statuses.map((stat) => (
                       <SelectItem key={stat} value={stat}>
                         <div className="flex items-center gap-2">
-                          {getStatusIcon(stat)}
+                          {getStatusIcon(stat.toLowerCase())}
                           <span>{stat}</span>
                         </div>
                       </SelectItem>
@@ -236,51 +546,56 @@ export default function SubmissionList({
                   </SelectContent>
                 </Select>
               </div>
-
-              {/* Sort By */}
-              <div>
-                <label htmlFor="sortby-select" className="text-sm font-medium text-gray-500 mb-1.5 block">Urutkan</label>
-                <Select value={selectedSortBy} onValueChange={(value) => { setSelectedSortBy(value); }}>
-                  <SelectTrigger id="sortby-select" className="w-full rounded-lg border-[#F0F0F0]">
-                    <SelectValue placeholder="Urutkan Berdasarkan" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="date_desc">
-                      <div className="flex items-center gap-2">
-                        <ArrowUpDown className="h-4 w-4" />
-                        <span>Terbaru</span>
-                      </div>
-                    </SelectItem>
-                    <SelectItem value="date_asc">
-                      <div className="flex items-center gap-2">
-                        <ArrowUpDown className="h-4 w-4" />
-                        <span>Terlama</span>
-                      </div>
-                    </SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
             </div>
-            
-            {/* Apply Filters Button - Blueprint accent color blue #2196F3 */}
-            <Button 
-              onClick={handleFilterChange} 
-              className="w-full sm:w-auto px-6 rounded-lg shadow-sm bg-[#0D47A1] hover:bg-[#0A3880] text-white transition-all"
-              disabled={isLoading}
-            >
-              {isLoading ? (
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              ) : (
-                <Filter className="mr-2 h-4 w-4" />
-              )}
-              Terapkan Filter
-            </Button>
+
+            {/* Filter Button Section */}
+            <div className="flex justify-between mt-2">
+              <Button 
+                type="button"
+                onClick={handleResetFilters}
+                variant="outline"
+                className="border-gray-200 text-gray-700 hover:bg-gray-50 flex items-center gap-2"
+                disabled={isLoading || (selectedCategory === 'all' && selectedStatus === 'all' && !searchTerm && selectedSortBy === 'date_desc')}
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-refresh-ccw">
+                  <path d="M3 2v6h6"></path>
+                  <path d="M21 12A9 9 0 0 0 6 5.3L3 8"></path>
+                  <path d="M21 22v-6h-6"></path>
+                  <path d="M3 12a9 9 0 0 0 15 6.7l3-2.7"></path>
+                </svg>
+                Reset Filter
+              </Button>
+
+              <Button 
+                type="button"
+                onClick={() => handleFilterChange(true)}
+                className="bg-[#2E7D32] hover:bg-[#1B5E20] text-white flex items-center gap-2"
+                disabled={isLoading}
+              >
+                <Filter className="h-4 w-4" />
+                {isLoading ? (
+                  <>
+                    <Loader2 className="h-4 w-4 mr-1 animate-spin" />
+                    Memproses...
+                  </>
+                ) : 'Terapkan Filter'}
+              </Button>
+            </div>
           </div>
         </CardContent>
-        <CardFooter className="text-sm text-gray-500 border-t border-[#F0F0F0] bg-[#F0F0F0]/30">
+        <CardFooter className="border-t border-[#F0F0F0] bg-gray-50 py-3">
           <div className="flex items-center gap-2">
             <Sparkles className="h-4 w-4 text-[#4CAF50]" />
-            Menampilkan {submissions.length} dari {totalCount} laporan
+            <span className="text-sm text-gray-600">
+              Menampilkan {submissions.length} dari {totalCount} laporan
+              {(selectedCategory !== 'all' || selectedStatus !== 'all' || searchTerm) && (
+                <span className="ml-1">
+                  {selectedCategory !== 'all' && ` • Kategori: ${selectedCategory}`}
+                  {selectedStatus !== 'all' && ` • Status: ${selectedStatus}`}
+                  {searchTerm && ` • Pencarian: "${searchTerm}"`}
+                </span>
+              )}
+            </span>
           </div>
         </CardFooter>
       </Card>
@@ -439,7 +754,7 @@ export default function SubmissionList({
             <PaginationContent>
               <PaginationItem>
                 <PaginationPrevious
-                  href={currentPage > 1 ? `${pathname}?${createQueryString({ page: currentPage - 1, category: selectedCategory, status: selectedStatus, sortBy: selectedSortBy, search: searchTerm })}` : '#'}
+                  href={currentPage > 1 ? `${pathname}?${createQueryString({ page: currentPage - 1, category: selectedCategory, status: selectedStatus, search: searchTerm })}` : '#'}
                   aria-disabled={currentPage <= 1}
                   tabIndex={currentPage <= 1 ? -1 : undefined}
                   className={`${currentPage <= 1 ? "pointer-events-none opacity-50" : ""} text-[#0D47A1]`}
@@ -458,7 +773,7 @@ export default function SubmissionList({
               {Array.from({ length: totalPages }, (_, i) => i + 1).map(page => (
                 <PaginationItem key={page}>
                   <PaginationLink
-                    href={`${pathname}?${createQueryString({ page: page, category: selectedCategory, status: selectedStatus, sortBy: selectedSortBy, search: searchTerm })}`}
+                    href={`${pathname}?${createQueryString({ page: page, category: selectedCategory, status: selectedStatus, search: searchTerm })}`}
                     isActive={currentPage === page}
                     aria-current={currentPage === page ? "page" : undefined}
                     className={currentPage === page ? "bg-[#4CAF50] text-white hover:bg-[#4CAF50]/90" : "text-gray-700 hover:bg-[#F0F0F0]"}
@@ -474,7 +789,7 @@ export default function SubmissionList({
 
               <PaginationItem>
                 <PaginationNext
-                  href={currentPage < totalPages ? `${pathname}?${createQueryString({ page: currentPage + 1, category: selectedCategory, status: selectedStatus, sortBy: selectedSortBy, search: searchTerm })}` : '#'}
+                  href={currentPage < totalPages ? `${pathname}?${createQueryString({ page: currentPage + 1, category: selectedCategory, status: selectedStatus, search: searchTerm })}` : '#'}
                   aria-disabled={currentPage >= totalPages}
                   tabIndex={currentPage >= totalPages ? -1 : undefined}
                   className={`${currentPage >= totalPages ? "pointer-events-none opacity-50" : ""} text-[#0D47A1]`}

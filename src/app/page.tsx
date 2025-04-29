@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import Link from 'next/link';
 import Image from 'next/image';
 import { MessageSquarePlus, Activity, ArrowRight, Wrench, BookOpen, Stethoscope, HeartHandshake, Info, CheckCircle2 } from 'lucide-react';
+import { Users, Building, HomeIcon, FileText, ClipboardList, Megaphone } from 'lucide-react';
 import Script from 'next/script';
 
 // Preload critical font
@@ -23,15 +24,43 @@ export default async function Home({
 }: {
   searchParams?: { [key: string]: string | string[] | undefined };
 }) {
-  // Extract and await search parameters for filtering, sorting, searching, and pagination
-  const params = await Promise.resolve({
-    category: typeof searchParams?.category === 'string' ? searchParams.category : undefined,
-    status: typeof searchParams?.status === 'string' ? searchParams.status : undefined,
-    sortBy: typeof searchParams?.sortBy === 'string' ? searchParams.sortBy : 'date_desc', // Default sort
-    search: typeof searchParams?.search === 'string' ? searchParams.search : undefined,
-    page: typeof searchParams?.page === 'string' ? parseInt(searchParams.page, 10) : 1,
-    limit: typeof searchParams?.limit === 'string' ? parseInt(searchParams.limit, 10) : 10 // Default items per page
-  });
+  // Create a properly awaited searchParams object
+  const awaitedSearchParams = await Promise.resolve(searchParams || {});
+  
+  // Extract parameters after awaiting
+  const category = typeof awaitedSearchParams.category === 'string' 
+    ? awaitedSearchParams.category 
+    : undefined;
+    
+  const status = typeof awaitedSearchParams.status === 'string' 
+    ? awaitedSearchParams.status 
+    : undefined;
+    
+  const sortBy = typeof awaitedSearchParams.sortBy === 'string' 
+    ? awaitedSearchParams.sortBy 
+    : 'date_desc';
+    
+  const search = typeof awaitedSearchParams.search === 'string' 
+    ? awaitedSearchParams.search 
+    : undefined;
+    
+  const page = typeof awaitedSearchParams.page === 'string' 
+    ? parseInt(awaitedSearchParams.page, 10) 
+    : 1;
+    
+  const limit = typeof awaitedSearchParams.limit === 'string' 
+    ? parseInt(awaitedSearchParams.limit, 10) 
+    : 10;
+
+  // Create params object after individual extraction
+  const params = {
+    category,
+    status,
+    sortBy,
+    search,
+    page,
+    limit
+  };
 
   // Fetch submissions based on parameters
   const { submissions, totalCount: oldTotalCount, totalPages } = await fetchSubmissions(params);
@@ -122,30 +151,43 @@ export default async function Home({
               <div className="flex flex-col sm:flex-row gap-4">
                 <Link href="/submit" passHref>
                   <Button size="lg" className="bg-white hover:bg-gray-100 text-[#2E7D32] font-medium rounded-lg transition-all shadow-lg hover:shadow-xl w-full sm:w-auto">
-                    <MessageSquarePlus className="mr-2 h-5 w-5" /> Buat Laporan
+                    <Megaphone className="mr-2 h-5 w-5 flex-shrink-0" aria-hidden="true" /> Buat Laporan
                   </Button>
                 </Link>
                 <Link href="/track" passHref>
                   <Button size="lg" variant="outline" className="bg-[#0D47A1] hover:bg-[#0A3880] text-white border-white/30 hover:border-white/50 rounded-lg transition-all w-full sm:w-auto">
-                    <Activity className="mr-2 h-5 w-5" /> Lacak Laporan
+                    <Activity className="mr-2 h-5 w-5 flex-shrink-0" aria-hidden="true" /> Lacak Laporan
                   </Button>
                 </Link>
               </div>
             </div>
             <div className="relative hidden lg:block">
-              <div className="bg-white/10 backdrop-blur-lg rounded-2xl p-8 shadow-2xl flex items-center justify-center">
+              <div className="bg-white/15 backdrop-blur-md rounded-2xl p-8 shadow-2xl flex items-center justify-center transform hover:scale-105 transition-all duration-300 border border-white/20">
                 <Image 
-                  src="/icons/icon-192x192.svg" 
+                  src="/icons/icon-512x512.svg" 
                   alt="DesaConnect Icon" 
-                  width={96} 
-                  height={96} 
-                  priority // Mark as priority for LCP
-                  className="text-white"
+                  width={140} 
+                  height={140} 
+                  priority 
+                  className="drop-shadow-lg"
                 />
+              </div>
+              <div className="absolute -top-4 -right-4 bg-white/20 backdrop-blur-sm w-12 h-12 rounded-full flex items-center justify-center animate-pulse">
+                <Building className="h-6 w-6 text-white" />
+              </div>
+              <div className="absolute -bottom-4 -left-4 bg-white/20 backdrop-blur-sm w-12 h-12 rounded-full flex items-center justify-center animate-pulse" style={{ animationDelay: "0.5s" }}>
+                <Users className="h-6 w-6 text-white" />
+              </div>
+              <div className="absolute top-1/2 right-[-50px] transform -translate-y-1/2 bg-white/20 backdrop-blur-sm w-10 h-10 rounded-full flex items-center justify-center animate-pulse" style={{ animationDelay: "1s" }}>
+                <HomeIcon className="h-5 w-5 text-white" />
               </div>
             </div>
           </div>
         </div>
+        
+        {/* Decorative background elements */}
+        <div className="absolute top-12 left-12 w-12 h-12 rounded-full bg-white/5 animate-pulse"></div>
+        <div className="absolute bottom-12 right-12 w-20 h-20 rounded-full bg-white/5 animate-pulse" style={{ animationDelay: "0.7s" }}></div>
       </section>
 
       {/* Section Cara Kerja - With lazy loading */}
@@ -159,7 +201,7 @@ export default async function Home({
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             <div className="flex flex-col items-center text-center p-6 rounded-xl bg-gray-50">
               <div className="bg-[#2E7D32]/10 p-4 rounded-full mb-4">
-                <MessageSquarePlus className="h-10 w-10 text-[#2E7D32]" />
+                <Megaphone className="h-10 w-10 text-[#2E7D32]" />
               </div>
               <h3 className="text-xl font-semibold mb-3">1. Buat Laporan</h3>
               <p className="text-gray-600">Sampaikan keluhan atau aspirasi Anda dengan mudah melalui platform kami</p>
@@ -191,7 +233,7 @@ export default async function Home({
             <Card className="bg-white shadow-lg border-0 rounded-xl overflow-hidden hover:shadow-xl transition-all">
               <CardContent className="p-6 flex items-center gap-4">
                 <div className="rounded-full bg-[#2E7D32]/10 p-3">
-                  <MessageSquarePlus className="h-8 w-8 text-[#2E7D32]" />
+                  <ClipboardList className="h-8 w-8 text-[#2E7D32]" />
                 </div>
                 <div>
                   <p className="text-3xl font-bold text-gray-900">{stats.total}</p>
@@ -227,60 +269,19 @@ export default async function Home({
         </div>
       </section>
 
-      {/* Categories Section - Optimized for performance */}
-      <section className="py-20 bg-white">
-        <div className="max-w-6xl mx-auto px-6 lg:px-8">
-          <div className="text-center max-w-2xl mx-auto mb-12">
-            <h2 className="text-3xl font-bold mb-4 text-gray-900">Kategori Laporan</h2>
-            <p className="text-gray-600">Pilih kategori yang sesuai dengan laporan Anda</p>
-          </div>
-          
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-6">
-            {categories.map((category) => (
-              <Link 
-                key={category} 
-                href={`/?category=${category}`} 
-                className="flex flex-col items-center p-6 bg-white rounded-xl shadow-md hover:shadow-xl transition-all border border-gray-100 group"
-              >
-                <div className={`
-                  ${category === 'Infrastructure' ? 'bg-blue-500/10 group-hover:bg-blue-500/20' : ''}
-                  ${category === 'Education' ? 'bg-yellow-500/10 group-hover:bg-yellow-500/20' : ''}
-                  ${category === 'Health' ? 'bg-red-500/10 group-hover:bg-red-500/20' : ''}
-                  ${category === 'Social Welfare' ? 'bg-purple-500/10 group-hover:bg-purple-500/20' : ''}
-                  ${category === 'Other' ? 'bg-gray-500/10 group-hover:bg-gray-500/20' : ''}
-                  p-4 rounded-full mb-4 transition-colors
-                `}>
-                  {getCategoryIcon(category)}
-                </div>
-                <span className="font-medium text-center text-gray-900">{category}</span>
-              </Link>
-            ))}
-          </div>
-        </div>
-      </section>
-
       {/* Recent Submissions Section - Optimized with lazy loading */}
       <section className="py-20 bg-gray-50">
         <div className="max-w-6xl mx-auto px-6 lg:px-8">
-          <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between mb-12">
-            <div>
-              <h2 className="text-3xl font-bold text-gray-900 mb-4">Laporan Terbaru</h2>
-              <p className="text-gray-600">Lihat laporan terbaru dari masyarakat Desa Pangkalan Baru</p>
-            </div>
-            <Link 
-              href="/submissions" 
-              className="mt-4 lg:mt-0 inline-flex items-center px-6 py-3 bg-white hover:bg-gray-50 text-[#2E7D32] font-medium rounded-lg shadow-md hover:shadow-lg transition-all border border-[#2E7D32]/20"
-            >
-              Lihat Semua Laporan
-              <ArrowRight className="h-5 w-5 ml-2" />
-            </Link>
+          <div className="mb-12">
+            <h2 className="text-3xl font-bold text-gray-900 mb-4">Laporan Terbaru</h2>
+            <p className="text-gray-600">Lihat laporan terbaru dari masyarakat Desa Pangkalan Baru</p>
           </div>
           
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
             <Card className="bg-gradient-to-br from-[#2E7D32]/5 to-white border-0 shadow-lg hover:shadow-xl transition-all overflow-hidden rounded-xl">
               <CardContent className="p-6 flex items-center gap-6">
                 <div className="rounded-full bg-[#2E7D32]/10 p-4">
-                  <MessageSquarePlus className="h-8 w-8 text-[#2E7D32]" />
+                  <Megaphone className="h-8 w-8 text-[#2E7D32]" />
                 </div>
                 <div>
                   <h3 className="text-xl font-semibold mb-2">Buat Laporan Baru</h3>

@@ -7,6 +7,25 @@ import path from 'path';
 import { supabase } from '@/lib/supabase'; // Import Supabase client
 import { v4 as uuidv4 } from 'uuid'; // Import untuk membuat UUID
 
+// Add type definitions at the top of the file after imports
+type SubmissionStatus = 'pending' | 'in progress' | 'resolved';
+type DisplayStatus = 'Pending' | 'In Progress' | 'Resolved';
+
+// Status mapping constant
+const STATUS_MAP: Record<string, SubmissionStatus> = {
+  'Pending': 'pending',
+  'In Progress': 'in progress',
+  'Resolved': 'resolved',
+  'pending': 'pending',
+  'in progress': 'in progress',
+  'resolved': 'resolved'
+} as const;
+
+// Validate if a status string is a valid SubmissionStatus
+function isValidStatus(status: string): status is SubmissionStatus {
+  return ['pending', 'in progress', 'resolved'].includes(status.toLowerCase());
+}
+
 // --- Zod Schema for Input Validation ---
 const submissionSchema = z.object({
   name: z.string().optional(),
@@ -168,7 +187,7 @@ export async function fetchSubmissions(params: {
   search?: string;
   page?: number;
   limit?: number;
-  isPublicView?: boolean; // Flag untuk memfilter data sensitif untuk tampilan publik
+  isPublicView?: boolean;
 }): Promise<{ submissions: Submission[]; totalCount: number; totalPages: number; }> {
   try {
     const { category, status, sortBy = 'date_desc', search, page = 1, limit = 10, isPublicView = true } = params;
@@ -185,33 +204,28 @@ export async function fetchSubmissions(params: {
 
     // Tambahkan filter berdasarkan status
     if (status && status !== 'all') {
-      // Ensure status is one of the valid options
-      const validStatus = status.toLowerCase() as 'pending' | 'in progress' | 'resolved';
-      query = query.eq('status', validStatus);
+      // Convert and validate status
+      const normalizedStatus = STATUS_MAP[status] || status.toLowerCase();
+      if (!isValidStatus(normalizedStatus)) {
+        console.error('Invalid status:', status);
+        console.error('Normalized status:', normalizedStatus);
+        throw new Error(`Invalid status value: ${status}`);
+      }
+      query = query.eq('status', normalizedStatus);
     }
 
     // Tambahkan pencarian
-    if (search) {
-      // PostgreSQL ilike operator untuk pencarian case-insensitive
-      // Ini akan mencari pada beberapa kolom
-      query = query.or(`description.ilike.%${search}%,category.ilike.%${search}%,reference_id.ilike.%${search}%,name.ilike.%${search}%`);
+    if (search && search.trim() !== '') {
+      query = query.or(
+        `description.ilike.%${search}%,reference_id.ilike.%${search}%,name.ilike.%${search}%,category.ilike.%${search}%`
+      );
     }
 
     // Tambahkan pengurutan
-    switch (sortBy) {
-      case 'date_asc':
-        query = query.order('created_at', { ascending: true });
-        break;
-      case 'date_desc':
-      default:
-        query = query.order('created_at', { ascending: false });
-        break;
-      case 'priority_asc':
-        query = query.order('priority', { ascending: true });
-        break;
-      case 'priority_desc':
-        query = query.order('priority', { ascending: false });
-        break;
+    if (sortBy === 'date_asc') {
+      query = query.order('created_at', { ascending: true });
+    } else {
+      query = query.order('created_at', { ascending: false });
     }
 
     // Tambahkan pagination
@@ -219,13 +233,38 @@ export async function fetchSubmissions(params: {
     const to = from + limit - 1;
     query = query.range(from, to);
 
+    // Log query untuk debugging
+    console.log('Query Parameters:', {
+      category,
+      status,
+      search,
+      sortBy,
+      page,
+      limit,
+      from,
+      to
+    });
+
     // Eksekusi query
     const { data, error, count } = await query;
 
     if (error) {
-      console.error("Error fetching submissions (Supabase):", error);
+      console.error("Error fetching submissions:", error);
+      throw error;
+    }
+
+    if (!data) {
+      console.log("No data returned from query");
       return { submissions: [], totalCount: 0, totalPages: 0 };
     }
+
+    // Log hasil query untuk debugging
+    console.log('Query Results:', {
+      resultCount: data.length,
+      totalCount: count,
+      firstItem: data[0],
+      params: params
+    });
 
     // Transformasi data ke format yang diharapkan
     const submissions: Submission[] = data.map((item: any) => ({
@@ -248,7 +287,7 @@ export async function fetchSubmissions(params: {
     return { submissions, totalCount, totalPages };
   } catch (error: any) {
     console.error("Error in fetchSubmissions:", error);
-    return { submissions: [], totalCount: 0, totalPages: 0 };
+    throw new Error(`Failed to fetch submissions: ${error.message}`);
   }
 }
 

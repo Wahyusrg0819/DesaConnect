@@ -135,13 +135,13 @@ export default function SubmissionList({
   const getStatusBadgeColor = (status: string): string => {
     switch (status.toLowerCase()) {
       case 'resolved':
-        return 'bg-[#4CAF50] text-white'; // Green from blueprint
+        return 'bg-[#1B5E20] text-white'; // Darker Green for better contrast
       case 'in progress':
-        return 'bg-yellow-500 text-white'; // Yellow for in progress
+        return 'bg-[#7F4700] text-white'; // Even darker orange for better contrast
       case 'pending':
-        return 'bg-[#F0F0F0] text-gray-700'; // Light gray from blueprint
+        return 'bg-[#424242] text-white'; // Darker Gray for better contrast
       default:
-        return 'bg-[#F0F0F0] text-gray-700';
+        return 'bg-[#424242] text-white';
     }
   };
 
@@ -160,7 +160,7 @@ export default function SubmissionList({
 
   const getCategoryIcon = (category: string) => {
     const Icon = categoryIcons[category] || categoryIcons['Other'];
-    return <Icon className="h-5 w-5 text-[#4CAF50]" />;
+    return <Icon className="h-5 w-5 text-[#2E7D32]" />;
   };
 
   return (
@@ -265,7 +265,7 @@ export default function SubmissionList({
             {/* Apply Filters Button - Blueprint accent color blue #2196F3 */}
             <Button 
               onClick={handleFilterChange} 
-              className="w-full sm:w-auto px-6 rounded-lg shadow-sm bg-[#2196F3] hover:bg-[#2196F3]/90 text-white transition-all"
+              className="w-full sm:w-auto px-6 rounded-lg shadow-sm bg-[#0D47A1] hover:bg-[#0A3880] text-white transition-all"
               disabled={isLoading}
             >
               {isLoading ? (
@@ -288,7 +288,7 @@ export default function SubmissionList({
       {/* Submissions Display Section */}
       {isLoading ? (
         <div className="flex items-center justify-center py-12">
-          <Loader2 className="h-8 w-8 text-[#4CAF50] animate-spin" />
+          <Loader2 className="h-8 w-8 text-[#2E7D32] animate-spin" />
           <span className="ml-2 text-gray-600">Memuat data...</span>
         </div>
       ) : submissions.length === 0 ? (
@@ -302,7 +302,7 @@ export default function SubmissionList({
       ) : (
         <div className="space-y-4">
           {submissions.map((submission) => (
-            <Card key={submission.id} className="overflow-hidden hover:shadow-md transition-shadow border-l-4 border-l-[#4CAF50] rounded-lg">
+            <Card key={submission.id} className="overflow-hidden hover:shadow-md transition-shadow border-l-4 border-l-[#2E7D32] rounded-lg">
               <div className="grid md:grid-cols-[1fr_auto] gap-4">
                 <div className="p-4 md:p-5">
                   <div className="flex flex-wrap items-center gap-2 mb-2">
@@ -347,7 +347,7 @@ export default function SubmissionList({
                   
                   <Accordion type="single" collapsible className="border-b-0">
                     <AccordionItem value="description" className="border-b-0">
-                      <AccordionTrigger className="text-sm py-1 px-0 font-normal text-[#2196F3] hover:text-[#1976D2] hover:no-underline">
+                      <AccordionTrigger className="text-sm py-1 px-0 font-normal text-[#0D47A1] hover:text-[#0A3880] hover:no-underline">
                         Lihat Detail Laporan
                       </AccordionTrigger>
                       <AccordionContent className="text-gray-700 whitespace-pre-line">
@@ -364,7 +364,7 @@ export default function SubmissionList({
                               href={submission.fileUrl} 
                               target="_blank" 
                               rel="noopener noreferrer"
-                              className="text-[#2196F3] hover:underline flex items-center gap-1.5 text-sm"
+                              className="text-[#0D47A1] hover:underline flex items-center gap-1.5 text-sm"
                             >
                               <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-paperclip">
                                 <path d="m21.44 11.05-9.19 9.19a6 6 0 0 1-8.49-8.49l8.57-8.57A4 4 0 1 1 18 8.84l-8.59 8.57a2 2 0 0 1-2.83-2.83l8.49-8.47"/>
@@ -406,8 +406,8 @@ export default function SubmissionList({
                       <div 
                         className={`h-2 rounded-full ${
                           submission.status === 'pending' ? 'w-0 bg-gray-300' : 
-                          submission.status === 'in progress' ? 'w-1/2 bg-yellow-500' : 
-                          'w-full bg-[#4CAF50]'
+                          submission.status === 'in progress' ? 'w-1/2 bg-[#7F4700]' : 
+                          'w-full bg-[#1B5E20]'
                         }`}
                       ></div>
                     </div>
@@ -419,7 +419,7 @@ export default function SubmissionList({
                   <Button 
                     asChild 
                     variant="default"
-                    className="w-full bg-[#2196F3] hover:bg-[#1976D2] text-white"
+                    className="w-full bg-[#0D47A1] hover:bg-[#0A3880] text-white"
                   >
                     <Link href={`/track?id=${submission.referenceId}`}>
                       Lacak Status
@@ -442,7 +442,7 @@ export default function SubmissionList({
                   href={currentPage > 1 ? `${pathname}?${createQueryString({ page: currentPage - 1, category: selectedCategory, status: selectedStatus, sortBy: selectedSortBy, search: searchTerm })}` : '#'}
                   aria-disabled={currentPage <= 1}
                   tabIndex={currentPage <= 1 ? -1 : undefined}
-                  className={`${currentPage <= 1 ? "pointer-events-none opacity-50" : ""} text-[#2196F3]`}
+                  className={`${currentPage <= 1 ? "pointer-events-none opacity-50" : ""} text-[#0D47A1]`}
                   onClick={(e) => { 
                     if (currentPage <= 1) {
                       e.preventDefault();
@@ -477,7 +477,7 @@ export default function SubmissionList({
                   href={currentPage < totalPages ? `${pathname}?${createQueryString({ page: currentPage + 1, category: selectedCategory, status: selectedStatus, sortBy: selectedSortBy, search: searchTerm })}` : '#'}
                   aria-disabled={currentPage >= totalPages}
                   tabIndex={currentPage >= totalPages ? -1 : undefined}
-                  className={`${currentPage >= totalPages ? "pointer-events-none opacity-50" : ""} text-[#2196F3]`}
+                  className={`${currentPage >= totalPages ? "pointer-events-none opacity-50" : ""} text-[#0D47A1]`}
                   onClick={(e) => { 
                     if (currentPage >= totalPages) {
                       e.preventDefault(); 

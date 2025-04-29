@@ -9,8 +9,8 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
-import { AlertCircle } from 'lucide-react';
-import { Alert, AlertDescription } from '@/components/ui/alert';
+import { AlertCircle, Info } from 'lucide-react';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { registerAdmin } from '@/lib/actions/auth-actions';
 import Link from 'next/link';
 
@@ -90,6 +90,16 @@ export default function RegisterForm() {
         </CardDescription>
       </CardHeader>
       <CardContent>
+        <Alert className="mb-6 bg-blue-50 border-blue-200">
+          <Info className="h-4 w-4 text-blue-600" />
+          <AlertTitle className="text-blue-800 font-medium">Informasi Penting</AlertTitle>
+          <AlertDescription className="text-blue-700">
+            <p>Hanya email yang telah diizinkan oleh Super Admin yang dapat melakukan registrasi. 
+            Silakan hubungi Super Admin untuk mendapatkan akses.</p>
+            <p className="mt-2 font-medium">Catatan: Jika Anda memasukkan email yang tidak diizinkan, proses registrasi tidak akan berhasil.</p>
+          </AlertDescription>
+        </Alert>
+
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
           {error && (
             <Alert variant="destructive">

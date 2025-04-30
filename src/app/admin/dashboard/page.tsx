@@ -1,13 +1,9 @@
 import { Metadata } from "next";
 import { protectAdminRoute, getCurrentUser } from "@/lib/auth-utils";
-import { Button } from "@/components/ui/button";
-import { handleLogout } from "@/lib/actions/dashboard-actions";
 import Link from "next/link";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { getSubmissionStats } from "@/lib/actions/submissions";
-import { Separator } from "@/components/ui/separator";
-import { Badge } from "@/components/ui/badge";
 import { 
   LayoutDashboard, 
   FileText, 
@@ -17,16 +13,81 @@ import {
   Clock, 
   AlertTriangle,
   RefreshCw,
-  LogOut,
   BarChart3, 
   CalendarDays
 } from "lucide-react";
+import { Suspense } from "react";
+import RefreshButton from "@/components/admin/refresh-button";
 
 export const metadata: Metadata = {
   title: "Admin Dashboard - DesaConnect",
   description: "Dashboard admin DesaConnect",
 };
 
+// Komponen untuk menampilkan statistik
+function StatCard({ 
+  title, 
+  value, 
+  description, 
+  icon, 
+  colorClass = "" 
+}: { 
+  title: string; 
+  value: number; 
+  description: string; 
+  icon: React.ReactNode; 
+  colorClass?: string;
+}) {
+  return (
+    <Card className="border-0 shadow-sm">
+      <CardHeader className="pb-2 pt-4">
+        <CardTitle className="text-sm font-medium text-muted-foreground">{title}</CardTitle>
+      </CardHeader>
+      <CardContent>
+        <div className={`text-3xl font-bold ${colorClass}`}>{value}</div>
+        <div className="flex items-center mt-1">
+          <span className={`mr-1 ${colorClass}`}>{icon}</span>
+          <p className="text-xs text-muted-foreground">{description}</p>
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
+
+// Komponen untuk menampilkan menu cepat
+function MenuCard({ 
+  title, 
+  description, 
+  icon, 
+  content, 
+  footerText, 
+  href 
+}: {
+  title: string;
+  description: string;
+  icon: React.ReactNode;
+  content: React.ReactNode;
+  footerText: string;
+  href: string;
+}) {
+  return (
+    <Link href={href} className="group">
+      <Card className="border border-gray-100 shadow-sm transition-all hover:shadow-md hover:border-primary/50 h-full">
+        <CardHeader>
+          <div className="flex items-center justify-between">
+            <CardTitle className="text-xl font-semibold">{title}</CardTitle>
+            <span className="text-primary group-hover:text-primary/80">{icon}</span>
+          </div>
+          <CardDescription>{description}</CardDescription>
+        </CardHeader>
+        <CardContent>{content}</CardContent>
+        <CardFooter className="text-xs text-muted-foreground">{footerText}</CardFooter>
+      </Card>
+    </Link>
+  );
+}
+
+// Komponen utama dashboard dengan caching
 export default async function AdminDashboardPage() {
   // Proteksi halaman admin (redirect jika bukan admin)
   await protectAdminRoute();
@@ -36,13 +97,35 @@ export default async function AdminDashboardPage() {
   
   // Dapatkan statistik laporan
   const statsResult = await getSubmissionStats();
-  const stats = statsResult.success ? statsResult.stats : {
+  
+  // Transformasi data statistik untuk memastikan format yang sesuai
+  const stats = statsResult.success ? {
+    // Mengambil data total dari API, atau nilai default jika tidak tersedia
+    totalSubmissions: statsResult.stats.total || 0,
+    
+    // Mengambil data status atau memberikan nilai default jika tidak tersedia
+    pendingCount: statsResult.stats.byStatus?.pending || 0,
+    inProgressCount: statsResult.stats.byStatus?.['in progress'] || 0,
+    resolvedCount: statsResult.stats.byStatus?.resolved || 0,
+    
+    // Mengambil data kategori atau memberikan objek kosong jika tidak tersedia
+    categories: statsResult.stats.byCategory || {},
+    
+    // Data processing time jika tersedia
+    processingTime: statsResult.stats.processingTime || {
+      averageResolutionDays: 0,
+      averageResponseDays: 0
+    }
+  } : {
     totalSubmissions: 0,
     pendingCount: 0,
     inProgressCount: 0,
     resolvedCount: 0,
     categories: {},
-    recentSubmissions: []
+    processingTime: {
+      averageResolutionDays: 0,
+      averageResponseDays: 0
+    }
   };
   
   // Mendapatkan tanggal saat ini untuk ditampilkan
@@ -55,235 +138,168 @@ export default async function AdminDashboardPage() {
   });
   
   return (
-    <div className="p-6 sm:p-8">
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8">
+    <div className="p-4 sm:p-6 md:p-8">
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6 md:mb-8">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight mb-1">Dashboard Admin</h1>
+          <h1 className="text-2xl md:text-3xl font-bold tracking-tight mb-1">Dashboard Admin</h1>
           <div className="flex items-center gap-2 text-muted-foreground">
             <CalendarDays className="h-4 w-4" />
-            <span>{formattedDate}</span>
+            <span className="text-sm">{formattedDate}</span>
           </div>
         </div>
         
-        <div className="flex items-center gap-4">
-          <div className="bg-primary/10 px-3 py-1 rounded-full flex items-center gap-2">
-            <span className="h-2 w-2 rounded-full bg-green-500"></span>
-            <span className="text-sm font-medium">{user?.email}</span>
-          </div>
-          <form action={handleLogout}>
-            <Button variant="outline" size="sm" type="submit" className="flex items-center gap-2">
-              <LogOut className="h-4 w-4" />
-              <span>Logout</span>
-            </Button>
-          </form>
+        <div className="flex items-center">
+          <RefreshButton />
         </div>
       </div>
       
       <Tabs defaultValue="overview" className="mb-8">
-        <TabsList className="mb-6">
+        <TabsList className="mb-6 w-full sm:w-auto overflow-auto">
           <TabsTrigger value="overview" className="data-[state=active]:bg-primary/10">
             <LayoutDashboard className="h-4 w-4 mr-2" />
-            Overview
+            <span>Overview</span>
           </TabsTrigger>
           <TabsTrigger value="stats" className="data-[state=active]:bg-primary/10">
             <BarChart3 className="h-4 w-4 mr-2" />
-            Statistik
+            <span>Statistik</span>
           </TabsTrigger>
         </TabsList>
         
         <TabsContent value="overview">
-          {/* Statistik ringkasan */}
-          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4 mb-8">
-            <Card className="border-0 shadow-sm">
-              <CardHeader className="pb-2 pt-4">
-                <CardTitle className="text-sm font-medium text-muted-foreground">Total Laporan</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="text-3xl font-bold">{stats.totalSubmissions}</div>
-                <p className="text-xs text-muted-foreground mt-1">Semua laporan yang masuk</p>
-              </CardContent>
-            </Card>
+          <Suspense fallback={<div>Memuat statistik...</div>}>
+            {/* Statistik ringkasan */}
+            <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 mb-8">
+              <StatCard
+                title="Total Laporan"
+                value={stats.totalSubmissions}
+                description="Semua laporan yang masuk"
+                icon={<AlertTriangle className="h-3 w-3" />}
+              />
+              
+              <StatCard
+                title="Menunggu"
+                value={stats.pendingCount}
+                description="Butuh ditinjau"
+                icon={<Clock className="h-3 w-3" />}
+                colorClass="text-yellow-600"
+              />
+              
+              <StatCard
+                title="Diproses"
+                value={stats.inProgressCount}
+                description="Sedang ditindaklanjuti"
+                icon={<RefreshCw className="h-3 w-3" />}
+                colorClass="text-blue-600"
+              />
+              
+              <StatCard
+                title="Selesai"
+                value={stats.resolvedCount}
+                description="Berhasil diselesaikan"
+                icon={<CheckCircle2 className="h-3 w-3" />}
+                colorClass="text-green-600"
+              />
+            </div>
             
-            <Card className="border-0 shadow-sm">
-              <CardHeader className="pb-2 pt-4">
-                <CardTitle className="text-sm font-medium text-muted-foreground">Menunggu</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="text-3xl font-bold text-yellow-600">{stats.pendingCount}</div>
-                <div className="flex items-center mt-1">
-                  <Clock className="h-3 w-3 text-yellow-600 mr-1" />
-                  <p className="text-xs text-muted-foreground">Butuh ditinjau</p>
-                </div>
-              </CardContent>
-            </Card>
-            
-            <Card className="border-0 shadow-sm">
-              <CardHeader className="pb-2 pt-4">
-                <CardTitle className="text-sm font-medium text-muted-foreground">Sedang Diproses</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="text-3xl font-bold text-blue-600">{stats.inProgressCount}</div>
-                <div className="flex items-center mt-1">
-                  <RefreshCw className="h-3 w-3 text-blue-600 mr-1" />
-                  <p className="text-xs text-muted-foreground">Dalam pengerjaan</p>
-                </div>
-              </CardContent>
-            </Card>
-            
-            <Card className="border-0 shadow-sm">
-              <CardHeader className="pb-2 pt-4">
-                <CardTitle className="text-sm font-medium text-muted-foreground">Terselesaikan</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="text-3xl font-bold text-green-600">{stats.resolvedCount}</div>
-                <div className="flex items-center mt-1">
-                  <CheckCircle2 className="h-3 w-3 text-green-600 mr-1" />
-                  <p className="text-xs text-muted-foreground">Sudah diselesaikan</p>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-          
-          <h2 className="text-xl font-bold mb-4">Menu Cepat</h2>
-          
-          <div className="grid gap-4 md:grid-cols-3">
-            <Link href="/admin/dashboard/submissions" className="group">
-              <Card className="border border-gray-100 shadow-sm transition-all hover:shadow-md hover:border-primary/50 h-full">
-                <CardHeader>
-                  <div className="flex items-center justify-between">
-                    <CardTitle className="text-xl font-semibold">Kelola Laporan</CardTitle>
-                    <FileText className="h-5 w-5 text-primary group-hover:text-primary/80" />
+            {/* Menu cepat */}
+            <h2 className="text-xl font-semibold mb-4">Menu Cepat</h2>
+            <div className="grid gap-6 grid-cols-1 md:grid-cols-3 mb-8">
+              <MenuCard
+                title="Kelola Laporan"
+                description="Lihat dan proses semua laporan masyarakat"
+                icon={<FileText className="h-5 w-5" />}
+                content={
+                  <div className="flex flex-col text-sm text-muted-foreground space-y-2">
+                    <p>• Lihat laporan masuk</p>
+                    <p>• Update status laporan</p>
+                    <p>• Tambahkan tanggapan</p>
                   </div>
-                  <CardDescription>
-                    Lihat dan kelola laporan dari masyarakat
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <div className="flex items-center gap-2">
-                    <Badge variant="outline" className="bg-yellow-50 text-yellow-700 hover:bg-yellow-50">
-                      {stats.pendingCount} menunggu
-                    </Badge>
-                    <Badge variant="outline" className="bg-blue-50 text-blue-700 hover:bg-blue-50">
-                      {stats.inProgressCount} diproses
-                    </Badge>
+                }
+                footerText="Akses ke semua laporan masyarakat"
+                href="/admin/dashboard/submissions"
+              />
+              
+              <MenuCard
+                title="Statistik & Analisis"
+                description="Lihat data statistik dan analisis laporan"
+                icon={<LineChart className="h-5 w-5" />}
+                content={
+                  <div className="flex flex-col text-sm text-muted-foreground space-y-2">
+                    <p>• Tren laporan</p>
+                    <p>• Grafik kategori</p>
+                    <p>• Waktu penyelesaian</p>
                   </div>
-                </CardContent>
-                <CardFooter className="text-xs text-muted-foreground">
-                  Klik untuk melihat semua laporan
-                </CardFooter>
-              </Card>
-            </Link>
-            
-            <Link href="/admin/dashboard/analytics" className="group">
-              <Card className="border border-gray-100 shadow-sm transition-all hover:shadow-md hover:border-primary/50 h-full">
-                <CardHeader>
-                  <div className="flex items-center justify-between">
-                    <CardTitle className="text-xl font-semibold">Analitik</CardTitle>
-                    <LineChart className="h-5 w-5 text-primary group-hover:text-primary/80" />
+                }
+                footerText="Analisis data untuk pengambilan keputusan"
+                href="/admin/dashboard/analytics"
+              />
+              
+              <MenuCard
+                title="Pengaturan Admin"
+                description="Kelola pengaturan aplikasi dan admin"
+                icon={<Settings className="h-5 w-5" />}
+                content={
+                  <div className="flex flex-col text-sm text-muted-foreground space-y-2">
+                    <p>• Kelola daftar admin</p>
+                    <p>• Pengaturan aplikasi</p>
+                    <p>• Konfigurasi notifikasi</p>
                   </div>
-                  <CardDescription>
-                    Lihat statistik dan grafik laporan
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <div className="flex items-center gap-2">
-                    <div className="text-sm">
-                      Analisis data dari {stats.totalSubmissions} total laporan
-                    </div>
-                  </div>
-                </CardContent>
-                <CardFooter className="text-xs text-muted-foreground">
-                  Klik untuk melihat analitik
-                </CardFooter>
-              </Card>
-            </Link>
-            
-            <Link href="/admin/dashboard/settings" className="group">
-              <Card className="border border-gray-100 shadow-sm transition-all hover:shadow-md hover:border-primary/50 h-full">
-                <CardHeader>
-                  <div className="flex items-center justify-between">
-                    <CardTitle className="text-xl font-semibold">Pengaturan</CardTitle>
-                    <Settings className="h-5 w-5 text-primary group-hover:text-primary/80" />
-                  </div>
-                  <CardDescription>
-                    Konfigurasi dan pengaturan akun
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <div className="flex items-center gap-2">
-                    <div className="text-sm">
-                      Kelola admin dan pengaturan aplikasi
-                    </div>
-                  </div>
-                </CardContent>
-                <CardFooter className="text-xs text-muted-foreground">
-                  Klik untuk mengatur sistem
-                </CardFooter>
-              </Card>
-            </Link>
-          </div>
+                }
+                footerText="Pengaturan dan manajemen aplikasi"
+                href="/admin/dashboard/settings"
+              />
+            </div>
+          </Suspense>
         </TabsContent>
         
         <TabsContent value="stats">
-          <Card className="border-0 shadow-sm">
-            <CardHeader>
-              <CardTitle>Statistik Laporan</CardTitle>
-              <CardDescription>
-                Ringkasan laporan berdasarkan kategori dan status
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="grid gap-4 md:grid-cols-2">
-                <div>
-                  <h3 className="text-sm font-medium mb-2">Berdasarkan Kategori</h3>
-                  <div className="space-y-2">
-                    {Object.entries(stats.categories || {}).map(([category, count]) => (
-                      <div key={category} className="flex items-center justify-between">
-                        <div className="flex items-center">
-                          <div className="w-2 h-2 rounded-full bg-primary mr-2"></div>
-                          <span className="text-sm">{category}</span>
-                        </div>
-                        <Badge variant="outline">{count as number}</Badge>
+          <div className="grid gap-6 grid-cols-1 md:grid-cols-2">
+            <Card>
+              <CardHeader>
+                <CardTitle>Kategori Laporan</CardTitle>
+                <CardDescription>Distribusi laporan berdasarkan kategori</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
+                  {Object.entries(stats.categories).map(([category, count]) => (
+                    <div key={category} className="flex justify-between items-center">
+                      <div className="flex items-center gap-2">
+                        <div className="w-3 h-3 rounded-full bg-primary"></div>
+                        <span className="text-sm font-medium">{category}</span>
                       </div>
-                    ))}
-                  </div>
+                      <span className="text-sm font-semibold">{count}</span>
+                    </div>
+                  ))}
                 </div>
-                
-                <div>
-                  <h3 className="text-sm font-medium mb-2">Berdasarkan Status</h3>
-                  <div className="space-y-2">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center">
-                        <div className="w-2 h-2 rounded-full bg-yellow-500 mr-2"></div>
-                        <span className="text-sm">Menunggu</span>
-                      </div>
-                      <Badge variant="outline" className="bg-yellow-50 text-yellow-700">
-                        {stats.pendingCount}
-                      </Badge>
+              </CardContent>
+            </Card>
+            
+            <Card>
+              <CardHeader>
+                <CardTitle>Waktu Penyelesaian</CardTitle>
+                <CardDescription>Rata-rata waktu respon dan penyelesaian</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-6">
+                  <div>
+                    <p className="text-sm font-medium text-muted-foreground mb-1">Rata-rata respon awal</p>
+                    <div className="flex items-end gap-2">
+                      <p className="text-3xl font-bold">{stats.processingTime.averageResponseDays.toFixed(1)}</p>
+                      <p className="text-muted-foreground text-sm mb-1">hari</p>
                     </div>
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center">
-                        <div className="w-2 h-2 rounded-full bg-blue-500 mr-2"></div>
-                        <span className="text-sm">Sedang Diproses</span>
-                      </div>
-                      <Badge variant="outline" className="bg-blue-50 text-blue-700">
-                        {stats.inProgressCount}
-                      </Badge>
-                    </div>
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center">
-                        <div className="w-2 h-2 rounded-full bg-green-500 mr-2"></div>
-                        <span className="text-sm">Terselesaikan</span>
-                      </div>
-                      <Badge variant="outline" className="bg-green-50 text-green-700">
-                        {stats.resolvedCount}
-                      </Badge>
+                  </div>
+                  
+                  <div>
+                    <p className="text-sm font-medium text-muted-foreground mb-1">Rata-rata penyelesaian</p>
+                    <div className="flex items-end gap-2">
+                      <p className="text-3xl font-bold">{stats.processingTime.averageResolutionDays.toFixed(1)}</p>
+                      <p className="text-muted-foreground text-sm mb-1">hari</p>
                     </div>
                   </div>
                 </div>
-              </div>
-            </CardContent>
-          </Card>
+              </CardContent>
+            </Card>
+          </div>
         </TabsContent>
       </Tabs>
     </div>

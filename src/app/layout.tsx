@@ -35,12 +35,9 @@ export default function RootLayout({
         <SupabaseProvider>
           <ServiceWorkerProvider />
           <div className="flex flex-col flex-grow">
-            <Header />
-              <main className="flex-grow">
-                {children}
-              </main>
-              <Footer />
-              <Toaster />
+            {/* Conditionally render Header and Footer if NOT in admin section */}
+            {children}
+            <Toaster />
           </div>
         </SupabaseProvider>
       </body>

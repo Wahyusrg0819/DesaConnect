@@ -471,11 +471,30 @@ export async function getSubmissionStats(): Promise<{ success: boolean; stats?: 
       categoryCounts[category] = (categoryCounts[category] || 0) + 1;
     });
 
+    // Dapatkan data submissions untuk analisis trending dan waktu penyelesaian
+    const { data: submissions, error: submissionsError } = await supabase
+      .from('submissions')
+      .select('created_at, status, updated_at, internal_comments')
+      .order('created_at', { ascending: true });
+
+    if (submissionsError) {
+      console.error("Error fetching submissions for trends (Supabase):", submissionsError);
+      return { success: false, error: "Gagal mendapatkan data tren." };
+    }
+
+    // Analisis data bulanan
+    const monthlyData = getMonthlyTrendData(submissions);
+    
+    // Hitung rata-rata waktu penyelesaian
+    const processingTime = calculateProcessingTime(submissions);
+
     // Format hasil
     const stats = {
       total: totalCount || 0,
       byStatus: Object.fromEntries(statusCounts.map(item => [item.status, item.count])),
       byCategory: categoryCounts,
+      monthlyTrends: monthlyData,
+      processingTime
     };
 
     return { success: true, stats };
@@ -483,4 +502,107 @@ export async function getSubmissionStats(): Promise<{ success: boolean; stats?: 
     console.error("Error in getSubmissionStats:", error);
     return { success: false, error: error.message || "Terjadi kesalahan saat mengambil statistik." };
   }
+}
+
+/**
+ * Calculates average processing time of submissions
+ */
+function calculateProcessingTime(submissions: any[]) {
+  if (!submissions || submissions.length === 0) {
+    return {
+      averageResolutionDays: 0,
+      averageResponseDays: 0
+    };
+  }
+  
+  // Filter resolved submissions only
+  const resolvedSubmissions = submissions.filter(sub => sub.status === 'resolved');
+  
+  if (resolvedSubmissions.length === 0) {
+    return {
+      averageResolutionDays: 0,
+      averageResponseDays: 0
+    };
+  }
+  
+  // Calculate average resolution time (created_at to updated_at for resolved)
+  let totalResolutionTime = 0;
+  
+  resolvedSubmissions.forEach(sub => {
+    const createdAt = new Date(sub.created_at);
+    const updatedAt = new Date(sub.updated_at);
+    const timeDiff = updatedAt.getTime() - createdAt.getTime();
+    const daysDiff = timeDiff / (1000 * 3600 * 24); // convert to days
+    totalResolutionTime += daysDiff;
+  });
+  
+  const averageResolutionDays = totalResolutionTime / resolvedSubmissions.length;
+  
+  // Calculate average first response time 
+  // (time from created_at to first internal comment)
+  let totalResponseTime = 0;
+  let submissionsWithComments = 0;
+  
+  submissions.forEach(sub => {
+    if (sub.internal_comments && Array.isArray(sub.internal_comments) && sub.internal_comments.length > 0) {
+      submissionsWithComments++;
+      const createdAt = new Date(sub.created_at);
+      const firstComment = new Date(sub.internal_comments[0].createdAt);
+      const timeDiff = firstComment.getTime() - createdAt.getTime();
+      const daysDiff = timeDiff / (1000 * 3600 * 24);
+      totalResponseTime += daysDiff;
+    }
+  });
+  
+  const averageResponseDays = submissionsWithComments > 0 
+    ? totalResponseTime / submissionsWithComments 
+    : 0;
+  
+  return {
+    averageResolutionDays: parseFloat(averageResolutionDays.toFixed(1)),
+    averageResponseDays: parseFloat(averageResponseDays.toFixed(1))
+  };
+}
+
+/**
+ * Processes submission data to generate monthly trends
+ */
+function getMonthlyTrendData(submissions: any[]) {
+  if (!submissions || submissions.length === 0) {
+    return [];
+  }
+
+  const months = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Ags', 'Sep', 'Okt', 'Nov', 'Des'];
+  const currentYear = new Date().getFullYear();
+  
+  // Initialize monthly data
+  const monthlyData = months.map(month => ({
+    name: month,
+    total: 0,
+    pending: 0,
+    inProgress: 0,
+    resolved: 0
+  }));
+  
+  // Count submissions by month
+  submissions.forEach(sub => {
+    const date = new Date(sub.created_at);
+    // Only count submissions from current year
+    if (date.getFullYear() === currentYear) {
+      const monthIndex = date.getMonth();
+      
+      monthlyData[monthIndex].total += 1;
+      
+      // Count by status
+      if (sub.status === 'pending') {
+        monthlyData[monthIndex].pending += 1;
+      } else if (sub.status === 'in progress') {
+        monthlyData[monthIndex].inProgress += 1;
+      } else if (sub.status === 'resolved') {
+        monthlyData[monthIndex].resolved += 1;
+      }
+    }
+  });
+  
+  return monthlyData;
 }

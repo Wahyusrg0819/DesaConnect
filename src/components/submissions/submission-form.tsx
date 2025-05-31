@@ -182,45 +182,36 @@ export default function SubmissionForm({ categories }: SubmissionFormProps) {
   }
 
   return (
-    <Card className="w-full max-w-2xl mx-auto shadow-lg border-0">
-      <CardHeader className="bg-gradient-to-r from-[#4CAF50]/90 to-[#2E7D32] text-white rounded-t-lg pb-4">
+    <Card className="w-full max-w-2xl mx-auto shadow-2xl border-0 rounded-2xl bg-white/90 backdrop-blur-sm">
+      <CardHeader className="bg-gradient-to-r from-[#4CAF50]/90 to-[#2E7D32] text-white rounded-t-2xl pb-6 shadow-md">
         <div className="flex items-start justify-between">
           <div>
-            <CardTitle className="text-2xl font-bold">Formulir Laporan Baru</CardTitle>
-            <CardDescription className="text-white/90 mt-1">
+            <CardTitle className="text-2xl font-extrabold tracking-tight drop-shadow-sm">Formulir Laporan Baru</CardTitle>
+            <CardDescription className="text-white/90 mt-1 font-medium">
               Sampaikan aspirasi atau keluhan Anda untuk Desa Pangkalan Baru
             </CardDescription>
           </div>
         </div>
         <div className="mt-4">
-          <Progress value={formProgress} className="h-2 bg-white/30" />
+          <Progress value={formProgress} className="h-2 bg-white/30 rounded-full" />
           <div className="flex justify-between mt-2 text-sm text-white/90">
-            <div className={`font-medium ${activeStep === 1 ? "text-white" : ""}`}>
-              Informasi Dasar
-            </div>
-            <div className={`font-medium ${activeStep === 2 ? "text-white" : ""}`}>
-              Detail Laporan
-            </div>
-            <div className={`font-medium ${activeStep === 3 ? "text-white" : ""}`}>
-              Lampiran & Kirim
-            </div>
+            <div className={`font-semibold ${activeStep === 1 ? "text-white" : "opacity-80"}`}>Informasi Dasar</div>
+            <div className={`font-semibold ${activeStep === 2 ? "text-white" : "opacity-80"}`}>Detail Laporan</div>
+            <div className={`font-semibold ${activeStep === 3 ? "text-white" : "opacity-80"}`}>Lampiran & Kirim</div>
           </div>
         </div>
       </CardHeader>
-      
-      <CardContent className="p-6">
+      <CardContent className="p-8">
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-            
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
             {/* Step 1: Basic Information */}
             {activeStep === 1 && (
-              <div className="space-y-4">
+              <div className="space-y-6">
                 <div className="flex items-center gap-2 mb-4">
                   <User className="h-5 w-5 text-[#4CAF50]" />
-                  <h3 className="text-lg font-semibold text-gray-800">Informasi Dasar</h3>
+                  <h3 className="text-lg font-bold text-gray-800">Informasi Dasar</h3>
                 </div>
-                
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <FormField
                     control={form.control}
                     name="name"
@@ -302,10 +293,10 @@ export default function SubmissionForm({ categories }: SubmissionFormProps) {
             
             {/* Step 2: Report Details */}
             {activeStep === 2 && (
-              <div className="space-y-4">
+              <div className="space-y-6">
                 <div className="flex items-center gap-2 mb-4">
                   <MessageSquare className="h-5 w-5 text-[#4CAF50]" />
-                  <h3 className="text-lg font-semibold text-gray-800">Detail Laporan</h3>
+                  <h3 className="text-lg font-bold text-gray-800">Detail Laporan</h3>
                 </div>
                 
                 <FormField
@@ -338,12 +329,12 @@ export default function SubmissionForm({ categories }: SubmissionFormProps) {
                 />
                 
                 <Accordion type="single" collapsible className="mt-4">
-                  <AccordionItem value="tips" className="border rounded-md px-4">
-                    <AccordionTrigger className="text-[#4CAF50] hover:text-[#3d8b40] font-medium py-2">
+                  <AccordionItem value="tips" className="border rounded-xl px-6 bg-[#f0f4c3]/40">
+                    <AccordionTrigger className="text-[#4CAF50] hover:text-[#3d8b40] font-semibold py-2">
                       Tips Menulis Laporan Yang Baik
                     </AccordionTrigger>
                     <AccordionContent>
-                      <ul className="list-disc pl-5 text-sm text-gray-600 space-y-1">
+                      <ul className="list-disc pl-5 text-sm text-gray-700 space-y-1">
                         <li>Berikan informasi spesifik: lokasi, waktu, dan situasi dengan jelas</li>
                         <li>Sampaikan fakta yang terjadi, hindari opini atau prasangka</li>
                         <li>Jelaskan dampak yang terjadi atau dikhawatirkan</li>
@@ -357,19 +348,18 @@ export default function SubmissionForm({ categories }: SubmissionFormProps) {
             
             {/* Step 3: Attachment & Submit */}
             {activeStep === 3 && (
-              <div className="space-y-4">
+              <div className="space-y-6">
                 <div className="flex items-center gap-2 mb-4">
                   <Upload className="h-5 w-5 text-[#4CAF50]" />
-                  <h3 className="text-lg font-semibold text-gray-800">Lampiran & Kirim</h3>
+                  <h3 className="text-lg font-bold text-gray-800">Lampiran & Kirim</h3>
                 </div>
-                
                 <FormItem>
-                  <FormLabel className="text-gray-700 font-medium">
+                  <FormLabel className="text-gray-700 font-semibold">
                     Lampiran (Opsional)
                   </FormLabel>
                   <div className="mt-1">
                     <div className="flex items-center justify-center w-full">
-                      <label className="flex flex-col items-center justify-center w-full h-32 border-2 border-gray-300 border-dashed rounded-lg cursor-pointer bg-[#F0F0F0] hover:bg-gray-100 transition-colors">
+                      <label className="flex flex-col items-center justify-center w-full h-36 border-2 border-gray-300 border-dashed rounded-2xl cursor-pointer bg-[#F0F0F0] hover:bg-gray-100 transition-colors">
                         <div className="flex flex-col items-center justify-center pt-5 pb-6">
                           <Upload className="w-8 h-8 mb-3 text-gray-500" />
                           <p className="mb-2 text-sm text-gray-500">
@@ -390,9 +380,9 @@ export default function SubmissionForm({ categories }: SubmissionFormProps) {
                     </div>
                   </div>
                   {file && (
-                    <div className="mt-2 flex items-center gap-2 p-2 bg-[#e8f5e9] rounded-md text-sm text-gray-700">
+                    <div className="mt-2 flex items-center gap-2 p-2 bg-[#e8f5e9] rounded-xl text-sm text-gray-700">
                       <FileText className="h-4 w-4 text-[#4CAF50]" />
-                      <span className="font-medium">File terpilih:</span>
+                      <span className="font-semibold">File terpilih:</span>
                       <span className="truncate">{file.name}</span>
                     </div>
                   )}
@@ -400,9 +390,8 @@ export default function SubmissionForm({ categories }: SubmissionFormProps) {
                     Unggah file pendukung jika ada (maks. 5MB).
                   </FormDescription>
                 </FormItem>
-                
                 <div className="mt-6 border-t pt-4">
-                  <div className="bg-[#e8f5e9] rounded-md p-3 mb-4 text-sm text-gray-700">
+                  <div className="bg-[#e8f5e9] rounded-xl p-4 mb-4 text-sm text-gray-700">
                     <p>Dengan mengirimkan formulir ini, Anda menyetujui bahwa laporan Anda akan ditindaklanjuti oleh petugas desa. Pastikan informasi yang disampaikan adalah benar dan dapat dipertanggungjawabkan.</p>
                   </div>
                 </div>
@@ -412,25 +401,24 @@ export default function SubmissionForm({ categories }: SubmissionFormProps) {
           </form>
         </Form>
       </CardContent>
-      <CardFooter className="bg-gray-50 px-6 py-4 flex flex-col sm:flex-row justify-between gap-3 rounded-b-lg">
+      <CardFooter className="bg-gray-50 px-8 py-6 flex flex-col sm:flex-row justify-between gap-4 rounded-b-2xl">
         {activeStep > 1 && (
           <Button 
             type="button" 
             onClick={prevStep} 
             variant="outline"
             disabled={isSubmitting}
-            className="border-gray-300 text-gray-700 hover:bg-gray-100"
+            className="border-gray-300 text-gray-700 hover:bg-gray-100 font-semibold"
           >
             Kembali
           </Button>
         )}
-        
         <div className={`flex ${activeStep === 1 ? 'justify-end w-full' : 'justify-end'}`}>
           {activeStep < 3 ? (
             <Button 
               type="button" 
               onClick={nextStep} 
-              className="bg-[#4CAF50] hover:bg-[#3d8b40] text-white"
+              className="bg-[#4CAF50] hover:bg-[#3d8b40] text-white font-semibold shadow-md"
               disabled={activeStep === 2 && !form.getValues('description')}
             >
               Lanjut
@@ -440,7 +428,7 @@ export default function SubmissionForm({ categories }: SubmissionFormProps) {
               type="button" 
               onClick={form.handleSubmit(onSubmit)} 
               disabled={isSubmitting} 
-              className="bg-[#4CAF50] hover:bg-[#3d8b40] text-white"
+              className="bg-[#4CAF50] hover:bg-[#3d8b40] text-white font-semibold shadow-md"
             >
               {isSubmitting ? (
                 <>

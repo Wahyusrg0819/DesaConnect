@@ -9,12 +9,13 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Pagination, PaginationContent, PaginationEllipsis, PaginationItem, PaginationLink, PaginationNext, PaginationPrevious } from "@/components/ui/pagination";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { useRouter, usePathname, useSearchParams } from 'next/navigation';
-import { Search, Filter, ArrowUpDown, CalendarDays, Tag, CheckCircle, Loader2, AlertCircle, Sparkles, RefreshCw, MapPin, MessageSquare, Wrench, BookOpen, Stethoscope, HeartHandshake, Info } from 'lucide-react';
+import { Search, Filter, ArrowUpDown, CalendarDays, Tag, CheckCircle, Loader2, AlertCircle, Sparkles, RefreshCw, MapPin, MessageSquare, Wrench, BookOpen, Stethoscope, HeartHandshake, Info, ChevronRight } from 'lucide-react';
 import type { Submission } from '@/lib/types'; // Assuming types are defined here
 import { formatDistanceToNow } from 'date-fns';
 import { id } from 'date-fns/locale'; // Import Indonesian locale for date formatting
 import Link from 'next/link';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { motion } from 'framer-motion';
 
 // Define category icons based on blueprint
 const categoryIcons: Record<string, React.ElementType> = {
@@ -466,346 +467,462 @@ export default function SubmissionList({
   return (
     <div className="space-y-8">
       {/* Filters and Search Section */}
-      <Card className="shadow-md rounded-lg border-0 overflow-hidden bg-white">
-        <CardHeader className="pb-2 border-b border-[#F0F0F0]">
-          <CardTitle className="text-xl font-semibold flex items-center gap-2">
-            <Filter className="h-5 w-5 text-[#4CAF50]"/> 
-            <span>Filter Laporan</span>
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="pt-6">
-          <div className="space-y-6">
-            {/* Search Input with immediate feedback */}
-            <form onSubmit={handleSearchSubmit} className="w-full">
-              <div className="relative">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
-                <Input
-                  placeholder="Cari berdasarkan kata kunci..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="pl-10 w-full rounded-lg border-[#F0F0F0] focus-visible:ring-[#2196F3]/50"
-                />
-              </div>
-            </form>
-
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              {/* Category Filter with active state indication */}
-              <div>
-                <label htmlFor="category-select" className="text-sm font-medium text-gray-500 mb-1.5 block">
-                  Kategori {selectedCategory !== 'all' && `(${selectedCategory})`}
-                </label>
-                <Select 
-                  value={selectedCategory} 
-                  onValueChange={(value) => {
-                    if (value === selectedCategory) return;
-                    setSelectedCategory(value);
-                  }}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5, ease: "easeOut" }}
+      >
+        <Card className="shadow-lg rounded-xl border border-gray-100/50 overflow-hidden bg-white/95 backdrop-blur-sm transition-all duration-300 hover:shadow-xl hover:bg-white">
+          <CardHeader className="pb-3 border-b border-[#E8F5E9] bg-gradient-to-r from-[#E8F5E9] via-white to-white">
+            <CardTitle className="text-xl font-semibold flex items-center gap-3 text-[#1B5E20]">
+              <Filter className="h-6 w-6 text-[#4CAF50]"/> 
+              <span>Filter Laporan</span>
+              {isLoading && (
+                <motion.div
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  className="ml-auto"
                 >
-                  <SelectTrigger id="category-select" className="w-full rounded-lg border-[#F0F0F0]">
-                    <SelectValue placeholder="Semua Kategori" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">Semua Kategori</SelectItem>
-                    {categories.map((cat) => (
-                      <SelectItem key={cat} value={cat} className="flex items-center">
-                        <div className="flex items-center gap-2">
-                          {getCategoryIcon(cat)}
-                          <span>{cat}</span>
-                        </div>
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-
-              {/* Status Filter */}
-              <div>
-                <label htmlFor="status-select" className="text-sm font-medium text-gray-500 mb-1.5 block">
-                  Status {selectedStatus !== 'all' && `(${selectedStatus})`}
-                </label>
-                <Select 
-                  value={selectedStatus} 
-                  onValueChange={(value) => {
-                    if (value === selectedStatus) return;
-                    setSelectedStatus(value);
-                  }}
-                >
-                  <SelectTrigger id="status-select" className="w-full rounded-lg border-[#F0F0F0]">
-                    <SelectValue placeholder="Semua Status" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">Semua Status</SelectItem>
-                    {statuses.map((stat) => (
-                      <SelectItem key={stat} value={stat}>
-                        <div className="flex items-center gap-2">
-                          {getStatusIcon(stat.toLowerCase())}
-                          <span>{stat}</span>
-                        </div>
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
-
-            {/* Filter Button Section */}
-            <div className="flex justify-between mt-2">
-              <Button 
-                type="button"
-                onClick={handleResetFilters}
-                variant="outline"
-                className="border-gray-200 text-gray-700 hover:bg-gray-50 flex items-center gap-2"
-                disabled={isLoading || (selectedCategory === 'all' && selectedStatus === 'all' && !searchTerm && selectedSortBy === 'date_desc')}
-              >
-                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-refresh-ccw">
-                  <path d="M3 2v6h6"></path>
-                  <path d="M21 12A9 9 0 0 0 6 5.3L3 8"></path>
-                  <path d="M21 22v-6h-6"></path>
-                  <path d="M3 12a9 9 0 0 0 15 6.7l3-2.7"></path>
-                </svg>
-                Reset Filter
-              </Button>
-
-              <Button 
-                type="button"
-                onClick={() => handleFilterChange(true)}
-                className="bg-[#2E7D32] hover:bg-[#1B5E20] text-white flex items-center gap-2"
-                disabled={isLoading}
-              >
-                <Filter className="h-4 w-4" />
-                {isLoading ? (
-                  <>
-                    <Loader2 className="h-4 w-4 mr-1 animate-spin" />
-                    Memproses...
-                  </>
-                ) : 'Terapkan Filter'}
-              </Button>
-            </div>
-          </div>
-        </CardContent>
-        <CardFooter className="border-t border-[#F0F0F0] bg-gray-50 py-3">
-          <div className="flex items-center gap-2">
-            <Sparkles className="h-4 w-4 text-[#4CAF50]" />
-            <span className="text-sm text-gray-600">
-              Menampilkan {submissions.length} dari {totalCount} laporan
-              {(selectedCategory !== 'all' || selectedStatus !== 'all' || searchTerm) && (
-                <span className="ml-1">
-                  {selectedCategory !== 'all' && ` • Kategori: ${selectedCategory}`}
-                  {selectedStatus !== 'all' && ` • Status: ${selectedStatus}`}
-                  {searchTerm && ` • Pencarian: "${searchTerm}"`}
-                </span>
+                  <Loader2 className="h-5 w-5 animate-spin text-[#4CAF50]" />
+                </motion.div>
               )}
-            </span>
-          </div>
-        </CardFooter>
-      </Card>
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="pt-6">
+            <div className="space-y-6">
+              {/* Search Input with immediate feedback */}
+              <form onSubmit={handleSearchSubmit} className="w-full">
+                <div className="relative group">
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400 transition-colors duration-200 group-hover:text-[#4CAF50]" />
+                  <Input
+                    placeholder="Cari berdasarkan kata kunci..."
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    className="pl-10 w-full rounded-lg border-[#E8F5E9] focus-visible:ring-[#4CAF50]/30 transition-all duration-200 bg-[#F9FDF9] hover:bg-white focus:bg-white shadow-sm"
+                  />
+                </div>
+              </form>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                {/* Category Filter with active state indication */}
+                <div>
+                  <label htmlFor="category-select" className="text-sm font-medium text-gray-500 mb-1.5 block">
+                    Kategori {selectedCategory !== 'all' && (
+                      <span className="inline-flex items-center text-[#2E7D32] bg-[#E8F5E9] px-2 py-0.5 rounded-full text-xs ml-2">
+                        {selectedCategory}
+                      </span>
+                    )}
+                  </label>
+                  <Select 
+                    value={selectedCategory} 
+                    onValueChange={(value) => {
+                      if (value === selectedCategory) return;
+                      setSelectedCategory(value);
+                    }}
+                  >
+                    <SelectTrigger 
+                      id="category-select" 
+                      className="w-full rounded-lg border-[#F0F0F0] bg-gray-50 hover:bg-white transition-all duration-200 focus:ring-[#2E7D32]/20"
+                    >
+                      <SelectValue placeholder="Semua Kategori" />
+                    </SelectTrigger>
+                    <SelectContent className="rounded-lg border-[#F0F0F0] shadow-lg">
+                      <SelectItem value="all" className="focus:bg-[#E8F5E9] focus:text-[#2E7D32]">
+                        Semua Kategori
+                      </SelectItem>
+                      {categories.map((cat) => (
+                        <SelectItem 
+                          key={cat} 
+                          value={cat} 
+                          className="flex items-center focus:bg-[#E8F5E9] focus:text-[#2E7D32]"
+                        >
+                          <div className="flex items-center gap-2">
+                            {getCategoryIcon(cat)}
+                            <span>{cat}</span>
+                          </div>
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                {/* Status Filter */}
+                <div>
+                  <label htmlFor="status-select" className="text-sm font-medium text-gray-600 mb-2 block flex items-center">
+                    <AlertCircle className="h-4 w-4 mr-1.5 text-[#4CAF50]" />
+                    Status {selectedStatus !== 'all' && (
+                      <motion.span 
+                        initial={{ opacity: 0, scale: 0.9 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        className="inline-flex items-center text-[#1B5E20] bg-[#E8F5E9] px-2 py-0.5 rounded-full text-xs ml-2 border border-[#4CAF50]/20"
+                      >
+                        {selectedStatus}
+                      </motion.span>
+                    )}
+                  </label>
+                  <Select 
+                    value={selectedStatus} 
+                    onValueChange={(value) => {
+                      if (value === selectedStatus) return;
+                      setSelectedStatus(value);
+                    }}
+                  >
+                    <SelectTrigger 
+                      id="status-select" 
+                      className="w-full rounded-lg border-[#E8F5E9] bg-[#F9FDF9] hover:bg-white transition-all duration-200 focus:ring-[#4CAF50]/30 shadow-sm"
+                    >
+                      <SelectValue placeholder="Semua Status" />
+                    </SelectTrigger>
+                    <SelectContent className="rounded-lg border-[#E8F5E9] shadow-lg bg-white/95 backdrop-blur-sm">
+                      <SelectItem value="all" className="focus:bg-[#E8F5E9] focus:text-[#1B5E20] hover:bg-[#E8F5E9]/50">
+                        <div className="flex items-center gap-2">
+                          <AlertCircle className="h-4 w-4 text-[#4CAF50]" />
+                          <span>Semua Status</span>
+                        </div>
+                      </SelectItem>
+                      {statuses.map((stat) => (
+                        <SelectItem 
+                          key={stat} 
+                          value={stat}
+                          className="focus:bg-[#E8F5E9] focus:text-[#1B5E20] hover:bg-[#E8F5E9]/50"
+                        >
+                          <div className="flex items-center gap-2">
+                            {getStatusIcon(stat.toLowerCase())}
+                            <span>{stat}</span>
+                          </div>
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+
+              {/* Filter Button Section */}
+              <div className="flex justify-between mt-2">
+                <Button 
+                  type="button"
+                  onClick={handleResetFilters}
+                  variant="outline"
+                  className="border-gray-200 text-gray-700 hover:bg-gray-50 hover:border-gray-300 transition-all duration-200 flex items-center gap-2"
+                  disabled={isLoading || (selectedCategory === 'all' && selectedStatus === 'all' && !searchTerm && selectedSortBy === 'date_desc')}
+                >
+                  <RefreshCw className="h-4 w-4" />
+                  Reset Filter
+                </Button>
+
+                <Button 
+                  type="button"
+                  onClick={() => handleFilterChange(true)}
+                  className="bg-[#2E7D32] hover:bg-[#1B5E20] text-white flex items-center gap-2 transition-all duration-200 shadow-sm hover:shadow"
+                  disabled={isLoading}
+                >
+                  <Filter className="h-4 w-4" />
+                  {isLoading ? (
+                    <>
+                      <Loader2 className="h-4 w-4 mr-1 animate-spin" />
+                      Memproses...
+                    </>
+                  ) : 'Terapkan Filter'}
+                </Button>
+              </div>
+            </div>
+          </CardContent>
+          <CardFooter className="border-t border-[#F0F0F0] bg-gradient-to-r from-[#f8f9fa] to-white py-3">
+            <div className="flex items-center gap-2">
+              <Sparkles className="h-4 w-4 text-[#4CAF50]" />
+              <span className="text-sm text-gray-600">
+                Menampilkan {submissions.length} dari {totalCount} laporan
+                {(selectedCategory !== 'all' || selectedStatus !== 'all' || searchTerm) && (
+                  <span className="ml-1">
+                    {selectedCategory !== 'all' && (
+                      <span className="inline-flex items-center text-[#2E7D32] text-xs ml-1">
+                        • Kategori: {selectedCategory}
+                      </span>
+                    )}
+                    {selectedStatus !== 'all' && (
+                      <span className="inline-flex items-center text-[#0D47A1] text-xs ml-1">
+                        • Status: {selectedStatus}
+                      </span>
+                    )}
+                    {searchTerm && (
+                      <span className="inline-flex items-center text-gray-600 text-xs ml-1">
+                        • Pencarian: "{searchTerm}"
+                      </span>
+                    )}
+                  </span>
+                )}
+              </span>
+            </div>
+          </CardFooter>
+        </Card>
+      </motion.div>
 
       {/* Submissions Display Section */}
-      {isLoading ? (
-        <div className="flex items-center justify-center py-12">
-          <Loader2 className="h-8 w-8 text-[#2E7D32] animate-spin" />
-          <span className="ml-2 text-gray-600">Memuat data...</span>
-        </div>
-      ) : submissions.length === 0 ? (
-        <div className="flex flex-col items-center justify-center py-12 text-center">
-          <AlertCircle className="h-12 w-12 text-gray-400 mb-3" />
-          <h3 className="text-lg font-semibold text-gray-700 mb-1">Tidak Ada Laporan Ditemukan</h3>
-          <p className="text-gray-500 max-w-md">
-            Tidak ada laporan yang sesuai dengan kriteria pencarian Anda. Coba ubah filter atau istilah pencarian.
-          </p>
-        </div>
-      ) : (
-        <div className="space-y-4">
-          {submissions.map((submission) => (
-            <Card key={submission.id} className="overflow-hidden hover:shadow-md transition-shadow border-l-4 border-l-[#2E7D32] rounded-lg">
-              <div className="grid md:grid-cols-[1fr_auto] gap-4">
-                <div className="p-4 md:p-5">
-                  <div className="flex flex-wrap items-center gap-2 mb-2">
-                    <Badge 
-                      className={getStatusBadgeColor(submission.status)} 
-                      variant="secondary"
-                    >
-                      <div className="flex items-center gap-1.5">
-                        {getStatusIcon(submission.status)}
-                        <span>{submission.status}</span>
-                      </div>
-                    </Badge>
-                    
-                    <Badge variant="outline" className="border-gray-200 bg-gray-50 text-gray-700">
-                      <div className="flex items-center gap-1.5">
-                        {getCategoryIcon(submission.category)}
-                        <span>{submission.category}</span>
-                      </div>
-                    </Badge>
-                    
-                    <Badge variant="outline" className="border-gray-200 bg-gray-50 text-gray-500">
-                      <div className="flex items-center gap-1.5">
-                        <CalendarDays className="h-3 w-3" />
-                        <span>
-                          {formatDistanceToNow(submission.createdAt, { 
-                            addSuffix: true, 
-                            locale: id 
-                          })}
-                        </span>
-                      </div>
-                    </Badge>
-                  </div>
-                  
-                  <h3 className="text-gray-800 font-semibold mb-3 flex items-center">
-                    <span className="mr-2">Laporan ID: {submission.referenceId}</span>
-                    {submission.priority === "Urgent" && (
-                      <Badge className="bg-red-100 text-red-800 border-red-200">
-                        Prioritas Tinggi
-                      </Badge>
-                    )}
-                  </h3>
-                  
-                  <Accordion type="single" collapsible className="border-b-0">
-                    <AccordionItem value="description" className="border-b-0">
-                      <AccordionTrigger className="text-sm py-1 px-0 font-normal text-[#0D47A1] hover:text-[#0A3880] hover:no-underline">
-                        Lihat Detail Laporan
-                      </AccordionTrigger>
-                      <AccordionContent className="text-gray-700 whitespace-pre-line">
-                        <div className="bg-gray-50 p-3 rounded-md border border-gray-100 my-2">
-                          {submission.description.length > 300 
-                            ? `${submission.description.substring(0, 300)}...` 
-                            : submission.description
-                          }
-                        </div>
-                        
-                        {submission.fileUrl && (
-                          <div className="mt-2 flex items-center">
-                            <a 
-                              href={submission.fileUrl} 
-                              target="_blank" 
-                              rel="noopener noreferrer"
-                              className="text-[#0D47A1] hover:underline flex items-center gap-1.5 text-sm"
-                            >
-                              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-paperclip">
-                                <path d="m21.44 11.05-9.19 9.19a6 6 0 0 1-8.49-8.49l8.57-8.57A4 4 0 1 1 18 8.84l-8.59 8.57a2 2 0 0 1-2.83-2.83l8.49-8.47"/>
-                              </svg>
-                              Lihat Lampiran
-                            </a>
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ duration: 0.5, delay: 0.2 }}
+      >
+        {isLoading ? (
+          <div className="flex items-center justify-center py-16 bg-white/50 rounded-xl border border-gray-100 shadow-sm">
+            <div className="flex flex-col items-center">
+              <Loader2 className="h-10 w-10 text-[#2E7D32] animate-spin mb-3" />
+              <span className="text-gray-600 font-medium">Memuat data laporan...</span>
+            </div>
+          </div>
+        ) : submissions.length === 0 ? (
+          <motion.div 
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ duration: 0.3 }}
+            className="flex flex-col items-center justify-center py-16 text-center bg-white rounded-xl border border-gray-100 shadow-sm"
+          >
+            <motion.div 
+              className="bg-gray-50 p-4 rounded-full mb-4"
+              animate={{ 
+                scale: [1, 1.1, 1],
+                rotate: [0, 5, -5, 0]
+              }}
+              transition={{ 
+                duration: 2,
+                repeat: Infinity,
+                repeatType: "reverse"
+              }}
+            >
+              <AlertCircle className="h-12 w-12 text-[#4CAF50]" />
+            </motion.div>
+            <h3 className="text-xl font-semibold text-[#1B5E20] mb-2">Tidak Ada Laporan Ditemukan</h3>
+            <p className="text-gray-500 max-w-md">
+              Tidak ada laporan yang sesuai dengan kriteria pencarian Anda. Coba ubah filter atau istilah pencarian.
+            </p>
+          </motion.div>
+        ) : (
+          <div className="space-y-5">
+            {submissions.map((submission, index) => (
+              <motion.div
+                key={submission.id}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.3, delay: index * 0.05 }}
+                whileHover={{ y: -4 }}
+                className="transform transition-all duration-300"
+              >
+                <Card className="overflow-hidden shadow-sm hover:shadow-md transition-all duration-300 border-l-4 border-l-[#2E7D32] rounded-xl bg-white">
+                  <div className="grid md:grid-cols-[1fr_auto] gap-4">
+                    <div className="p-5 md:p-6">
+                      <div className="flex flex-wrap items-center gap-2 mb-3">
+                        <Badge 
+                          className={`${getStatusBadgeColor(submission.status)} transition-all duration-300 shadow-sm`} 
+                          variant="secondary"
+                        >
+                          <div className="flex items-center gap-1.5">
+                            {getStatusIcon(submission.status)}
+                            <span>{submission.status}</span>
                           </div>
-                        )}
+                        </Badge>
                         
-                        <div className="flex justify-between items-center mt-3 pt-2 border-t border-gray-100">
-                          <div className="flex items-center text-gray-500 text-sm">
-                            <MapPin className="h-3.5 w-3.5 mr-1" /> 
-                            Desa Pangkalan Baru
+                        <Badge 
+                          variant="outline" 
+                          className="border-gray-200 bg-gray-50 text-gray-700 hover:bg-gray-100 transition-colors duration-200"
+                        >
+                          <div className="flex items-center gap-1.5">
+                            {getCategoryIcon(submission.category)}
+                            <span>{submission.category}</span>
                           </div>
-                          
-                          <div className="flex items-center gap-1 text-sm text-gray-500">
-                            <MessageSquare className="h-3.5 w-3.5" />
+                        </Badge>
+                        
+                        <Badge 
+                          variant="outline" 
+                          className="border-gray-200 bg-gray-50 text-gray-500 hover:bg-gray-100 transition-colors duration-200"
+                        >
+                          <div className="flex items-center gap-1.5">
+                            <CalendarDays className="h-3 w-3" />
                             <span>
-                              {submission.internalComments?.length || 0} komentar
+                              {formatDistanceToNow(submission.createdAt, { 
+                                addSuffix: true, 
+                                locale: id 
+                              })}
                             </span>
                           </div>
+                        </Badge>
+                      </div>
+                      
+                      <h3 className="text-gray-800 font-semibold mb-3 flex items-center text-lg">
+                        <span className="mr-2">Laporan ID: {submission.referenceId}</span>
+                        {submission.priority === "Urgent" && (
+                          <Badge className="bg-red-100 text-red-800 border-red-200 animate-pulse">
+                            Prioritas Tinggi
+                          </Badge>
+                        )}
+                      </h3>
+                      
+                      <Accordion type="single" collapsible className="border-b-0">
+                        <AccordionItem value="description" className="border-b-0">
+                          <AccordionTrigger className="text-sm py-2 px-0 font-medium text-[#0D47A1] hover:text-[#0A3880] hover:no-underline transition-all duration-200 group">
+                            <div className="flex items-center">
+                              <span>Lihat Detail Laporan</span>
+                              <ChevronRight className="h-4 w-4 ml-1 text-[#0D47A1] group-hover:translate-x-1 transition-transform duration-200" />
+                            </div>
+                          </AccordionTrigger>
+                          <AccordionContent className="text-gray-700 whitespace-pre-line">
+                            <div className="bg-gradient-to-r from-gray-50 to-white p-4 rounded-md border border-gray-100 my-2 shadow-inner">
+                              {submission.description.length > 300 
+                                ? `${submission.description.substring(0, 300)}...` 
+                                : submission.description
+                              }
+                            </div>
+                            
+                            {submission.fileUrl && (
+                              <div className="mt-3 flex items-center">
+                                <a 
+                                  href={submission.fileUrl} 
+                                  target="_blank" 
+                                  rel="noopener noreferrer"
+                                  className="text-[#0D47A1] hover:text-[#0A3880] hover:underline flex items-center gap-1.5 text-sm font-medium transition-colors duration-200 bg-[#E3F2FD] hover:bg-[#BBDEFB] px-3 py-1.5 rounded-md"
+                                >
+                                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-paperclip">
+                                    <path d="m21.44 11.05-9.19 9.19a6 6 0 0 1-8.49-8.49l8.57-8.57A4 4 0 1 1 18 8.84l-8.59 8.57a2 2 0 0 1-2.83-2.83l8.49-8.47"/>
+                                  </svg>
+                                  Lihat Lampiran
+                                </a>
+                              </div>
+                            )}
+                            
+                            <div className="flex justify-between items-center mt-4 pt-3 border-t border-gray-100">
+                              <div className="flex items-center text-gray-500 text-sm bg-gray-50 px-2 py-1 rounded-md">
+                                <MapPin className="h-3.5 w-3.5 mr-1 text-[#2E7D32]" /> 
+                                Desa Pangkalan Baru
+                              </div>
+                              
+                              <div className="flex items-center gap-1 text-sm text-gray-500 bg-gray-50 px-2 py-1 rounded-md">
+                                <MessageSquare className="h-3.5 w-3.5 text-[#0D47A1]" />
+                                <span>
+                                  {submission.internalComments?.length || 0} komentar
+                                </span>
+                              </div>
+                            </div>
+                          </AccordionContent>
+                        </AccordionItem>
+                      </Accordion>
+                      
+                      {/* Progress Indicator */}
+                      <div className="mt-4 pt-2">
+                        <div className="flex items-center justify-between mb-2">
+                          <span className="text-sm font-medium text-gray-700">
+                            Status Penanganan
+                          </span>
+                          <span className="text-sm font-medium text-gray-700">
+                            {submission.status === 'pending' ? '0%' : 
+                             submission.status === 'in progress' ? '50%' : '100%'}
+                          </span>
                         </div>
-                      </AccordionContent>
-                    </AccordionItem>
-                  </Accordion>
-                  
-                  {/* Progress Indicator */}
-                  <div className="mt-4 pt-2">
-                    <div className="flex items-center justify-between mb-1.5">
-                      <span className="text-xs font-medium text-gray-500">
-                        Status Penanganan
-                      </span>
-                      <span className="text-xs font-medium text-gray-700">
-                        {submission.status === 'pending' ? '0%' : 
-                         submission.status === 'in progress' ? '50%' : '100%'}
-                      </span>
+                        <div className="w-full bg-gray-100 rounded-full h-2.5 shadow-inner">
+                          <motion.div 
+                            initial={{ width: 0 }}
+                            animate={{ 
+                              width: submission.status === 'pending' ? '0%' : 
+                                     submission.status === 'in progress' ? '50%' : '100%' 
+                            }}
+                            transition={{ duration: 1, ease: "easeOut" }}
+                            className={`h-2.5 rounded-full ${
+                              submission.status === 'pending' ? 'bg-gray-300' : 
+                              submission.status === 'in progress' ? 'bg-[#7F4700]' : 
+                              'bg-[#1B5E20]'
+                            }`}
+                          />
+                        </div>
+                      </div>
                     </div>
-                    <div className="w-full bg-gray-200 rounded-full h-2">
-                      <div 
-                        className={`h-2 rounded-full ${
-                          submission.status === 'pending' ? 'w-0 bg-gray-300' : 
-                          submission.status === 'in progress' ? 'w-1/2 bg-[#7F4700]' : 
-                          'w-full bg-[#1B5E20]'
-                        }`}
-                      ></div>
+                    
+                    {/* Action Buttons on right side for larger screens */}
+                    <div className="bg-gradient-to-b from-gray-50 to-white flex flex-col md:justify-center items-center py-5 px-6 border-t md:border-t-0 md:border-l border-gray-200">
+                      <Button 
+                        asChild 
+                        variant="default"
+                        className="w-full bg-[#0D47A1] hover:bg-[#0A3880] text-white transition-all duration-300 shadow-sm hover:shadow font-medium"
+                      >
+                        <Link href={`/track?id=${submission.referenceId}`} className="flex items-center justify-center gap-1">
+                          <span>Lacak Status</span>
+                          <ChevronRight className="h-4 w-4 group-hover:translate-x-1 transition-transform duration-200" />
+                        </Link>
+                      </Button>
                     </div>
                   </div>
-                </div>
-                
-                {/* Action Buttons on right side for larger screens */}
-                <div className="bg-gray-50 flex flex-col md:justify-center items-center py-4 px-5 border-t md:border-t-0 md:border-l border-gray-200">
-                  <Button 
-                    asChild 
-                    variant="default"
-                    className="w-full bg-[#0D47A1] hover:bg-[#0A3880] text-white"
-                  >
-                    <Link href={`/track?id=${submission.referenceId}`}>
-                      Lacak Status
-                    </Link>
-                  </Button>
-                </div>
-              </div>
-            </Card>
-          ))}
-        </div>
-      )}
+                </Card>
+              </motion.div>
+            ))}
+          </div>
+        )}
+      </motion.div>
 
       {/* Pagination */}
       {totalPages > 1 && (
-        <div className="flex justify-center mt-6">
-          <Pagination>
-            <PaginationContent>
-              <PaginationItem>
-                <PaginationPrevious
-                  href={currentPage > 1 ? `${pathname}?${createQueryString({ page: currentPage - 1, category: selectedCategory, status: selectedStatus, search: searchTerm })}` : '#'}
-                  aria-disabled={currentPage <= 1}
-                  tabIndex={currentPage <= 1 ? -1 : undefined}
-                  className={`${currentPage <= 1 ? "pointer-events-none opacity-50" : ""} text-[#0D47A1]`}
-                  onClick={(e) => { 
-                    if (currentPage <= 1) {
-                      e.preventDefault();
-                    } else {
-                      e.preventDefault();
-                      handlePageChange(currentPage - 1);
-                    }
-                  }}
-                />
-              </PaginationItem>
-
-              {/* Simplified Pagination Logic - Consider a more robust solution for many pages */}
-              {Array.from({ length: totalPages }, (_, i) => i + 1).map(page => (
-                <PaginationItem key={page}>
-                  <PaginationLink
-                    href={`${pathname}?${createQueryString({ page: page, category: selectedCategory, status: selectedStatus, search: searchTerm })}`}
-                    isActive={currentPage === page}
-                    aria-current={currentPage === page ? "page" : undefined}
-                    className={currentPage === page ? "bg-[#4CAF50] text-white hover:bg-[#4CAF50]/90" : "text-gray-700 hover:bg-[#F0F0F0]"}
-                    onClick={(e) => {
-                      e.preventDefault();
-                      handlePageChange(page);
+        <motion.div 
+          className="flex justify-center mt-8"
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.4, delay: 0.3 }}
+        >
+          <div className="flex flex-col items-center gap-2">
+            <p className="text-sm text-gray-500 mb-1">
+              Menampilkan halaman <span className="font-medium text-gray-800">{currentPage}</span> dari <span className="font-medium text-gray-800">{totalPages}</span>
+            </p>
+            <Pagination className="shadow-sm bg-white rounded-lg p-1 border border-[#E8F5E9]">
+              <PaginationContent className="gap-2">
+                <PaginationItem>
+                  <PaginationPrevious
+                    href={currentPage > 1 ? `${pathname}?${createQueryString({ page: currentPage - 1, category: selectedCategory, status: selectedStatus, search: searchTerm })}` : '#'}
+                    aria-disabled={currentPage <= 1}
+                    tabIndex={currentPage <= 1 ? -1 : undefined}
+                    className={`transition-all duration-200 rounded-lg border-[#E8F5E9] hover:bg-[#E8F5E9] hover:text-[#1B5E20] ${currentPage <= 1 ? "pointer-events-none opacity-50" : ""} text-[#2E7D32]`}
+                    onClick={(e) => { 
+                      if (currentPage <= 1) {
+                        e.preventDefault();
+                      } else {
+                        e.preventDefault();
+                        handlePageChange(currentPage - 1);
+                      }
                     }}
-                  >
-                    {page}
-                  </PaginationLink>
+                  />
                 </PaginationItem>
-              ))}
 
-              <PaginationItem>
-                <PaginationNext
-                  href={currentPage < totalPages ? `${pathname}?${createQueryString({ page: currentPage + 1, category: selectedCategory, status: selectedStatus, search: searchTerm })}` : '#'}
-                  aria-disabled={currentPage >= totalPages}
-                  tabIndex={currentPage >= totalPages ? -1 : undefined}
-                  className={`${currentPage >= totalPages ? "pointer-events-none opacity-50" : ""} text-[#0D47A1]`}
-                  onClick={(e) => { 
-                    if (currentPage >= totalPages) {
-                      e.preventDefault(); 
-                    } else {
-                      e.preventDefault();
-                      handlePageChange(currentPage + 1);
-                    }
-                  }}
-                />
-              </PaginationItem>
-            </PaginationContent>
-          </Pagination>
-        </div>
+                {Array.from({ length: totalPages }, (_, i) => i + 1).map(page => (
+                  <PaginationItem key={page}>
+                    <PaginationLink
+                      href={`${pathname}?${createQueryString({ page: page, category: selectedCategory, status: selectedStatus, search: searchTerm })}`}
+                      isActive={currentPage === page}
+                      aria-current={currentPage === page ? "page" : undefined}
+                      className={`transition-all duration-200 rounded-lg border-[#E8F5E9] ${currentPage === page ? 'bg-[#E8F5E9] text-[#1B5E20] font-medium border-[#4CAF50]' : 'text-gray-700 hover:bg-[#E8F5E9] hover:text-[#1B5E20]'}`}
+                      onClick={(e) => {
+                        e.preventDefault();
+                        handlePageChange(page);
+                      }}
+                    >
+                      {page}
+                    </PaginationLink>
+                  </PaginationItem>
+                ))}
+
+                <PaginationItem>
+                  <PaginationNext
+                    href={currentPage < totalPages ? `${pathname}?${createQueryString({ page: currentPage + 1, category: selectedCategory, status: selectedStatus, search: searchTerm })}` : '#'}
+                    aria-disabled={currentPage >= totalPages}
+                    tabIndex={currentPage >= totalPages ? -1 : undefined}
+                    className={`transition-all duration-200 rounded-lg border-[#E8F5E9] hover:bg-[#E8F5E9] hover:text-[#1B5E20] ${currentPage >= totalPages ? "pointer-events-none opacity-50" : ""} text-[#2E7D32]`}
+                    onClick={(e) => { 
+                      if (currentPage >= totalPages) {
+                        e.preventDefault(); 
+                      } else {
+                        e.preventDefault();
+                        handlePageChange(currentPage + 1);
+                      }
+                    }}
+                  />
+                </PaginationItem>
+              </PaginationContent>
+            </Pagination>
+          </div>
+        </motion.div>
       )}
     </div>
   );

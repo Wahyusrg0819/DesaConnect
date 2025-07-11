@@ -167,7 +167,7 @@ const HowItWorks = ({ className }: HowItWorksProps) => {
           className="space-y-12"
         >
           <motion.div variants={itemVariants} className="text-center">
-            <h2 className="mb-4 text-3xl font-bold tracking-tight md:text-4xl">Cara Kerja DesaConnect</h2>
+            <h2 className="mb-4 text-3xl font-bold tracking-tight md:text-4xl">Cara Kerja Desa Pangkalan Baru</h2>
             <p className="mx-auto max-w-2xl text-muted-foreground">
               Tiga langkah sederhana untuk menghubungkan masyarakat dengan pemerintah desa
             </p>

@@ -63,8 +63,8 @@ import { Separator } from "@/components/ui/separator";
 import { Label } from "@/components/ui/label";
 
 export const metadata: Metadata = {
-  title: "Kelola Laporan - DesaConnect",
-  description: "Manajemen laporan masyarakat DesaConnect",
+  title: "Kelola Laporan - Desa Pangkalan Baru",
+  description: "Manajemen laporan masyarakat Desa Pangkalan Baru",
 };
 
 // Menambahkan cache control untuk memastikan data selalu fresh

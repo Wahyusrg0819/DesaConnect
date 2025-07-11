@@ -3,13 +3,7 @@
 import { cookies } from 'next/headers';
 import { supabase } from '@/lib/supabase';
 import { redirect } from 'next/navigation';
-
-// Mendapatkan daftar email admin dari variabel lingkungan
-function getAllowedAdminEmails(): string[] {
-  const adminEmailsString = process.env.ALLOWED_ADMIN_EMAILS || '';
-  // Memisahkan email berdasarkan koma dan menghapus spasi
-  return adminEmailsString.split(',').map(email => email.trim().toLowerCase()).filter(Boolean);
-}
+import { createClient } from '@supabase/supabase-js';
 
 // Simple cache for admin status - expires after 15 minutes
 const adminCache = new Map<string, { isAdmin: boolean, timestamp: number }>();
@@ -22,34 +16,34 @@ export const isAuthorizedAdmin = async (email: string | null | undefined): Promi
   const normalizedEmail = email.trim().toLowerCase();
   const startTime = Date.now();
 
+  console.log(`[AUTH] Checking admin authorization for: ${normalizedEmail}`);
+
   // Check cache first
   const cachedResult = adminCache.get(normalizedEmail);
   if (cachedResult && (Date.now() - cachedResult.timestamp) < CACHE_TTL) {
-    console.log(`[PERF] Using cached admin status for ${normalizedEmail}, elapsed: ${Date.now() - startTime}ms`);
+    console.log(`[PERF] Using cached admin status for ${normalizedEmail}, result: ${cachedResult.isAdmin}, elapsed: ${Date.now() - startTime}ms`);
     return cachedResult.isAdmin;
   }
   
-  // Initialize with fallback from environment variables first (faster)
-  // This moves the env check before the database check for better performance
-  const allowedEmails = getAllowedAdminEmails();
-  let isAdmin = allowedEmails.some(allowedEmail => allowedEmail === normalizedEmail);
-  
-  if (isAdmin) {
-    console.log(`[PERF] Admin found in environment variables: ${normalizedEmail}, elapsed: ${Date.now() - startTime}ms`);
-    // Cache the result
-    adminCache.set(normalizedEmail, { 
-      isAdmin, 
-      timestamp: Date.now() 
-    });
-    return true;
-  }
-  
-  // If not found in environment variables, check database
+  let isAdmin = false;
+
+  // Check database only (removed environment variable dependency)
   try {
-    console.log(`[PERF] Checking database for admin status: ${normalizedEmail}`);
+    console.log(`[AUTH] Checking database for admin status: ${normalizedEmail}`);
     const dbCheckStart = Date.now();
     
-    const { data, error } = await supabase
+    // Use service role client to bypass RLS for admin checks
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+    const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+    
+    if (!supabaseUrl || !serviceRoleKey) {
+      console.error('[AUTH] Missing Supabase credentials for admin check');
+      return false;
+    }
+    
+    const supabaseAdmin = createClient(supabaseUrl, serviceRoleKey);
+    
+    const { data, error } = await supabaseAdmin
       .from('admin_list')
       .select('email')
       .eq('email', normalizedEmail)
@@ -57,13 +51,15 @@ export const isAuthorizedAdmin = async (email: string | null | undefined): Promi
       
     if (!error && data) {
       isAdmin = true;
-      console.log(`[PERF] Admin found in database: ${normalizedEmail}, db elapsed: ${Date.now() - dbCheckStart}ms, total: ${Date.now() - startTime}ms`);
+      console.log(`[AUTH] ✅ Admin found in database: ${normalizedEmail}, db elapsed: ${Date.now() - dbCheckStart}ms, total: ${Date.now() - startTime}ms`);
     } else if (error && error.code !== 'PGRST116') { // PGRST116 is "No rows returned" - not really an error
-      console.error('Database error checking admin status:', error);
+      console.error('[AUTH] Database error checking admin status:', error);
       // Only log real DB errors, not "not found"
+    } else {
+      console.log(`[AUTH] ❌ Email not found in database: ${normalizedEmail}`);
     }
   } catch (err) {
-    console.error('Exception checking admin_list table:', err);
+    console.error('[AUTH] Exception checking admin_list table:', err);
   }
   
   // Cache the result
@@ -72,7 +68,7 @@ export const isAuthorizedAdmin = async (email: string | null | undefined): Promi
     timestamp: Date.now() 
   });
   
-  console.log(`[PERF] Admin check complete for ${normalizedEmail}, result: ${isAdmin}, total elapsed: ${Date.now() - startTime}ms`);
+  console.log(`[AUTH] Final result for ${normalizedEmail}: ${isAdmin ? '✅ AUTHORIZED' : '❌ NOT AUTHORIZED'}, total elapsed: ${Date.now() - startTime}ms`);
   return isAdmin;
 };
 
@@ -145,4 +141,28 @@ export async function protectAdminRoute() {
     // Redirect ke halaman utama jika bukan admin
     redirect('/');
   }
-} 
+}
+
+// Function to clear admin cache (useful for debugging)
+export const clearAdminCache = async (email?: string) => {
+  if (email) {
+    const normalizedEmail = email.trim().toLowerCase();
+    adminCache.delete(normalizedEmail);
+    console.log(`[AUTH] Cache cleared for: ${normalizedEmail}`);
+  } else {
+    adminCache.clear();
+    console.log(`[AUTH] All admin cache cleared`);
+  }
+};
+
+// Function to view current cache (for debugging)
+export const getAdminCache = async () => {
+  const cacheEntries = Array.from(adminCache.entries()).map(([email, data]) => ({
+    email,
+    isAdmin: data.isAdmin,
+    timestamp: new Date(data.timestamp).toISOString(),
+    ageMinutes: Math.round((Date.now() - data.timestamp) / (60 * 1000))
+  }));
+  console.log(`[AUTH] Current cache entries:`, cacheEntries);
+  return cacheEntries;
+};

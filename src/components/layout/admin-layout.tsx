@@ -1,18 +1,34 @@
+'use client';
+
+import { usePathname } from 'next/navigation';
 import AdminHeader from './admin-header';
-import { User } from '@/lib/types';
 
 interface AdminLayoutProps {
   children: React.ReactNode;
-  currentUser?: User | null;
+  currentUser?: { email?: string } | null;
 }
 
 export default function AdminLayout({ children, currentUser }: AdminLayoutProps) {
+  const pathname = usePathname();
+  
+  // Pages where the admin header should NOT be shown
+  const hideHeaderOnPages = ['/admin/login', '/admin/register'];
+  const shouldShowHeader = !hideHeaderOnPages.includes(pathname);
+  
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col">
-      <AdminHeader userEmail={currentUser?.email} />
+      {shouldShowHeader && <AdminHeader userEmail={currentUser?.email} />}
       
       <main className="flex-grow">
-        {children}
+        {shouldShowHeader ? (
+          <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-4">
+            <div className="bg-white rounded-lg shadow-sm">
+              {children}
+            </div>
+          </div>
+        ) : (
+          children
+        )}
       </main>
     </div>
   );

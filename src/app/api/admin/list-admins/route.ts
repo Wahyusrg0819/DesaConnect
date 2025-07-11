@@ -17,25 +17,26 @@ const adminClient = createClient<Database>(supabaseUrl, supabaseServiceRoleKey, 
 
 export async function GET(request: Request) {
   try {
-    // Get the user's session from cookies
+    // Get the user's session from cookies - check both admin_session and user-email
     const cookieStore = await cookies()
+    const adminSessionEmail = cookieStore.get('admin_session')?.value
     const userEmail = cookieStore.get('user-email')?.value
+    
+    // Use admin_session first (primary auth), then fallback to user-email
+    const currentUserEmail = adminSessionEmail || userEmail
 
-    if (!userEmail) {
+    if (!currentUserEmail) {
       return NextResponse.json(
         { error: 'Unauthorized - No user email found' },
         { status: 401 }
       )
     }
 
-    // Check if the user is an admin
-    const { data: adminCheck, error: adminCheckError } = await adminClient
-      .from('admin_list')
-      .select('email')
-      .eq('email', userEmail)
-      .single()
+    // Import and use the same authorization logic
+    const { isAuthorizedAdmin } = await import('@/lib/auth-utils')
+    const isAdmin = await isAuthorizedAdmin(currentUserEmail)
 
-    if (adminCheckError || !adminCheck) {
+    if (!isAdmin) {
       return NextResponse.json(
         { error: 'Unauthorized - Not an admin' },
         { status: 401 }

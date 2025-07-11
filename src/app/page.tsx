@@ -91,7 +91,7 @@ export default async function Home({
   const organizationJsonLd = {
     "@context": "https://schema.org",
     "@type": "GovernmentOrganization",
-    "name": "DesaConnect - Desa Pangkalan Baru",
+    "name": "Desa Pangkalan Baru",
     "url": "https://desaconnect.id",
     "logo": "https://desaconnect.id/icons/icon-192x192.png",
     "description": "Platform aspirasi dan keluhan masyarakat untuk Desa Pangkalan Baru",
@@ -119,7 +119,7 @@ export default async function Home({
   const applicationJsonLd = {
     "@context": "https://schema.org",
     "@type": "WebApplication",
-    "name": "DesaConnect",
+    "name": "Desa Pangkalan Baru",
     "applicationCategory": "GovernmentApplication",
     "operatingSystem": "All",
     "offers": {
@@ -144,7 +144,7 @@ export default async function Home({
         
         {/* Hero Section - Modern and Animated */}
         <Hero 
-          title="Selamat Datang di DesaConnect"
+          title="Selamat Datang di Desa Pangkalan Baru"
           subtitle="Platform aspirasi dan keluhan untuk membangun Desa Pangkalan Baru yang lebih baik."
           badge="Platform Digital Desa"
           actions={[

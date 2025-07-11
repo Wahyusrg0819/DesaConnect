@@ -7,8 +7,8 @@ import { Button } from "@/components/ui/button";
 import { Suspense } from "react";
 
 export const metadata: Metadata = {
-  title: "Admin Settings - DesaConnect",
-  description: "Pengaturan administrator DesaConnect",
+  title: "Admin Settings - Desa Pangkalan Baru",
+  description: "Pengaturan administrator Desa Pangkalan Baru",
 };
 
 export default async function AdminSettingsPage() {
@@ -37,7 +37,7 @@ export default async function AdminSettingsPage() {
       </div>
       
       <Suspense fallback={<div className="flex items-center justify-center p-12 border rounded-md bg-muted/5"><div className="flex flex-col items-center"><div className="w-10 h-10 border-4 border-primary/10 border-t-primary rounded-full animate-spin mb-3"></div><p className="text-muted-foreground text-sm">Memuat pengaturan...</p></div></div>}>
-        <AdminSettings currentUser={user} />
+        <AdminSettings currentUser={user as any} />
       </Suspense>
     </div>
   );

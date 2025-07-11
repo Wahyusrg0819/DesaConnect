@@ -1,6 +1,7 @@
 "use client";
 
 import Link from 'next/link';
+import Image from 'next/image';
 import { Button } from '@/components/ui/button';
 import { 
   LayoutDashboard, 
@@ -63,12 +64,19 @@ export default function AdminHeader({ userEmail }: AdminHeaderProps) {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-16">
           {/* Logo */}
-          <Link href="/admin/dashboard" className="flex items-center gap-2" aria-label="Admin Dashboard">
-            <div className="bg-[#2E7D32] text-white p-1.5 rounded-md">
-              <MessageSquarePlus className="h-5 w-5" />
+          <Link href="/admin/dashboard" className="flex items-center gap-3" aria-label="Admin Dashboard">
+            <div className="flex items-center justify-center">
+              <Image
+                src="/images/300_kamparkab.webp"
+                alt="Logo Kabupaten Kampar"
+                width={32}
+                height={32}
+                className="object-contain"
+                priority
+              />
             </div>
             <div className="flex flex-col">
-              <span className="text-lg font-bold text-gray-900">DesaConnect</span>
+              <span className="text-lg font-bold text-gray-900">Desa Pangkalan Baru</span>
               <span className="text-xs text-gray-500 -mt-1">Admin Portal</span>
             </div>
           </Link>

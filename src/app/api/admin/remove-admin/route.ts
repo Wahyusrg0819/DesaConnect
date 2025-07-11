@@ -18,31 +18,23 @@ function getAdminSupabaseClient() {
 
 export async function POST(request: NextRequest) {
   try {
-    // Verifikasi bahwa request datang dari admin yang sudah login
-    const cookieStore = cookies();
-    const supabase = createServerComponentClient({ cookies: () => cookieStore });
+    // Get the user's session from cookies - check both admin_session and user-email
+    const cookieStore = await cookies();
+    const adminSessionEmail = cookieStore.get('admin_session')?.value;
+    const userEmail = cookieStore.get('user-email')?.value;
     
-    // Ambil session user saat ini
-    const { data: { session }, error: sessionError } = await supabase.auth.getSession();
-    
-    if (sessionError) {
-      console.error('Session error:', sessionError);
+    // Use admin_session first (primary auth), then fallback to user-email
+    const currentUserEmail = adminSessionEmail || userEmail;
+
+    if (!currentUserEmail) {
       return NextResponse.json(
-        { error: 'Error mendapatkan session: ' + sessionError.message },
-        { status: 500 }
-      );
-    }
-    
-    if (!session || !session.user) {
-      return NextResponse.json(
-        { error: 'Unauthorized - User not logged in' },
+        { error: 'Unauthorized - No user email found' },
         { status: 401 }
       );
     }
-    
-    // Verifikasi bahwa user adalah admin
-    const userEmail = session.user.email;
-    const isAdmin = await isAuthorizedAdmin(userEmail);
+
+    // Check if the current user is an admin
+    const isAdmin = await isAuthorizedAdmin(currentUserEmail);
     
     if (!isAdmin) {
       return NextResponse.json(
@@ -63,7 +55,7 @@ export async function POST(request: NextRequest) {
     }
     
     // Tidak boleh menghapus diri sendiri
-    if (userEmail?.toLowerCase() === email.toLowerCase()) {
+    if (currentUserEmail?.toLowerCase() === email.toLowerCase()) {
       return NextResponse.json(
         { error: 'Anda tidak dapat menghapus diri sendiri dari daftar admin' },
         { status: 400 }
@@ -74,9 +66,9 @@ export async function POST(request: NextRequest) {
     const adminSupabase = getAdminSupabaseClient();
     
     // Cek dulu jumlah admin yang ada
-    const { data: adminCount, error: countError } = await adminSupabase
+    const { count: adminCount, error: countError } = await adminSupabase
       .from('admin_list')
-      .select('id', { count: 'exact', head: true });
+      .select('*', { count: 'exact', head: true });
     
     if (countError) {
       console.error('Error checking admin count:', countError);
@@ -87,7 +79,7 @@ export async function POST(request: NextRequest) {
     }
     
     // Pastikan selalu ada minimal satu admin
-    if (adminCount !== null && adminCount.count <= 1) {
+    if (adminCount !== null && adminCount <= 1) {
       return NextResponse.json(
         { error: 'Tidak dapat menghapus admin terakhir dalam sistem' },
         { status: 400 }

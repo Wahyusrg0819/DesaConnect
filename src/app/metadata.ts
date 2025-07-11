@@ -1,12 +1,12 @@
 import type { Metadata, Viewport } from "next";
 
 export const metadata: Metadata = {
-  title: "DesaConnect - Sistem Layanan Aspirasi dan Keluhan Masyarakat",
+  title: "Desa Pangkalan Baru - Sistem Layanan Aspirasi dan Keluhan Masyarakat",
   description: "Platform aspirasi dan keluhan masyarakat untuk membangun Desa Pangkalan Baru yang lebih baik dan lebih transparan.",
   keywords: "desa connect, aspirasi masyarakat, keluhan masyarakat, desa pangkalan baru, layanan publik, transparansi desa",
-  authors: [{ name: "DesaConnect Team" }],
-  creator: "DesaConnect Team",
-  publisher: "DesaConnect",
+  authors: [{ name: "Desa Pangkalan Baru Team" }],
+  creator: "Desa Pangkalan Baru Team",
+  publisher: "Desa Pangkalan Baru",
   robots: {
     index: true,
     follow: true,
@@ -17,24 +17,24 @@ export const metadata: Metadata = {
     },
   },
   openGraph: {
-    title: "DesaConnect - Sistem Layanan Aspirasi dan Keluhan Masyarakat",
+    title: "Desa Pangkalan Baru - Sistem Layanan Aspirasi dan Keluhan Masyarakat",
     description: "Platform aspirasi dan keluhan masyarakat untuk membangun Desa Pangkalan Baru yang lebih baik dan lebih transparan.",
     type: "website",
     locale: "id_ID",
     url: "https://desaconnect.id",
-    siteName: "DesaConnect",
+    siteName: "Desa Pangkalan Baru",
     images: [
       {
         url: "/images/og-image.png",
         width: 1200,
         height: 630,
-        alt: "DesaConnect - Platform Aspirasi Masyarakat Desa",
+        alt: "Desa Pangkalan Baru - Platform Aspirasi Masyarakat Desa",
       }
     ],
   },
   twitter: {
     card: "summary_large_image",
-    title: "DesaConnect - Sistem Layanan Aspirasi dan Keluhan Masyarakat",
+    title: "Desa Pangkalan Baru - Sistem Layanan Aspirasi dan Keluhan Masyarakat",
     description: "Platform aspirasi dan keluhan masyarakat untuk membangun Desa Pangkalan Baru yang lebih baik.",
     images: ["/images/twitter-card.png"],
     creator: "@desaconnect",

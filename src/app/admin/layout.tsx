@@ -4,8 +4,8 @@ import { getCurrentUser } from '@/lib/auth-utils';
 import AdminLayout from '@/components/layout/admin-layout';
 
 export const metadata: Metadata = {
-  title: 'Admin Area - DesaConnect',
-  description: 'Area administratif DesaConnect',
+  title: 'Admin Area - Desa Pangkalan Baru',
+  description: 'Area administratif Desa Pangkalan Baru',
 };
 
 export default async function AdminRootLayout({ children }: { children: ReactNode }) {
@@ -14,12 +14,7 @@ export default async function AdminRootLayout({ children }: { children: ReactNod
   
   return (
     <AdminLayout currentUser={currentUser}>
-      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-4">
-        {/* Konten admin dengan padding yang cukup */}
-        <div className="bg-white rounded-lg shadow-sm">
-          {children}
-        </div>
-      </div>
+      {children}
     </AdminLayout>
   );
 } 

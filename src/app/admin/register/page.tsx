@@ -4,8 +4,8 @@ import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
 
 export const metadata: Metadata = {
-  title: "Admin Register - DesaConnect",
-  description: "Registrasi untuk akses dashboard admin DesaConnect",
+  title: "Admin Register - Desa Pangkalan Baru",
+  description: "Registrasi untuk akses dashboard admin Desa Pangkalan Baru",
 };
 
 export default function AdminRegisterPage() {

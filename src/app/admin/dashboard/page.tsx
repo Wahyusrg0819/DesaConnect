@@ -20,8 +20,8 @@ import { Suspense } from "react";
 import RefreshButton from "@/components/admin/refresh-button";
 
 export const metadata: Metadata = {
-  title: "Admin Dashboard - DesaConnect",
-  description: "Dashboard admin DesaConnect",
+  title: "Admin Dashboard - Desa Pangkalan Baru",
+  description: "Dashboard admin Desa Pangkalan Baru",
 };
 
 // Komponen untuk menampilkan statistik
@@ -114,7 +114,9 @@ export default async function AdminDashboardPage() {
     // Data processing time jika tersedia
     processingTime: statsResult.stats.processingTime || {
       averageResolutionDays: 0,
-      averageResponseDays: 0
+      averageResponseDays: 0,
+      resolvedCount: 0,
+      respondedCount: 0
     }
   } : {
     totalSubmissions: 0,
@@ -124,7 +126,9 @@ export default async function AdminDashboardPage() {
     categories: {},
     processingTime: {
       averageResolutionDays: 0,
-      averageResponseDays: 0
+      averageResponseDays: 0,
+      resolvedCount: 0,
+      respondedCount: 0
     }
   };
   
@@ -267,7 +271,7 @@ export default async function AdminDashboardPage() {
                         <div className="w-3 h-3 rounded-full bg-primary"></div>
                         <span className="text-sm font-medium">{category}</span>
                       </div>
-                      <span className="text-sm font-semibold">{count}</span>
+                      <span className="text-sm font-semibold">{Number(count) || 0}</span>
                     </div>
                   ))}
                 </div>
@@ -276,26 +280,73 @@ export default async function AdminDashboardPage() {
             
             <Card>
               <CardHeader>
-                <CardTitle>Waktu Penyelesaian</CardTitle>
-                <CardDescription>Rata-rata waktu respon dan penyelesaian</CardDescription>
+                <CardTitle className="flex items-center gap-2">
+                  <Clock className="h-5 w-5 text-primary" />
+                  Waktu Penyelesaian
+                </CardTitle>
+                <CardDescription>Rata-rata waktu respon dan penyelesaian laporan</CardDescription>
               </CardHeader>
               <CardContent>
                 <div className="space-y-6">
-                  <div>
-                    <p className="text-sm font-medium text-muted-foreground mb-1">Rata-rata respon awal</p>
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between">
+                      <p className="text-sm font-medium text-muted-foreground">Rata-rata respon awal</p>
+                      <span className="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded-full">
+                        {stats.processingTime.respondedCount || 0} laporan
+                      </span>
+                    </div>
                     <div className="flex items-end gap-2">
-                      <p className="text-3xl font-bold">{stats.processingTime.averageResponseDays.toFixed(1)}</p>
+                      <p className="text-3xl font-bold text-blue-600">
+                        {stats.processingTime.averageResponseDays || 0}
+                      </p>
                       <p className="text-muted-foreground text-sm mb-1">hari</p>
                     </div>
+                    <div className="w-full bg-blue-100 rounded-full h-2">
+                      <div 
+                        className="bg-blue-600 h-2 rounded-full transition-all duration-300" 
+                        style={{ 
+                          width: `${Math.min(100, (stats.processingTime.averageResponseDays / 7) * 100)}%` 
+                        }}
+                      ></div>
+                    </div>
+                    <p className="text-xs text-muted-foreground">
+                      Target: {'<'} 7 hari ({stats.processingTime.averageResponseDays <= 7 ? '✅ Tercapai' : '⚠️ Perlu ditingkatkan'})
+                    </p>
                   </div>
                   
-                  <div>
-                    <p className="text-sm font-medium text-muted-foreground mb-1">Rata-rata penyelesaian</p>
+                  <div className="border-t pt-4 space-y-2">
+                    <div className="flex items-center justify-between">
+                      <p className="text-sm font-medium text-muted-foreground">Rata-rata penyelesaian</p>
+                      <span className="text-xs bg-green-100 text-green-800 px-2 py-1 rounded-full">
+                        {stats.processingTime.resolvedCount || 0} selesai
+                      </span>
+                    </div>
                     <div className="flex items-end gap-2">
-                      <p className="text-3xl font-bold">{stats.processingTime.averageResolutionDays.toFixed(1)}</p>
+                      <p className="text-3xl font-bold text-green-600">
+                        {stats.processingTime.averageResolutionDays || 0}
+                      </p>
                       <p className="text-muted-foreground text-sm mb-1">hari</p>
                     </div>
+                    <div className="w-full bg-green-100 rounded-full h-2">
+                      <div 
+                        className="bg-green-600 h-2 rounded-full transition-all duration-300" 
+                        style={{ 
+                          width: `${Math.min(100, (stats.processingTime.averageResolutionDays / 30) * 100)}%` 
+                        }}
+                      ></div>
+                    </div>
+                    <p className="text-xs text-muted-foreground">
+                      Target: {'<'} 30 hari ({stats.processingTime.averageResolutionDays <= 30 ? '✅ Tercapai' : '⚠️ Perlu ditingkatkan'})
+                    </p>
                   </div>
+                  
+                  {(stats.processingTime.resolvedCount === 0 && stats.processingTime.respondedCount === 0) && (
+                    <div className="text-center py-4 text-muted-foreground text-sm">
+                      <AlertTriangle className="h-8 w-8 mx-auto mb-2 text-yellow-500" />
+                      <p>Belum ada data waktu penyelesaian</p>
+                      <p className="text-xs mt-1">Data akan muncul setelah ada laporan yang diproses</p>
+                    </div>
+                  )}
                 </div>
               </CardContent>
             </Card>

@@ -10,8 +10,8 @@ import { Button } from "@/components/ui/button";
 import Link from "next/link";
 
 export const metadata: Metadata = {
-  title: "Analitik - Admin Dashboard | DesaConnect",
-  description: "Analisis dan grafik laporan masyarakat DesaConnect",
+  title: "Analitik - Admin Dashboard | Desa Pangkalan Baru",
+  description: "Analisis dan grafik laporan masyarakat Desa Pangkalan Baru",
 };
 
 // Helper untuk menghasilkan data chart per bulan (contoh data)
@@ -169,6 +169,10 @@ export default async function AnalyticsPage() {
             <BarChart3 className="h-4 w-4 mr-2" />
             Overview
           </TabsTrigger>
+          <TabsTrigger value="performance" className="data-[state=active]:bg-primary/10">
+            <TrendingUp className="h-4 w-4 mr-2" />
+            Performa
+          </TabsTrigger>
           <TabsTrigger value="categories" className="data-[state=active]:bg-primary/10">
             <PieChartIcon className="h-4 w-4 mr-2" />
             Kategori
@@ -203,6 +207,263 @@ export default async function AnalyticsPage() {
                 <MonthlyVolumeChart data={monthlyData} />
               </CardContent>
             </Card>
+          </div>
+        </TabsContent>
+        
+        {/* Tab Konten Performa */}
+        <TabsContent value="performance">
+          <div className="grid gap-6">
+            {/* Performance Overview Cards */}
+            <div className="grid gap-4 md:grid-cols-3">
+              <Card className="border-0 shadow-sm">
+                <CardHeader className="pb-3">
+                  <CardTitle className="text-lg">Respons Awal</CardTitle>
+                  <CardDescription>Waktu rata-rata untuk respons pertama</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-3">
+                    <div className="flex items-end gap-2">
+                      <span className="text-3xl font-bold text-blue-600">
+                        {stats.processingTime.averageResponseDays || 0}
+                      </span>
+                      <span className="text-muted-foreground text-sm mb-1">hari</span>
+                    </div>
+                    <div className="flex items-center gap-2 text-xs">
+                      <div className={cn(
+                        "w-2 h-2 rounded-full",
+                        (stats.processingTime.averageResponseDays || 0) <= 3 ? "bg-green-500" :
+                        (stats.processingTime.averageResponseDays || 0) <= 7 ? "bg-yellow-500" : "bg-red-500"
+                      )}></div>
+                      <span className="text-muted-foreground">
+                        {(stats.processingTime.averageResponseDays || 0) <= 3 ? "Sangat Baik" :
+                         (stats.processingTime.averageResponseDays || 0) <= 7 ? "Baik" : "Perlu Perbaikan"}
+                      </span>
+                    </div>
+                    <div className="text-xs text-muted-foreground">
+                      Dari {stats.processingTime.respondedCount || 0} laporan yang direspons
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card className="border-0 shadow-sm">
+                <CardHeader className="pb-3">
+                  <CardTitle className="text-lg">Penyelesaian</CardTitle>
+                  <CardDescription>Waktu rata-rata untuk menyelesaikan laporan</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-3">
+                    <div className="flex items-end gap-2">
+                      <span className="text-3xl font-bold text-green-600">
+                        {stats.processingTime.averageResolutionDays || 0}
+                      </span>
+                      <span className="text-muted-foreground text-sm mb-1">hari</span>
+                    </div>
+                    <div className="flex items-center gap-2 text-xs">
+                      <div className={cn(
+                        "w-2 h-2 rounded-full",
+                        (stats.processingTime.averageResolutionDays || 0) <= 14 ? "bg-green-500" :
+                        (stats.processingTime.averageResolutionDays || 0) <= 30 ? "bg-yellow-500" : "bg-red-500"
+                      )}></div>
+                      <span className="text-muted-foreground">
+                        {(stats.processingTime.averageResolutionDays || 0) <= 14 ? "Sangat Baik" :
+                         (stats.processingTime.averageResolutionDays || 0) <= 30 ? "Baik" : "Perlu Perbaikan"}
+                      </span>
+                    </div>
+                    <div className="text-xs text-muted-foreground">
+                      Dari {stats.processingTime.resolvedCount || 0} laporan yang selesai
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card className="border-0 shadow-sm">
+                <CardHeader className="pb-3">
+                  <CardTitle className="text-lg">Efisiensi</CardTitle>
+                  <CardDescription>Tingkat penyelesaian laporan</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-3">
+                    <div className="flex items-end gap-2">
+                      <span className="text-3xl font-bold text-purple-600">
+                        {Math.round(((stats.processingTime.resolvedCount || 0) / Math.max(stats.total, 1)) * 100)}%
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-2 text-xs">
+                      <div className={cn(
+                        "w-2 h-2 rounded-full",
+                        resolvedPercentage >= 80 ? "bg-green-500" :
+                        resolvedPercentage >= 60 ? "bg-yellow-500" : "bg-red-500"
+                      )}></div>
+                      <span className="text-muted-foreground">
+                        {resolvedPercentage >= 80 ? "Sangat Baik" :
+                         resolvedPercentage >= 60 ? "Baik" : "Perlu Perbaikan"}
+                      </span>
+                    </div>
+                    <div className="text-xs text-muted-foreground">
+                      {stats.processingTime.resolvedCount || 0} dari {stats.total || 0} laporan
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+
+            {/* Performance Insights */}
+            <div className="grid gap-4 md:grid-cols-2">
+              <Card className="border-0 shadow-sm">
+                <CardHeader>
+                  <CardTitle>Target Performa</CardTitle>
+                  <CardDescription>Pencapaian terhadap target waktu</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-6">
+                    <div className="space-y-2">
+                      <div className="flex items-center justify-between text-sm">
+                        <span>Respons Awal (Target: ≤ 3 hari)</span>
+                        <span className={cn(
+                          "font-medium",
+                          (stats.processingTime.averageResponseDays || 0) <= 3 ? "text-green-600" : "text-red-600"
+                        )}>
+                          {(stats.processingTime.averageResponseDays || 0) <= 3 ? "✅ Tercapai" : "❌ Belum tercapai"}
+                        </span>
+                      </div>
+                      <div className="w-full bg-gray-200 rounded-full h-2">
+                        <div 
+                          className={cn(
+                            "h-2 rounded-full transition-all duration-300",
+                            (stats.processingTime.averageResponseDays || 0) <= 3 ? "bg-green-500" : "bg-red-500"
+                          )}
+                          style={{ 
+                            width: `${Math.min(100, Math.max(20, 100 - (stats.processingTime.averageResponseDays || 0) * 10))}%` 
+                          }}
+                        ></div>
+                      </div>
+                    </div>
+
+                    <div className="space-y-2">
+                      <div className="flex items-center justify-between text-sm">
+                        <span>Penyelesaian (Target: ≤ 14 hari)</span>
+                        <span className={cn(
+                          "font-medium",
+                          (stats.processingTime.averageResolutionDays || 0) <= 14 ? "text-green-600" : "text-red-600"
+                        )}>
+                          {(stats.processingTime.averageResolutionDays || 0) <= 14 ? "✅ Tercapai" : "❌ Belum tercapai"}
+                        </span>
+                      </div>
+                      <div className="w-full bg-gray-200 rounded-full h-2">
+                        <div 
+                          className={cn(
+                            "h-2 rounded-full transition-all duration-300",
+                            (stats.processingTime.averageResolutionDays || 0) <= 14 ? "bg-green-500" : "bg-red-500"
+                          )}
+                          style={{ 
+                            width: `${Math.min(100, Math.max(10, 100 - (stats.processingTime.averageResolutionDays || 0) * 3))}%` 
+                          }}
+                        ></div>
+                      </div>
+                    </div>
+
+                    <div className="space-y-2">
+                      <div className="flex items-center justify-between text-sm">
+                        <span>Tingkat Penyelesaian (Target: ≥ 80%)</span>
+                        <span className={cn(
+                          "font-medium",
+                          resolvedPercentage >= 80 ? "text-green-600" : "text-red-600"
+                        )}>
+                          {resolvedPercentage >= 80 ? "✅ Tercapai" : "❌ Belum tercapai"}
+                        </span>
+                      </div>
+                      <div className="w-full bg-gray-200 rounded-full h-2">
+                        <div 
+                          className={cn(
+                            "h-2 rounded-full transition-all duration-300",
+                            resolvedPercentage >= 80 ? "bg-green-500" : "bg-red-500"
+                          )}
+                          style={{ width: `${resolvedPercentage}%` }}
+                        ></div>
+                      </div>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card className="border-0 shadow-sm">
+                <CardHeader>
+                  <CardTitle>Rekomendasi</CardTitle>
+                  <CardDescription>Saran untuk meningkatkan performa</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-4">
+                    {(stats.processingTime.averageResponseDays || 0) > 3 && (
+                      <div className="flex items-start gap-3 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
+                        <div className="w-2 h-2 bg-yellow-500 rounded-full mt-2 flex-shrink-0"></div>
+                        <div>
+                          <h4 className="font-medium text-yellow-800 text-sm">Respons Terlalu Lambat</h4>
+                          <p className="text-yellow-700 text-xs mt-1">
+                            Waktu respons rata-rata {stats.processingTime.averageResponseDays} hari. 
+                            Pertimbangkan untuk meningkatkan monitoring dan notifikasi otomatis.
+                          </p>
+                        </div>
+                      </div>
+                    )}
+
+                    {(stats.processingTime.averageResolutionDays || 0) > 30 && (
+                      <div className="flex items-start gap-3 p-3 bg-red-50 border border-red-200 rounded-lg">
+                        <div className="w-2 h-2 bg-red-500 rounded-full mt-2 flex-shrink-0"></div>
+                        <div>
+                          <h4 className="font-medium text-red-800 text-sm">Penyelesaian Terlalu Lama</h4>
+                          <p className="text-red-700 text-xs mt-1">
+                            Waktu penyelesaian rata-rata {stats.processingTime.averageResolutionDays} hari. 
+                            Perlu evaluasi proses dan alokasi sumber daya.
+                          </p>
+                        </div>
+                      </div>
+                    )}
+
+                    {resolvedPercentage < 60 && (
+                      <div className="flex items-start gap-3 p-3 bg-red-50 border border-red-200 rounded-lg">
+                        <div className="w-2 h-2 bg-red-500 rounded-full mt-2 flex-shrink-0"></div>
+                        <div>
+                          <h4 className="font-medium text-red-800 text-sm">Tingkat Penyelesaian Rendah</h4>
+                          <p className="text-red-700 text-xs mt-1">
+                            Hanya {resolvedPercentage}% laporan yang terselesaikan. 
+                            Perlu peningkatan follow-up dan prioritas penanganan.
+                          </p>
+                        </div>
+                      </div>
+                    )}
+
+                    {(stats.processingTime.averageResponseDays || 0) <= 3 && 
+                     (stats.processingTime.averageResolutionDays || 0) <= 14 && 
+                     resolvedPercentage >= 80 && (
+                      <div className="flex items-start gap-3 p-3 bg-green-50 border border-green-200 rounded-lg">
+                        <div className="w-2 h-2 bg-green-500 rounded-full mt-2 flex-shrink-0"></div>
+                        <div>
+                          <h4 className="font-medium text-green-800 text-sm">Performa Sangat Baik</h4>
+                          <p className="text-green-700 text-xs mt-1">
+                            Semua target performa tercapai. Pertahankan kualitas layanan ini dan 
+                            fokus pada peningkatan kepuasan masyarakat.
+                          </p>
+                        </div>
+                      </div>
+                    )}
+
+                    {stats.total === 0 && (
+                      <div className="flex items-start gap-3 p-3 bg-gray-50 border border-gray-200 rounded-lg">
+                        <div className="w-2 h-2 bg-gray-500 rounded-full mt-2 flex-shrink-0"></div>
+                        <div>
+                          <h4 className="font-medium text-gray-800 text-sm">Belum Ada Data</h4>
+                          <p className="text-gray-700 text-xs mt-1">
+                            Belum ada laporan untuk dianalisis. Data performa akan muncul 
+                            setelah ada laporan yang masuk dan diproses.
+                          </p>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
           </div>
         </TabsContent>
         
@@ -405,4 +666,4 @@ export default async function AnalyticsPage() {
       </Card>
     </div>
   );
-} 
+}

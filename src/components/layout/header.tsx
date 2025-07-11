@@ -1,6 +1,7 @@
 "use client";
 
 import Link from 'next/link';
+import Image from 'next/image';
 import { Button } from '@/components/ui/button';
 import { Home, MessageSquarePlus, Search, Menu, X, FileSearch } from 'lucide-react';
 import { useState, useEffect } from 'react';
@@ -11,21 +12,21 @@ const NAV_ITEMS = [
     label: 'Beranda',
     href: '/',
     icon: Home,
-    variant: 'ghost',
+    variant: 'ghost' as const,
     colorClass: 'text-gray-600 hover:text-gray-900 hover:bg-gray-100/80',
   },
   {
     label: 'Buat Laporan',
     href: '/submit',
     icon: MessageSquarePlus,
-    variant: 'default',
+    variant: 'default' as const,
     colorClass: 'bg-white text-[#2E7D32] hover:bg-[#2E7D32] hover:text-white border-2 border-[#2E7D32] shadow-sm hover:shadow-md',
   },
   {
     label: 'Lacak Laporan',
     href: '/track',
     icon: FileSearch,
-    variant: 'outline',
+    variant: 'outline' as const,
     colorClass: 'bg-[#0D47A1] text-white hover:bg-[#0A3880] border-[#0D47A1]'
   },
 ];
@@ -45,12 +46,19 @@ export default function Header() {
   return (
     <header className="bg-white border-b border-gray-100 sticky top-0 z-50 shadow-sm" role="banner">
       <nav className="max-w-6xl mx-auto px-6 lg:px-8 py-4 flex justify-between items-center" aria-label="Main navigation">
-        <Link href="/" className="text-2xl font-bold flex items-center gap-2 hover:opacity-90 transition-all" aria-label="DesaConnect Home">
-          <div className="bg-[#2E7D32] text-white p-1.5 rounded-xl" aria-hidden="true">
-            <MessageSquarePlus className="h-6 w-6" />
+        <Link href="/" className="text-2xl font-bold flex items-center gap-3 hover:opacity-90 transition-all" aria-label="Desa Pangkalan Baru Home">
+          <div className="flex items-center justify-center" aria-hidden="true">
+            <Image
+              src="/images/300_kamparkab.webp"
+              alt="Logo Kabupaten Kampar"
+              width={40}
+              height={40}
+              className="object-contain"
+              priority
+            />
           </div>
           <span className="text-[#2E7D32] hover:text-[#1B5E20] transition-colors">
-            DesaConnect
+            Desa Pangkalan Baru
           </span>
         </Link>
 

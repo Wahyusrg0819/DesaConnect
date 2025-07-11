@@ -758,7 +758,7 @@ export default function AdminSettings({ currentUser }: AdminSettingsProps) {
           <CardHeader className="bg-muted/30 pb-4">
             <CardTitle className="text-xl">Pengaturan Umum</CardTitle>
                 <CardDescription>
-                  Konfigurasi umum aplikasi DesaConnect
+                  Konfigurasi umum aplikasi Desa Pangkalan Baru
                 </CardDescription>
               </CardHeader>
           <CardContent className="p-6 space-y-8">

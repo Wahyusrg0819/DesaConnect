@@ -71,7 +71,7 @@ const Step = ({ icon, title, description, step, isActive = false, isCompleted = 
     <motion.div
       variants={itemVariants}
       className={cn(
-        "flex flex-col items-center text-center md:items-start md:text-left",
+        "flex flex-col items-center text-center space-y-4 p-6",
         isActive && "text-primary",
         isCompleted && "text-muted-foreground"
       )}
@@ -79,14 +79,21 @@ const Step = ({ icon, title, description, step, isActive = false, isCompleted = 
       <motion.div
         variants={iconVariants}
         className={cn(
-          "mb-4 flex h-16 w-16 items-center justify-center rounded-full border-2",
-          isActive ? "border-[#2E7D32] bg-[#2E7D32]/10" : "border-muted bg-muted/30"
+          "relative mb-2 flex h-16 w-16 items-center justify-center rounded-full border-2 bg-white shadow-md",
+          isActive ? "border-[#2E7D32] bg-[#2E7D32]/5" : "border-gray-300"
         )}
       >
         {icon}
+        {/* Step number */}
+        <div className="absolute -top-2 -right-2 flex h-6 w-6 items-center justify-center rounded-full bg-[#2E7D32] text-xs font-bold text-white">
+          {step}
+        </div>
       </motion.div>
-      <h3 className="mb-2 text-xl font-bold">{title}</h3>
-      <p className="max-w-xs text-muted-foreground">{description}</p>
+      
+      <div className="space-y-2">
+        <h3 className="text-lg font-semibold text-gray-900">{title}</h3>
+        <p className="max-w-xs text-sm text-gray-600 leading-relaxed">{description}</p>
+      </div>
     </motion.div>
   );
 };
@@ -94,10 +101,13 @@ const Step = ({ icon, title, description, step, isActive = false, isCompleted = 
 // Connector line between steps
 const StepConnector = ({ isActive = false }: { isActive?: boolean }) => {
   return (
-    <div className="relative hidden h-0.5 flex-1 md:flex">
+    <div className="relative hidden h-1 flex-1 mx-4 md:flex items-center">
       <motion.div
         variants={lineVariants}
-        className={cn("absolute h-full w-full", isActive ? "bg-[#2E7D32]" : "bg-muted")}
+        className={cn(
+          "absolute h-full w-full rounded-full", 
+          isActive ? "bg-[#2E7D32]" : "bg-gray-300"
+        )}
       />
     </div>
   );
@@ -139,7 +149,7 @@ const HowItWorks = ({ className }: HowItWorksProps) => {
       isCompleted: false,
     },
     {
-      icon: <Activity className="h-8 w-8 text-[#0D47A1]" />,
+      icon: <Activity className="h-8 w-8 text-[#2E7D32]" />,
       title: "Tindak Lanjut",
       description: "Perangkat desa akan menerima dan memproses laporan Anda untuk ditindaklanjuti.",
       step: 2,
@@ -147,7 +157,7 @@ const HowItWorks = ({ className }: HowItWorksProps) => {
       isCompleted: false,
     },
     {
-      icon: <CheckCircle className="h-8 w-8 text-green-500" />,
+      icon: <CheckCircle className="h-8 w-8 text-[#2E7D32]" />,
       title: "Penyelesaian",
       description: "Dapatkan update status penyelesaian masalah dan lihat hasilnya secara transparan.",
       step: 3,
@@ -157,49 +167,53 @@ const HowItWorks = ({ className }: HowItWorksProps) => {
   ];
 
   return (
-    <section className={cn("py-16 md:py-24", className)}>
+    <section className={cn("py-20 md:py-28 bg-gray-50", className)}>
       <div className="container px-4 md:px-6">
         <motion.div
           ref={ref}
           initial="hidden"
           animate={controls}
           variants={containerVariants}
-          className="space-y-12"
+          className="space-y-16"
         >
-          <motion.div variants={itemVariants} className="text-center">
-            <h2 className="mb-4 text-3xl font-bold tracking-tight md:text-4xl">Cara Kerja Desa Pangkalan Baru</h2>
-            <p className="mx-auto max-w-2xl text-muted-foreground">
+          <motion.div variants={itemVariants} className="text-center space-y-4">
+            <h2 className="text-3xl md:text-4xl font-bold tracking-tight text-gray-900">
+              Cara Kerja Desa Pangkalan Baru
+            </h2>
+            <p className="mx-auto max-w-2xl text-lg text-gray-600">
               Tiga langkah sederhana untuk menghubungkan masyarakat dengan pemerintah desa
             </p>
           </motion.div>
 
-          <div className="flex flex-col items-center justify-center gap-8 md:flex-row md:items-start md:gap-4">
+          <div className="flex flex-col items-center justify-center gap-8 md:flex-row md:items-center md:gap-4">
             {steps.map((step, index) => (
               <React.Fragment key={step.step}>
                 <Step {...step} />
-                {index < steps.length - 1 && <StepConnector isActive={index === 0} />}
+                {index < steps.length - 1 && <StepConnector isActive={true} />}
               </React.Fragment>
             ))}
           </div>
 
           <motion.div
             variants={itemVariants}
-            className="flex flex-col items-center justify-center gap-4 pt-8 md:flex-row"
+            className="flex flex-col items-center justify-center gap-4 pt-8 md:flex-row md:gap-6"
           >
             <motion.a
               href="/submit"
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-              className="rounded-lg bg-[#2E7D32] px-6 py-3 text-white shadow-lg transition-all hover:shadow-xl"
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+              className="inline-flex items-center px-6 py-3 bg-[#2E7D32] text-white font-medium rounded-lg shadow-sm hover:bg-[#1B5E20] transition-colors"
             >
+              <Megaphone className="w-4 h-4 mr-2" />
               Mulai Sekarang
             </motion.a>
             <motion.a
               href="/track"
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-              className="rounded-lg border border-input bg-[#0D47A1] px-6 py-3 text-white shadow-sm transition-all hover:bg-[#0A3880]"
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+              className="inline-flex items-center px-6 py-3 border border-[#2E7D32] text-[#2E7D32] font-medium rounded-lg hover:bg-[#2E7D32] hover:text-white transition-colors"
             >
+              <CheckCircle className="w-4 h-4 mr-2" />
               Lacak Laporan
             </motion.a>
           </motion.div>

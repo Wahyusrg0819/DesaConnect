@@ -33,20 +33,22 @@ const nextConfig: NextConfig = {
   compress: true,
   // Enable production source maps for better debugging
   productionBrowserSourceMaps: true,
-  // Optimize fonts
-  optimizeFonts: true,
   // Enable React strict mode for better development
   reactStrictMode: true,
   // Enable page level caching
   staticPageGenerationTimeout: 120,
+  // Reduce logging in development
+  logging: {
+    fetches: {
+      fullUrl: false,
+    },
+  },
   // Enable experimental features for better performance
   experimental: {
-    // Enable server actions
-    serverActions: true,
-    // Enable optimistic updates
-    optimisticClientCache: true,
-    // Enable modern JavaScript features
-    modernBrowsers: true,
+    // Enable server actions (updated format for Next.js 14+)
+    serverActions: {
+      bodySizeLimit: '2mb',
+    },
   },
   // Configure headers for security and caching
   async headers() {

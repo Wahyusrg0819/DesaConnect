@@ -233,17 +233,19 @@ export async function fetchSubmissions(params: {
     const to = from + limit - 1;
     query = query.range(from, to);
 
-    // Log query untuk debugging
-    console.log('Query Parameters:', {
-      category,
-      status,
-      search,
-      sortBy,
-      page,
-      limit,
-      from,
-      to
-    });
+    // Log query untuk debugging (hanya dalam development mode)
+    if (process.env.NODE_ENV === 'development') {
+      console.log('Query Parameters:', {
+        category,
+        status,
+        search,
+        sortBy,
+        page,
+        limit,
+        from,
+        to
+      });
+    }
 
     // Eksekusi query
     const { data, error, count } = await query;
@@ -258,13 +260,15 @@ export async function fetchSubmissions(params: {
       return { submissions: [], totalCount: 0, totalPages: 0 };
     }
 
-    // Log hasil query untuk debugging
-    console.log('Query Results:', {
-      resultCount: data.length,
-      totalCount: count,
-      firstItem: data[0],
-      params: params
-    });
+    // Log hasil query untuk debugging (hanya dalam development mode dan sesekali)
+    if (process.env.NODE_ENV === 'development' && Math.random() < 0.1) {
+      console.log('Query Results:', {
+        resultCount: data.length,
+        totalCount: count,
+        firstItem: data[0] ? `ID: ${data[0].id}` : 'No items',
+        params: { category, status, sortBy, page, limit }
+      });
+    }
 
     // Transformasi data ke format yang diharapkan
     const submissions: Submission[] = data.map((item: any) => ({

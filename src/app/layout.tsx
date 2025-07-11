@@ -26,10 +26,9 @@ export default function RootLayout({
       <head>
         <link rel="manifest" href="/manifest.json" />
         <meta name="theme-color" content="#2E7D32" />
-        <link rel="apple-touch-icon" href="/icons/apple-icon-180x180.svg" />
+        <link rel="apple-touch-icon" href="/images/300_kamparkab.webp" />
         {/* Add additional icon sizes for apple devices */}
-        <link rel="icon" href="/icons/icon-32x32.svg" type="image/svg+xml" />
-        <link rel="icon" href="/icons/icon-16x16.svg" sizes="16x16" type="image/svg+xml" />
+        <link rel="icon" href="/favicon.ico" type="image/x-icon" />
       </head>
       <body className="min-h-screen flex flex-col" suppressHydrationWarning>
         <SupabaseProvider>

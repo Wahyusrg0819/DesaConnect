@@ -10,11 +10,11 @@ export default function Footer() {
       <div className="container mx-auto px-4">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
           <div className="space-y-4">
-            <Link href="/" className="text-xl font-bold flex items-center gap-2 hover:opacity-90 transition-opacity" aria-label="DesaConnect Home">
+            <Link href="/" className="text-xl font-bold flex items-center gap-2 hover:opacity-90 transition-opacity" aria-label="Desa Pangkalan Baru Home">
               <div className="bg-[#2E7D32] text-white p-1 rounded-md" aria-hidden="true">
                 <MessageSquarePlus className="h-5 w-5" />
               </div>
-              <span className="text-[#2E7D32]">DesaConnect</span>
+              <span className="text-[#2E7D32]">Desa Pangkalan Baru</span>
             </Link>
             <p className="text-sm">
               Platform aspirasi dan keluhan untuk Desa Pangkalan Baru. Sampaikan suara Anda dan bantu kami membangun desa yang lebih baik.

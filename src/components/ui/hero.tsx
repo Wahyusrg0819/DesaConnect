@@ -96,7 +96,7 @@ const Hero = React.forwardRef<HTMLElement, HeroProps>(
   (
     {
       className,
-      title = "DesaConnect",
+      title = "Desa Pangkalan Baru",
       subtitle = "Menghubungkan desa dengan dunia digital untuk kemajuan bersama",
       badge = "Platform Digital Desa",
       actions = [

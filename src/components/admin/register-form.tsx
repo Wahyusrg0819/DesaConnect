@@ -86,7 +86,7 @@ export default function RegisterForm() {
       <CardHeader>
         <CardTitle className="text-2xl">Register Admin</CardTitle>
         <CardDescription>
-          Daftar sebagai admin DesaConnect
+          Daftar sebagai admin Desa Pangkalan Baru
         </CardDescription>
       </CardHeader>
       <CardContent>

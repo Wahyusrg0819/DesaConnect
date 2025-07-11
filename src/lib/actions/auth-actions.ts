@@ -31,26 +31,46 @@ export async function loginAdmin(formData: FormData): Promise<{ success: boolean
       password: formData.get('password') as string,
     };
 
+    console.log('[AUTH] Login attempt for email:', rawData.email);
+
     // Validasi input
     const validation = loginSchema.safeParse(rawData);
     if (!validation.success) {
+      console.log('[AUTH] Validation failed:', validation.error.errors);
       return { success: false, error: validation.error.errors.map(e => e.message).join(', ') };
     }
 
     const validatedData = validation.data;
+    console.log('[AUTH] Input validation passed for:', validatedData.email);
 
     // Make sure email is a valid string before checking admin status
     if (!validatedData.email || typeof validatedData.email !== 'string') {
+      console.log('[AUTH] Invalid email type');
       return { success: false, error: 'Email tidak valid' };
     }
     
     console.log(`[PERF] Input validation completed in ${Date.now() - startTime}ms`);
 
-    // Khusus untuk tahap development/debugging
+    // Check admin status first (before any authentication)
+    const adminCheckStart = Date.now();
+    console.log('[AUTH] Starting admin status check for:', validatedData.email);
+    
+    const isAdmin = await isAuthorizedAdmin(validatedData.email);
+    console.log(`[AUTH] Admin check completed in ${Date.now() - adminCheckStart}ms, result:`, isAdmin);
+    
+    if (!isAdmin) {
+      console.log(`[AUTH] ❌ LOGIN FAILED: Email ${validatedData.email} not authorized as admin`);
+      console.log(`[PERF] Login failed: not an admin, total time: ${Date.now() - startTime}ms`);
+      return { success: false, error: 'Email tidak terdaftar sebagai admin' };
+    }
+
+    console.log(`[AUTH] ✅ Email ${validatedData.email} is authorized as admin`);
+
+    // For development/testing - hardcoded SuperAdmin credentials
     if (validatedData.email === 'wahyumuliadisiregar@student.uir.ac.id' && 
         validatedData.password === 'Admin123456') {
       
-      console.log('[PERF] Using dev hardcoded credentials');
+      console.log('[AUTH] Using dev hardcoded credentials for SuperAdmin');
       
       try {
         // Set admin_session cookie
@@ -63,53 +83,38 @@ export async function loginAdmin(formData: FormData): Promise<{ success: boolean
           maxAge: 60 * 60 * 24, // 1 day in seconds
         });
         
-        console.log(`[PERF] Login success with hardcoded credentials, total time: ${Date.now() - startTime}ms`);
+        console.log(`[AUTH] ✅ LOGIN SUCCESS with hardcoded credentials, total time: ${Date.now() - startTime}ms`);
         return { success: true };
       } catch (cookieError) {
-        console.error('Error setting admin_session cookie:', cookieError);
+        console.error('[AUTH] Error setting admin_session cookie:', cookieError);
         return { success: false, error: 'Gagal mengatur session' };
       }
     }
 
-    // Check admin status using DB
+    // For other admins, create a simplified login (since this is admin-only system)
+    // In a real system, you'd authenticate against Supabase auth or a password database
+    console.log('[AUTH] Processing admin login for authorized email:', validatedData.email);
+    
     try {
-      const adminCheckStart = Date.now();
-      console.log('[PERF] Starting admin status check');
+      const cookieStart = Date.now();
+      // Set admin session cookie for authorized admin
+      const cookieStore = await cookies();
+      cookieStore.set('admin_session', validatedData.email, {
+        httpOnly: true,
+        path: '/',
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: 'lax',
+        maxAge: 60 * 60 * 24, // 1 day in seconds
+      });
       
-      const isAdmin = await isAuthorizedAdmin(validatedData.email);
-      console.log(`[PERF] Admin check completed in ${Date.now() - adminCheckStart}ms`);
-      
-      if (!isAdmin) {
-        console.log(`[PERF] Login failed: not an admin, total time: ${Date.now() - startTime}ms`);
-        return { success: false, error: 'Email tidak terdaftar sebagai admin' };
-      }
-      
-      // If email is in admin list, set up a cookie session
-      try {
-        const cookieStart = Date.now();
-        // Set cookie dengan opsi yang benar
-        const cookieStore = await cookies();
-        cookieStore.set('admin_session', validatedData.email, {
-          httpOnly: true,
-          path: '/',
-          secure: process.env.NODE_ENV === 'production',
-          sameSite: 'lax',
-          maxAge: 60 * 60 * 24, // 1 day in seconds
-        });
-        
-        console.log(`[PERF] Cookie set in ${Date.now() - cookieStart}ms, total login time: ${Date.now() - startTime}ms`);
-        return { success: true };
-      } catch (cookieError) {
-        console.error('Error setting cookie:', cookieError);
-        return { success: false, error: 'Gagal mengatur session' };
-      }
-    } catch (adminCheckError) {
-      console.error('Error checking admin status:', adminCheckError);
-      console.log(`[PERF] Login failed with error, total time: ${Date.now() - startTime}ms`);
-      return { success: false, error: 'Gagal memeriksa status admin' };
+      console.log(`[AUTH] ✅ LOGIN SUCCESS: Cookie set in ${Date.now() - cookieStart}ms, total login time: ${Date.now() - startTime}ms`);
+      return { success: true };
+    } catch (cookieError) {
+      console.error('[AUTH] Error setting cookie:', cookieError);
+      return { success: false, error: 'Gagal mengatur session' };
     }
   } catch (error: any) {
-    console.error('Error in loginAdmin:', error);
+    console.error('[AUTH] Error in loginAdmin:', error);
     console.log(`[PERF] Login failed with generic error, total time: ${Date.now() - startTime}ms`);
     return { success: false, error: error.message || 'Terjadi kesalahan saat login' };
   }
@@ -163,28 +168,10 @@ export async function registerAdmin(
       };
     }
 
-    // Add the admin to the admin_list table first
-    try {
-      const { error: insertError } = await supabaseAdmin
-        .from('admin_list')
-        .insert({ email: email.toLowerCase() });
-
-      if (insertError && insertError.code !== '23505') { // Ignore if already exists
-        console.error("Error adding admin to admin_list:", insertError);
-        return {
-          error: "Gagal menambahkan admin ke daftar.",
-          data: null,
-        };
-      }
-    } catch (error) {
-      console.error("Error inserting into admin_list table:", error);
-      return {
-        error: "Gagal menambahkan admin ke daftar.",
-        data: null,
-      };
-    }
+    // Email sudah diauthorize, registrasi berhasil
+    // Tidak perlu insert lagi ke admin_list karena sudah ditambahkan oleh SuperAdmin
+    console.log(`Admin registration successful for: ${email}`);
     
-    // Skip the actual auth creation for now since we're using a fallback mechanism
     return {
       error: null,
       data: { message: "Admin berhasil terdaftar!" },
@@ -212,4 +199,4 @@ export async function logoutAdmin(): Promise<{ success: boolean; error?: string 
     console.error('Error in logoutAdmin:', error);
     return { success: false, error: error.message || 'Terjadi kesalahan saat logout' };
   }
-} 
+}

@@ -54,8 +54,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Separator } from "@/components/ui/separator";
 
 export const metadata: Metadata = {
-  title: "Detail Laporan - DesaConnect",
-  description: "Detail laporan masyarakat DesaConnect",
+  title: "Detail Laporan - Desa Pangkalan Baru",
+  description: "Detail laporan masyarakat Desa Pangkalan Baru",
 };
 
 // Menambahkan cache control untuk memastikan data selalu fresh

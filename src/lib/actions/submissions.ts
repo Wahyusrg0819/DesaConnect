@@ -511,56 +511,112 @@ function calculateProcessingTime(submissions: any[]) {
   if (!submissions || submissions.length === 0) {
     return {
       averageResolutionDays: 0,
-      averageResponseDays: 0
+      averageResponseDays: 0,
+      resolvedCount: 0,
+      respondedCount: 0
     };
   }
   
-  // Filter resolved submissions only
-  const resolvedSubmissions = submissions.filter(sub => sub.status === 'resolved');
+  // Filter resolved submissions only for resolution time calculation
+  const resolvedSubmissions = submissions.filter(sub => 
+    sub.status === 'resolved' && 
+    sub.created_at && 
+    sub.updated_at
+  );
   
-  if (resolvedSubmissions.length === 0) {
-    return {
-      averageResolutionDays: 0,
-      averageResponseDays: 0
-    };
+  let averageResolutionDays = 0;
+  if (resolvedSubmissions.length > 0) {
+    let totalResolutionTime = 0;
+    
+    resolvedSubmissions.forEach(sub => {
+      try {
+        const createdAt = new Date(sub.created_at);
+        const updatedAt = new Date(sub.updated_at);
+        
+        // Validate dates
+        if (isNaN(createdAt.getTime()) || isNaN(updatedAt.getTime())) {
+          console.warn('Invalid date found in submission:', sub.id);
+          return;
+        }
+        
+        const timeDiff = updatedAt.getTime() - createdAt.getTime();
+        const daysDiff = Math.max(0, timeDiff / (1000 * 3600 * 24)); // Ensure positive
+        totalResolutionTime += daysDiff;
+      } catch (error) {
+        console.warn('Error calculating resolution time for submission:', sub.id, error);
+      }
+    });
+    
+    averageResolutionDays = totalResolutionTime / resolvedSubmissions.length;
   }
-  
-  // Calculate average resolution time (created_at to updated_at for resolved)
-  let totalResolutionTime = 0;
-  
-  resolvedSubmissions.forEach(sub => {
-    const createdAt = new Date(sub.created_at);
-    const updatedAt = new Date(sub.updated_at);
-    const timeDiff = updatedAt.getTime() - createdAt.getTime();
-    const daysDiff = timeDiff / (1000 * 3600 * 24); // convert to days
-    totalResolutionTime += daysDiff;
-  });
-  
-  const averageResolutionDays = totalResolutionTime / resolvedSubmissions.length;
   
   // Calculate average first response time 
-  // (time from created_at to first internal comment)
+  // (time from created_at to first status change or first admin action)
   let totalResponseTime = 0;
-  let submissionsWithComments = 0;
+  let submissionsWithResponse = 0;
   
   submissions.forEach(sub => {
-    if (sub.internal_comments && Array.isArray(sub.internal_comments) && sub.internal_comments.length > 0) {
-      submissionsWithComments++;
+    try {
+      if (!sub.created_at) return;
+      
       const createdAt = new Date(sub.created_at);
-      const firstComment = new Date(sub.internal_comments[0].createdAt);
-      const timeDiff = firstComment.getTime() - createdAt.getTime();
-      const daysDiff = timeDiff / (1000 * 3600 * 24);
-      totalResponseTime += daysDiff;
+      if (isNaN(createdAt.getTime())) return;
+      
+      let firstResponseDate = null;
+      
+      // Check for status change from 'pending' to other status
+      if (sub.status !== 'pending' && sub.updated_at) {
+        const updatedAt = new Date(sub.updated_at);
+        if (!isNaN(updatedAt.getTime()) && updatedAt > createdAt) {
+          firstResponseDate = updatedAt;
+        }
+      }
+      
+      // Check for internal comments (if they exist in a different structure)
+      if (sub.internal_comments && typeof sub.internal_comments === 'string') {
+        try {
+          const comments = JSON.parse(sub.internal_comments);
+          if (Array.isArray(comments) && comments.length > 0 && comments[0].createdAt) {
+            const commentDate = new Date(comments[0].createdAt);
+            if (!isNaN(commentDate.getTime()) && commentDate > createdAt) {
+              if (!firstResponseDate || commentDate < firstResponseDate) {
+                firstResponseDate = commentDate;
+              }
+            }
+          }
+        } catch (e) {
+          // Ignore JSON parse errors
+        }
+      }
+      
+      // If no other response found, use updated_at if status changed
+      if (!firstResponseDate && sub.updated_at && sub.status !== 'pending') {
+        const updatedAt = new Date(sub.updated_at);
+        if (!isNaN(updatedAt.getTime()) && updatedAt > createdAt) {
+          firstResponseDate = updatedAt;
+        }
+      }
+      
+      if (firstResponseDate) {
+        submissionsWithResponse++;
+        const timeDiff = firstResponseDate.getTime() - createdAt.getTime();
+        const daysDiff = Math.max(0, timeDiff / (1000 * 3600 * 24));
+        totalResponseTime += daysDiff;
+      }
+    } catch (error) {
+      console.warn('Error calculating response time for submission:', sub.id, error);
     }
   });
   
-  const averageResponseDays = submissionsWithComments > 0 
-    ? totalResponseTime / submissionsWithComments 
+  const averageResponseDays = submissionsWithResponse > 0 
+    ? totalResponseTime / submissionsWithResponse 
     : 0;
   
   return {
     averageResolutionDays: parseFloat(averageResolutionDays.toFixed(1)),
-    averageResponseDays: parseFloat(averageResponseDays.toFixed(1))
+    averageResponseDays: parseFloat(averageResponseDays.toFixed(1)),
+    resolvedCount: resolvedSubmissions.length,
+    respondedCount: submissionsWithResponse
   };
 }
 

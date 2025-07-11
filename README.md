@@ -1,4 +1,4 @@
-# DesaConnect
+# Desa Pangkalan Baru
 
 Aplikasi platform aspirasi dan keluhan untuk Desa Pangkalan Baru.
 

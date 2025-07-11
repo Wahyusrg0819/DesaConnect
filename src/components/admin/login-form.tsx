@@ -86,7 +86,7 @@ export default function LoginForm() {
       <CardHeader>
         <CardTitle className="text-2xl">Login Admin</CardTitle>
         <CardDescription>
-          Masuk ke dashboard admin DesaConnect
+          Masuk ke dashboard admin Desa Pangkalan Baru
         </CardDescription>
       </CardHeader>
       <CardContent>

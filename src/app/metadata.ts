@@ -1,7 +1,7 @@
 import type { Metadata, Viewport } from "next";
 
 export const metadata: Metadata = {
-  metadataBase: new URL(process.env.NODE_ENV === 'production' ? 'https://desa-connect.vercel.app/' : 'http://localhost:3000'),
+  metadataBase: new URL(process.env.NODE_ENV === 'production' ? 'https://desa-connect.vercel.app' : 'http://localhost:3000'),
   title: "Desa Pangkalan Baru - Sistem Layanan Aspirasi dan Keluhan Masyarakat",
   description: "Platform aspirasi dan keluhan masyarakat untuk membangun Desa Pangkalan Baru yang lebih baik dan lebih transparan.",
   keywords: "desa connect, aspirasi masyarakat, keluhan masyarakat, desa pangkalan baru, layanan publik, transparansi desa",
@@ -43,15 +43,15 @@ export const metadata: Metadata = {
   },
   icons: {
     icon: [
-      { url: "/favicon.ico" },
-      { url: "/images/300_kamparkab.webp", type: "image/webp" },
+      { url: "/favicon.ico?v=2", type: "image/x-icon" },
+      { url: "/images/300_kamparkab.webp?v=2", type: "image/webp" },
     ],
     apple: [
-      { url: "/images/300_kamparkab.webp", sizes: "180x180", type: "image/webp" },
+      { url: "/images/300_kamparkab.webp?v=2", sizes: "180x180", type: "image/webp" },
     ],
     other: [
-      { url: "/images/300_kamparkab.webp", sizes: "192x192", type: "image/webp" },
-      { url: "/images/300_kamparkab.webp", sizes: "512x512", type: "image/webp" },
+      { url: "/images/300_kamparkab.webp?v=2", sizes: "192x192", type: "image/webp" },
+      { url: "/images/300_kamparkab.webp?v=2", sizes: "512x512", type: "image/webp" },
     ],
   },
   manifest: "/manifest.json",

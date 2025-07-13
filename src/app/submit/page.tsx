@@ -4,7 +4,7 @@ import { MessageSquarePlus } from 'lucide-react';
 import PublicLayout from '@/components/layout/public-layout';
 
 export default function SubmitPage() {
-  const categories = ['Infrastructure', 'Education', 'Health', 'Social Welfare', 'Other']; // Example categories
+  const categories = ['Infrastruktur', 'Pendidikan', 'Kesehatan', 'Kesejahteraan Sosial', 'Lainnya']; // Kategori laporan
 
   return (
     <PublicLayout>

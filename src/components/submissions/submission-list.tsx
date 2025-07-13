@@ -772,22 +772,6 @@ export default function SubmissionList({
                               }
                             </div>
                             
-                            {submission.fileUrl && (
-                              <div className="mt-3 flex items-center">
-                                <a 
-                                  href={submission.fileUrl} 
-                                  target="_blank" 
-                                  rel="noopener noreferrer"
-                                  className="text-[#0D47A1] hover:text-[#0A3880] hover:underline flex items-center gap-1.5 text-sm font-medium transition-colors duration-200 bg-[#E3F2FD] hover:bg-[#BBDEFB] px-3 py-1.5 rounded-md"
-                                >
-                                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-paperclip">
-                                    <path d="m21.44 11.05-9.19 9.19a6 6 0 0 1-8.49-8.49l8.57-8.57A4 4 0 1 1 18 8.84l-8.59 8.57a2 2 0 0 1-2.83-2.83l8.49-8.47"/>
-                                  </svg>
-                                  Lihat Lampiran
-                                </a>
-                              </div>
-                            )}
-                            
                             <div className="flex justify-between items-center mt-4 pt-3 border-t border-gray-100">
                               <div className="flex items-center text-gray-500 text-sm bg-gray-50 px-2 py-1 rounded-md">
                                 <MapPin className="h-3.5 w-3.5 mr-1 text-[#2E7D32]" /> 

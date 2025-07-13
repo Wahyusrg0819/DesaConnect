@@ -242,11 +242,11 @@ export default function SubmissionForm({ categories }: SubmissionFormProps) {
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel className="text-gray-700 font-medium">
-                          Kontak (Opsional)
+                          Kontak WhatsApp (Opsional)
                         </FormLabel>
                         <FormControl>
                           <Input 
-                            placeholder="Email atau nomor telepon" 
+                            placeholder="Nomor WhatsApp atau email" 
                             {...field} 
                             disabled={isSubmitting} 
                             className="border-gray-300 focus:border-[#4CAF50] focus:ring-[#4CAF50] rounded-md"

@@ -5,7 +5,6 @@ import Link from "next/link";
 import {
   Table,
   TableBody,
-  TableCaption,
   TableCell,
   TableHead,
   TableHeader,
@@ -33,23 +32,18 @@ import {
   Clock, 
   Filter, 
   Eye, 
-  Edit, 
   XCircle, 
   CalendarDays,
   FilePenLine,
   FileText,
-  MessageSquare,
   Send,
-  ChevronDown,
   SlidersHorizontal,
   Calendar
 } from "lucide-react";
 import {
   Select,
   SelectContent,
-  SelectGroup,
   SelectItem,
-  SelectLabel,
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
@@ -59,8 +53,16 @@ import {
   TabsList, 
   TabsTrigger 
 } from "@/components/ui/tabs";
-import { Separator } from "@/components/ui/separator";
 import { Label } from "@/components/ui/label";
+import { 
+  Pagination,
+  PaginationContent,
+  PaginationItem,
+  PaginationLink,
+  PaginationNext,
+  PaginationPrevious,
+} from '@/components/ui/pagination';
+
 
 export const metadata: Metadata = {
   title: "Kelola Laporan - Desa Pangkalan Baru",
@@ -91,16 +93,22 @@ async function getSubmissions(params?: {
   search?: string;
   startDate?: string;
   endDate?: string;
+  page?: number;
+  limit?: number;
 }) {
   "use server";
   
   try {
     console.log('Fetching submissions data with params:', params);
     const supabase = getSupabaseClient();
+    const page = params?.page || 1;
+    const limit = params?.limit || 10;
+    const from = (page - 1) * limit;
+    const to = from + limit - 1;
     
     let query = supabase
       .from('submissions')
-      .select('*');
+      .select('*', { count: 'exact' });
     
     // Apply filters if provided
     if (params?.status && params.status !== 'all') {
@@ -130,18 +138,20 @@ async function getSubmissions(params?: {
       query = query.lt('created_at', endDate.toISOString());
     }
     
-    const { data, error } = await query.order('created_at', { ascending: false });
+    const { data, error, count } = await query
+      .order('created_at', { ascending: false })
+      .range(from, to);
     
     if (error) {
       console.error('Error fetching submissions:', error.message);
-      return [];
+      return { data: [], count: 0 };
     }
     
     console.log(`Retrieved ${data.length} submissions`);
-    return data;
+    return { data, count: count ?? 0 };
   } catch (error) {
     console.error('Error in getSubmissions:', error);
-    return [];
+    return { data: [], count: 0 };
   }
 }
 
@@ -176,11 +186,15 @@ export default async function SubmissionsPage({
     startDate?: string;
     endDate?: string;
     tab?: string;
+    page?: string;
   };
 }) {
   // Proteksi halaman admin
   await protectAdminRoute();
   
+  const currentPage = Number(searchParams?.page) || 1;
+  const limit = 10;
+
   // Map tab values to status values
   const tabToStatus = {
     'all': undefined,
@@ -201,50 +215,16 @@ export default async function SubmissionsPage({
   });
 
   // Get submissions with awaited parameters
-  const submissions = await getSubmissions({
-    category: params.category,
-    priority: params.priority,
-    search: params.search,
-    startDate: params.startDate,
-    endDate: params.endDate
+  const { data: submissions, count: totalCount } = await getSubmissions({
+    ...params,
+    page: currentPage,
+    limit,
   });
 
+  const totalPages = Math.ceil(totalCount / limit);
+
   // Filter submissions based on search, category, priority, and date range first
-  const baseFilteredSubmissions = submissions.filter(s => {
-    let matches = true;
-    
-    // Apply category filter
-    if (params.category && params.category !== 'all') {
-      matches = matches && s.category === params.category;
-    }
-    
-    // Apply priority filter
-    if (params.priority && params.priority !== 'all') {
-      matches = matches && s.priority === params.priority;
-    }
-    
-    // Apply search filter
-    if (params.search) {
-      const searchLower = params.search.toLowerCase();
-      matches = matches && (
-        s.reference_id?.toLowerCase().includes(searchLower) ||
-        s.name?.toLowerCase().includes(searchLower) ||
-        s.description?.toLowerCase().includes(searchLower)
-      );
-    }
-    
-    // Apply date range filter
-    if (params.startDate) {
-      matches = matches && new Date(s.created_at) >= new Date(params.startDate);
-    }
-    if (params.endDate) {
-      const endDate = new Date(params.endDate);
-      endDate.setDate(endDate.getDate() + 1);
-      matches = matches && new Date(s.created_at) < endDate;
-    }
-    
-    return matches;
-  });
+  const baseFilteredSubmissions = submissions;
 
   // Now filter by status/tab
   const filteredSubmissions = params.tab === 'all' 
@@ -259,6 +239,7 @@ export default async function SubmissionsPage({
 
   // Rest of your component code using params instead of searchParams directly
   const { 
+    status,
     category = 'all', 
     priority = 'all', 
     search = '', 
@@ -282,26 +263,6 @@ export default async function SubmissionsPage({
     acc[category]++;
     return acc;
   }, {});
-  
-  // Define filter components with server actions
-  const SearchForm = () => (
-    <form className="w-full flex flex-col sm:flex-row gap-2">
-      <div className="relative w-full">
-        <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-        <Input
-          type="search"
-          name="search"
-          placeholder="Cari berdasarkan ID atau deskripsi..."
-          className="pl-9 w-full"
-          defaultValue={search}
-        />
-      </div>
-      <Button type="submit" size="icon" className="h-10 w-10 sm:w-auto sm:px-4">
-        <Search className="h-4 w-4 sm:mr-2" />
-        <span className="hidden sm:inline">Cari</span>
-      </Button>
-    </form>
-  );
   
   return (
     <div className="p-6 sm:p-8">
@@ -411,7 +372,7 @@ export default async function SubmissionsPage({
               }}>
                 <div className="flex items-center gap-2">
                   <span>Semua</span>
-                  <Badge variant="secondary" className="ml-1">{baseFilteredSubmissions.length}</Badge>
+                  <Badge variant="secondary" className="ml-1">{totalCount}</Badge>
                 </div>
               </Link>
             </TabsTrigger>
@@ -591,7 +552,7 @@ export default async function SubmissionsPage({
                 {search || category !== 'all' || priority !== 'all' || startDate || endDate ? (
                   <>Menampilkan hasil filter: {filteredSubmissions.length} laporan ditemukan</>
                 ) : (
-                  <>Total {filteredSubmissions.length} laporan ditemukan</>
+                  <>Total {totalCount} laporan ditemukan</>
                 )}
               </CardDescription>
             </CardHeader>
@@ -676,16 +637,74 @@ export default async function SubmissionsPage({
             </CardContent>
             <CardFooter className="flex justify-between border-t py-4 px-6">
               <div className="text-xs text-muted-foreground">
-                Menampilkan {filteredSubmissions.length} dari {submissions.length} laporan
+                Menampilkan {filteredSubmissions.length} dari {totalCount} laporan
               </div>
-              <div className="flex items-center gap-1">
-                <Button variant="outline" size="sm" disabled>
-                  Sebelumnya
-                </Button>
-                <Button variant="outline" size="sm" disabled>
-                  Selanjutnya
-                </Button>
-              </div>
+              <Pagination>
+                <PaginationContent>
+                  <PaginationItem>
+                    <PaginationPrevious 
+                      href={{ 
+                        pathname: '/admin/dashboard/submissions', 
+                        query: {
+                          status,
+                          category,
+                          priority,
+                          search,
+                          startDate,
+                          endDate,
+                          tab,
+                          page: currentPage > 1 ? currentPage - 1 : 1
+                        }
+                      }}
+                      aria-disabled={currentPage <= 1}
+                      tabIndex={currentPage <= 1 ? -1 : undefined}
+                      className={currentPage <= 1 ? "pointer-events-none opacity-50" : undefined}
+                    />
+                  </PaginationItem>
+                  {[...Array(totalPages)].map((_, i) => (
+                    <PaginationItem key={i}>
+                      <PaginationLink 
+                        href={{ 
+                          pathname: '/admin/dashboard/submissions', 
+                          query: {
+                            status,
+                            category,
+                            priority,
+                            search,
+                            startDate,
+                            endDate,
+                            tab,
+                            page: i + 1
+                          }
+                        }}
+                        isActive={currentPage === i + 1}
+                      >
+                        {i + 1}
+                      </PaginationLink>
+                    </PaginationItem>
+                  ))}
+                  <PaginationItem>
+                    <PaginationNext 
+                      href={{ 
+                        pathname: '/admin/dashboard/submissions', 
+                        query: {
+                          status,
+                          category,
+                          priority,
+                          search,
+                          startDate,
+                          endDate,
+                          tab,
+                          page: currentPage < totalPages ? currentPage + 1 : totalPages
+                        }
+                      }}
+                      aria-disabled={currentPage >= totalPages}
+                      tabIndex={currentPage >= totalPages ? -1 : undefined}
+                      className={currentPage >= totalPages ? "pointer-events-none opacity-50" : undefined}
+                    />
+                  </PaginationItem>
+                </PaginationContent>
+              </Pagination>
             </CardFooter>
           </Card>
         </TabsContent>
@@ -811,5 +830,5 @@ export default async function SubmissionsPage({
         </div>
       </div>
     </div>
-  );
-} 
+    );
+  }

@@ -8,6 +8,7 @@
 #docs
 LAPORANKP
 
+*.md
 
 # Testing
 /coverage

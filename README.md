@@ -1,6 +1,10 @@
-# Desa Pangkalan Baru
+# DesaConnect
 
 Aplikasi platform aspirasi dan keluhan untuk Desa Pangkalan Baru.
+
+## ⚠️ PENTING: Keamanan
+
+**JANGAN PERNAH commit file `.env.local` atau file environment lainnya ke repository!** File ini berisi informasi sensitif seperti API keys dan database credentials.
 
 ## Fitur Utama
 
@@ -20,46 +24,49 @@ Aplikasi platform aspirasi dan keluhan untuk Desa Pangkalan Baru.
 
 1. Clone repositori
 2. Install dependensi dengan `npm install`
-3. Buat file `.env.local` dan tambahkan konfigurasi Supabase:
+3. **Buat file `.env.local`** (tidak akan ter-commit) dan tambahkan konfigurasi Supabase:
 
-```
-NEXT_PUBLIC_SUPABASE_URL=your-supabase-url
-NEXT_PUBLIC_SUPABASE_ANON_KEY=your-supabase-anon-key
-JWT_SECRET=your-jwt-secret
-ADMIN_SETUP_SECRET=your-admin-setup-secret
-```
-
-4. Jalankan aplikasi dengan `npm run dev`
-
-### Setup Admin
-
-Untuk menambahkan admin pertama, ikuti langkah-langkah di [Panduan Setup Admin](docs/admin-setup.md).
-
-## Informasi Tambahan
-
-Untuk dokumentasi lebih lanjut, lihat folder `docs`.
-
-## Environment Variables
-
-Make sure to set the following environment variables in your `.env` file:
-
-```
+```bash
 # Supabase credentials
 NEXT_PUBLIC_SUPABASE_URL=your_supabase_url
 NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
 SUPABASE_SERVICE_ROLE_KEY=your_supabase_service_role_key
 
 # Admin emails (comma-separated list)
-ALLOWED_ADMIN_EMAILS=admin@example.com,admin2@example.com
+ALLOWED_ADMIN_EMAILS=admin@desaconnect.com,admin2@desaconnect.com
 ```
 
-The `SUPABASE_SERVICE_ROLE_KEY` is required for admin registration functionality.
+4. Jalankan aplikasi dengan `npm run dev`
 
-## Recent Changes
+## Struktur Proyek
 
-### Authentication System Updates
+```
+src/
+├── app/                 # Next.js app router
+├── components/          # React components
+├── lib/                 # Utility functions
+└── types/               # TypeScript type definitions
+```
 
-- Fixed duplicate implementation of `isAuthorizedAdmin` function
-- Consolidated admin authorization logic in `src/lib/auth-utils.ts`
-- Improved error handling for missing environment variables
-- Added validation for required API keys
+## Teknologi
+
+- **Frontend**: Next.js 14, React, TypeScript
+- **Backend**: Next.js API Routes
+- **Database**: Supabase (PostgreSQL)
+- **Authentication**: Supabase Auth
+- **Styling**: Tailwind CSS
+
+## Keamanan
+
+- Environment variables tidak akan ter-commit
+- Row Level Security (RLS) di database
+- JWT authentication
+- Input validation dan sanitization
+
+## Contributing
+
+Lihat [CONTRIBUTING.md](CONTRIBUTING.md) untuk panduan kontribusi.
+
+## License
+
+MIT License

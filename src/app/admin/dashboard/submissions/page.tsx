@@ -11,6 +11,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
+import { Progress } from "@/components/ui/progress";
 import { formatDate } from "@/lib/utils";
 import { createClient } from '@supabase/supabase-js';
 import { 
@@ -35,8 +36,6 @@ import {
   XCircle, 
   CalendarDays,
   FilePenLine,
-  FileText,
-  Send,
   SlidersHorizontal,
   Calendar
 } from "lucide-react";
@@ -263,6 +262,8 @@ export default async function SubmissionsPage({
     acc[category]++;
     return acc;
   }, {});
+  const totalSubmissions = submissions.length;
+  const sortedCategoryEntries = Object.entries(categoryCounts).sort((a, b) => (b[1] as number) - (a[1] as number));
   
   return (
     <div className="p-6 sm:p-8">
@@ -280,16 +281,7 @@ export default async function SubmissionsPage({
             Lihat dan kelola seluruh laporan dari masyarakat
           </p>
         </div>
-        <div className="flex items-center gap-2">
-          <Button variant="outline" className="flex items-center gap-2">
-            <FileSpreadsheet className="h-4 w-4" />
-            <span>Export</span>
-          </Button>
-          <Button className="flex items-center gap-2 bg-primary">
-            <FilePenLine className="h-4 w-4" />
-            <span>Tambah Laporan</span>
-          </Button>
-        </div>
+        <div className="flex items-center gap-2" />
       </div>
       
       {/* Statistik Card */}
@@ -710,69 +702,7 @@ export default async function SubmissionsPage({
         </TabsContent>
       </Tabs>
       
-      {/* Laporan Terbaru dan Quick Actions */}
-      <div className="grid gap-6 md:grid-cols-3">
-        <div className="md:col-span-2">
-          <Card className="border-0 shadow-sm">
-            <CardHeader className="pb-2">
-              <CardTitle className="text-lg">Laporan Terbaru</CardTitle>
-              <CardDescription>5 laporan terakhir yang masuk</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                {recentSubmissions.length === 0 ? (
-                  <div className="text-center py-6 text-muted-foreground">
-                    Belum ada laporan yang masuk
-                  </div>
-                ) : (
-                  recentSubmissions.map((submission: any) => (
-                    <div key={submission.id} className="flex items-start gap-3 pb-4 border-b last:border-b-0 last:pb-0">
-                      <div className={`p-2 rounded-full mt-0.5 ${
-                        submission.status === 'pending' ? 'bg-yellow-100' :
-                        submission.status === 'in progress' ? 'bg-blue-100' : 'bg-green-100'
-                      }`}>
-                        {submission.status === 'pending' ? (
-                          <Clock className={`h-4 w-4 text-yellow-600`} />
-                        ) : submission.status === 'in progress' ? (
-                          <RefreshCw className={`h-4 w-4 text-blue-600`} />
-                        ) : (
-                          <CheckCircle className={`h-4 w-4 text-green-600`} />
-                        )}
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center justify-between gap-2">
-                          <div className="font-medium truncate">{submission.reference_id}</div>
-                          <div className="text-xs text-muted-foreground whitespace-nowrap">
-                            {formatDate(submission.created_at)}
-                          </div>
-                        </div>
-                        <div className="text-xs text-muted-foreground mt-1 truncate">
-                          {submission.description.substring(0, 60)}...
-                        </div>
-                        <div className="flex items-center gap-2 mt-2">
-                          <Badge variant="outline" className={`${statusColorMap[submission.status]} text-xs py-0 px-1.5`}>
-                            {submission.status}
-                          </Badge>
-                          <Badge variant="outline" className="text-xs py-0 px-1.5">
-                            {submission.category}
-                          </Badge>
-                        </div>
-                      </div>
-                    </div>
-                  ))
-                )}
-              </div>
-            </CardContent>
-            <CardFooter className="pt-0">
-              <Link href="/admin/dashboard/submissions">
-                <Button variant="link" className="p-0 h-auto text-primary">
-                  Lihat semua laporan
-                </Button>
-              </Link>
-            </CardFooter>
-          </Card>
-        </div>
-        
+      <div className="grid gap-6">
         <div>
           <Card className="border-0 shadow-sm">
             <CardHeader className="pb-2">
@@ -785,46 +715,27 @@ export default async function SubmissionsPage({
                   Belum ada data kategori
                 </div>
               ) : (
-                <div className="space-y-2">
-                  {Object.entries(categoryCounts).map(([category, count]) => (
-                    <div key={category} className="flex items-center justify-between">
-                      <span className="text-sm">{category}</span>
-                      <div className="flex items-center gap-2">
-                        <div className="bg-primary/10 h-2 rounded-full w-24 overflow-hidden">
-                          <div 
-                            className="bg-primary h-full rounded-full" 
-                            style={{ width: `${(count as number / submissions.length) * 100}%` }}
-                          />
+                <div className="space-y-4">
+                  {sortedCategoryEntries.map(([category, count]) => {
+                    const percent = totalSubmissions > 0 ? Math.round(((count as number) / totalSubmissions) * 100) : 0;
+                    return (
+                      <div key={category} className="space-y-1.5">
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-2">
+                            <span className="inline-block h-2 w-2 rounded-full bg-primary/70" />
+                            <span className="text-sm font-medium">{category}</span>
+                          </div>
+                          <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                            <Badge variant="secondary" className="h-5 px-2 text-[10px]">{count}</Badge>
+                            <span>{percent}%</span>
+                          </div>
                         </div>
-                        <span className="text-xs font-medium">{count}</span>
+                        <Progress value={percent} />
                       </div>
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
               )}
-            </CardContent>
-          </Card>
-          
-          <Card className="border-0 shadow-sm mt-6">
-            <CardHeader className="pb-2">
-              <CardTitle className="text-lg">Tindakan Cepat</CardTitle>
-              <CardDescription>Aksi yang sering digunakan</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-2">
-                <Button className="w-full justify-start" variant="outline">
-                  <FileText className="mr-2 h-4 w-4" />
-                  <span>Buat Laporan Baru</span>
-                </Button>
-                <Button className="w-full justify-start" variant="outline">
-                  <FileSpreadsheet className="mr-2 h-4 w-4" />
-                  <span>Export Data Laporan</span>
-                </Button>
-                <Button className="w-full justify-start" variant="outline">
-                  <Send className="mr-2 h-4 w-4" />
-                  <span>Respon Cepat ke Laporan</span>
-                </Button>
-              </div>
             </CardContent>
           </Card>
         </div>

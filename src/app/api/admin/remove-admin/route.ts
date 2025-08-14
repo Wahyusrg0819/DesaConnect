@@ -1,8 +1,8 @@
 import { createClient } from '@supabase/supabase-js';
 import { NextRequest, NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
-import { createServerComponentClient } from '@supabase/auth-helpers-nextjs';
 import { isAuthorizedAdmin } from '@/lib/auth-utils';
+import type { Database } from '@/types/supabase';
 
 // Membuat Supabase admin client dengan service role key
 function getAdminSupabaseClient() {
@@ -13,7 +13,7 @@ function getAdminSupabaseClient() {
     throw new Error('Missing Supabase credentials');
   }
   
-  return createClient(supabaseUrl, supabaseServiceRoleKey);
+  return createClient<Database>(supabaseUrl, supabaseServiceRoleKey);
 }
 
 export async function POST(request: NextRequest) {
@@ -86,6 +86,33 @@ export async function POST(request: NextRequest) {
       );
     }
     
+    // Unassign submissions linked to this admin to satisfy FK constraints
+    const { error: unassignAssignedToError } = await adminSupabase
+      .from('submissions')
+      .update({ assigned_to: null })
+      .eq('assigned_to', email.toLowerCase());
+
+    if (unassignAssignedToError) {
+      console.error('Error unassigning submissions (assigned_to):', unassignAssignedToError);
+      return NextResponse.json(
+        { error: 'Error unassigning submissions: ' + unassignAssignedToError.message },
+        { status: 500 }
+      );
+    }
+
+    const { error: unassignLastUpdatedByError } = await adminSupabase
+      .from('submissions')
+      .update({ last_updated_by: null })
+      .eq('last_updated_by', email.toLowerCase());
+
+    if (unassignLastUpdatedByError) {
+      console.error('Error clearing submissions (last_updated_by):', unassignLastUpdatedByError);
+      return NextResponse.json(
+        { error: 'Error clearing last updated by: ' + unassignLastUpdatedByError.message },
+        { status: 500 }
+      );
+    }
+
     // Hapus admin dari database
     const { data, error } = await adminSupabase
       .from('admin_list')

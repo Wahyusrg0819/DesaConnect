@@ -22,6 +22,9 @@ export interface Database {
           file_url: string | null
           priority: 'Urgent' | 'Regular'
           internal_comments: Json | null
+          assigned_to: string | null
+          updated_at: string | null
+          last_updated_by: string | null
         }
         Insert: {
           id?: string
@@ -35,6 +38,9 @@ export interface Database {
           file_url?: string | null
           priority?: 'Urgent' | 'Regular'
           internal_comments?: Json | null
+          assigned_to?: string | null
+          updated_at?: string | null
+          last_updated_by?: string | null
         }
         Update: {
           id?: string
@@ -48,6 +54,9 @@ export interface Database {
           file_url?: string | null
           priority?: 'Urgent' | 'Regular'
           internal_comments?: Json | null
+          assigned_to?: string | null
+          updated_at?: string | null
+          last_updated_by?: string | null
         }
         Relationships: []
       }

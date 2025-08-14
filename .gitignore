@@ -5,8 +5,8 @@
 /.pnp
 .pnp.js
 
-#docs
-LAPORANKP
+docs
+/LAPORANKP
 
 *.md
 

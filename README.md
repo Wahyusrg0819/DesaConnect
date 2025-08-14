@@ -21,12 +21,14 @@ Aplikasi platform aspirasi dan keluhan untuk Desa Pangkalan Baru.
 1. Clone repositori
 2. Install dependensi dengan `npm install`
 3. Buat file `.env.local` dan tambahkan konfigurasi Supabase:
+
 ```
 NEXT_PUBLIC_SUPABASE_URL=your-supabase-url
 NEXT_PUBLIC_SUPABASE_ANON_KEY=your-supabase-anon-key
 JWT_SECRET=your-jwt-secret
 ADMIN_SETUP_SECRET=your-admin-setup-secret
 ```
+
 4. Jalankan aplikasi dengan `npm run dev`
 
 ### Setup Admin

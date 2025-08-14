@@ -131,16 +131,7 @@ export default async function SubmissionDetailPage({
             </div>
           </div>
           <div className="flex gap-2">
-            <Button variant="outline" className="flex items-center gap-2">
-              <FileText className="h-4 w-4" />
-              <span>Export PDF</span>
-            </Button>
-            <Link href={`/admin/dashboard/submissions/${id}/action`}>
-              <Button className="flex items-center gap-2 bg-primary">
-                <CheckCircle2 className="h-4 w-4" />
-                <span>Tindak Lanjut</span>
-              </Button>
-            </Link>
+            <div className="h-6" />
           </div>
         </div>
         

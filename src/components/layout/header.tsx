@@ -39,36 +39,36 @@ export default function Header() {
   }, []);
 
   return (
-    <header className="glass sticky top-0 z-50 transition-all duration-300">
-      <nav className="max-w-6xl mx-auto px-6 py-4 flex justify-between items-center" aria-label="Main navigation">
-        <Link href="/" className="text-xl font-bold flex items-center gap-3 group" aria-label="Desa Pangkalan Baru Home">
-          <div className="flex items-center justify-center p-1.5 rounded-xl bg-primary/10 group-hover:bg-primary/20 transition-colors shadow-sm" aria-hidden="true">
+    <header className="sticky top-0 z-50 bg-background border-b border-border">
+      <nav className="max-w-6xl mx-auto px-6 py-3 flex justify-between items-center" aria-label="Main navigation">
+        <Link href="/" className="flex items-center gap-3" aria-label="Desa Pangkalan Baru Home">
+          <div className="flex items-center justify-center p-1 border border-border rounded-md bg-card" aria-hidden="true">
             <Image
               src="/images/300_kamparkab.webp"
               alt="Logo Kabupaten Kampar"
-              width={36}
-              height={36}
+              width={32}
+              height={32}
               className="object-contain"
               priority
             />
           </div>
           <div className="flex flex-col">
-            <span className="text-primary font-bold tracking-tight">
+            <span className="font-semibold leading-tight text-foreground">
               Desa Pangkalan Baru
             </span>
-            <span className="text-[11px] font-semibold text-muted-foreground uppercase tracking-widest mt-0.5">
+            <span className="text-[11px] text-muted-foreground uppercase tracking-wider mt-0.5">
               Layanan Aspirasi
             </span>
           </div>
         </Link>
 
         {/* Desktop Navigation */}
-        <div className="hidden md:flex items-center gap-3 bg-white/50 px-2 py-1.5 rounded-full border border-border shadow-sm">
+        <div className="hidden md:flex items-center gap-2">
           {NAV_ITEMS.map((item) => (
             <Link href={item.href} passHref key={item.href}>
-              <Button variant={item.variant === 'default' ? 'default' : 'ghost'} size="sm" className={item.variant !== 'default' ? 'rounded-full hover:bg-primary/10' : 'rounded-full shadow-md hover:shadow-lg transition-all'}>
+              <Button variant={item.variant} size="sm">
                 <item.icon className="mr-2 h-4 w-4" aria-hidden="true" />
-                <span className="font-medium">{item.label}</span>
+                <span>{item.label}</span>
               </Button>
             </Link>
           ))}
@@ -78,7 +78,7 @@ export default function Header() {
         <Button 
           variant="outline" 
           size="icon" 
-          className="md:hidden rounded-lg bg-white/80 border-border shadow-sm"
+          className="md:hidden"
           onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
           aria-expanded={mobileMenuOpen}
           aria-label={mobileMenuOpen ? "Tutup Menu" : "Buka Menu"}
@@ -93,7 +93,7 @@ export default function Header() {
 
       {/* Mobile Navigation */}
       {mobileMenuOpen && (
-        <div className="md:hidden border-t border-border bg-white px-4 py-3 space-y-2">
+        <div className="md:hidden border-t border-border bg-background px-4 py-3 space-y-2">
           {NAV_ITEMS.map((item) => (
             <Link href={item.href} passHref key={item.href} onClick={() => setMobileMenuOpen(false)}>
               <Button variant={item.variant} className="w-full justify-start">

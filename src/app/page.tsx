@@ -84,43 +84,40 @@ export default async function Home({
         completed={stats.byStatus['resolved'] || 0}
       />
 
-      <section className="py-20 bg-background relative border-t border-border/50">
-        <div className="absolute inset-0 bg-secondary/20 -z-10"></div>
-        <div className="max-w-6xl mx-auto px-4 relative z-10">
-          <div className="mb-12">
-            <h2 className="text-3xl font-extrabold mb-3 tracking-tight">Laporan & Aspirasi Terbaru</h2>
-            <p className="text-muted-foreground text-lg">Lihat laporan dan aspirasi yang telah disampaikan oleh masyarakat beserta status penyelesaiannya.</p>
+      <section className="py-16 bg-background border-t border-border">
+        <div className="max-w-6xl mx-auto px-4">
+          <div className="mb-8">
+            <h2 className="text-2xl font-semibold mb-2">Laporan & Aspirasi Terbaru</h2>
+            <p className="text-muted-foreground">Lihat laporan dan aspirasi yang telah disampaikan oleh masyarakat beserta status penyelesaiannya.</p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-12">
-            <Card className="border-border/60 bg-gradient-to-br from-card to-primary/5 shadow-sm hover:shadow-md transition-shadow group overflow-hidden relative">
-              <div className="absolute -right-4 -bottom-4 w-24 h-24 bg-primary/10 rounded-full blur-xl group-hover:bg-primary/20 transition-colors"></div>
-              <CardContent className="p-8 flex items-center gap-6 relative z-10">
-                <div className="p-4 rounded-2xl bg-primary/10 group-hover:bg-primary group-hover:text-primary-foreground transition-all duration-300 shadow-sm">
-                  <Megaphone className="h-8 w-8 text-primary group-hover:text-primary-foreground" />
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
+            <Card className="border-border shadow-none rounded-md hover:bg-muted/50 transition-colors">
+              <CardContent className="p-6 flex items-start gap-4">
+                <div className="p-3 rounded-md bg-primary/10 text-primary flex-shrink-0 mt-1">
+                  <Megaphone className="h-5 w-5" />
                 </div>
                 <div>
-                  <h3 className="font-bold text-xl mb-1.5">Buat Laporan Baru</h3>
-                  <p className="text-muted-foreground leading-relaxed">Sampaikan aspirasi atau keluhan Anda kepada perangkat desa dengan mudah dan aman.</p>
+                  <h3 className="font-semibold text-lg mb-1">Buat Laporan Baru</h3>
+                  <p className="text-sm text-muted-foreground">Sampaikan aspirasi atau keluhan Anda kepada perangkat desa dengan mudah dan aman.</p>
                 </div>
               </CardContent>
             </Card>
 
-            <Card className="border-border/60 bg-gradient-to-bl from-card to-accent/5 shadow-sm hover:shadow-md transition-shadow group overflow-hidden relative">
-              <div className="absolute -right-4 -bottom-4 w-24 h-24 bg-accent/10 rounded-full blur-xl group-hover:bg-accent/20 transition-colors"></div>
-              <CardContent className="p-8 flex items-center gap-6 relative z-10">
-                <div className="p-4 rounded-2xl bg-accent/20 group-hover:bg-accent group-hover:text-accent-foreground transition-all duration-300 shadow-sm">
-                  <Activity className="h-8 w-8 text-accent-foreground group-hover:text-accent-foreground" />
+            <Card className="border-border shadow-none rounded-md hover:bg-muted/50 transition-colors">
+              <CardContent className="p-6 flex items-start gap-4">
+                <div className="p-3 rounded-md bg-primary/10 text-primary flex-shrink-0 mt-1">
+                  <Activity className="h-5 w-5" />
                 </div>
                 <div>
-                  <h3 className="font-bold text-xl mb-1.5">Lacak Status Laporan</h3>
-                  <p className="text-muted-foreground leading-relaxed">Gunakan kode referensi yang Anda miliki untuk mengetahui status tindak lanjut.</p>
+                  <h3 className="font-semibold text-lg mb-1">Lacak Status Laporan</h3>
+                  <p className="text-sm text-muted-foreground">Gunakan kode referensi yang Anda miliki untuk mengetahui status tindak lanjut.</p>
                 </div>
               </CardContent>
             </Card>
           </div>
 
-          <div className="bg-card rounded-2xl border border-border shadow-sm p-2 sm:p-4">
+          <div className="bg-card rounded-md border border-border shadow-none p-4">
             <SubmissionList
               submissions={submissions}
               categories={categories}

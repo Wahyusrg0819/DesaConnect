@@ -177,7 +177,7 @@ const priorityColorMap: Record<string, string> = {
 export default async function SubmissionsPage({
   searchParams,
 }: {
-  searchParams: { 
+  searchParams: Promise<{ 
     status?: string; 
     category?: string; 
     priority?: string;
@@ -186,12 +186,14 @@ export default async function SubmissionsPage({
     endDate?: string;
     tab?: string;
     page?: string;
-  };
+  }>;
 }) {
   // Proteksi halaman admin
   await protectAdminRoute();
+
+  const resolvedSearchParams = await searchParams;
   
-  const currentPage = Number(searchParams?.page) || 1;
+  const currentPage = Number(resolvedSearchParams?.page) || 1;
   const limit = 10;
 
   // Map tab values to status values
@@ -202,16 +204,15 @@ export default async function SubmissionsPage({
     'resolved': 'resolved'
   };
   
-  // Await search parameters
-  const params = await Promise.resolve({
-    status: searchParams?.tab ? tabToStatus[searchParams.tab as keyof typeof tabToStatus] : searchParams?.status,
-    category: searchParams?.category,
-    priority: searchParams?.priority,
-    search: searchParams?.search,
-    startDate: searchParams?.startDate,
-    endDate: searchParams?.endDate,
-    tab: searchParams?.tab || 'all'
-  });
+  const params = {
+    status: resolvedSearchParams?.tab ? tabToStatus[resolvedSearchParams.tab as keyof typeof tabToStatus] : resolvedSearchParams?.status,
+    category: resolvedSearchParams?.category,
+    priority: resolvedSearchParams?.priority,
+    search: resolvedSearchParams?.search,
+    startDate: resolvedSearchParams?.startDate,
+    endDate: resolvedSearchParams?.endDate,
+    tab: resolvedSearchParams?.tab || 'all'
+  };
 
   // Get submissions with awaited parameters
   const { data: submissions, count: totalCount } = await getSubmissions({

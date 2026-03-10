@@ -19,7 +19,6 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { useSupabase } from "@/components/providers/supabase-provider";
 import { useRouter } from "next/navigation";
 import { Textarea } from "@/components/ui/textarea";
-import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "@/components/ui/use-toast";
 import { 
@@ -129,9 +128,6 @@ export default function AdminSettings({ currentUser }: AdminSettingsProps) {
     setError(null);
 
     try {
-      // Create or update user-email cookie before making the API call
-      document.cookie = `user-email=${adminEmail}; path=/; max-age=3600; SameSite=Strict`;
-      
       const response = await fetch('/api/admin/list-admins', {
         method: 'GET',
         headers: {
@@ -226,9 +222,6 @@ export default function AdminSettings({ currentUser }: AdminSettingsProps) {
       setAdminList(prev => [optimisticAdmin, ...prev]);
       setFilteredAdmins(prev => [optimisticAdmin, ...prev]);
 
-      // Ensure the user-email cookie is set
-      document.cookie = `user-email=${adminEmail}; path=/; max-age=3600; SameSite=Strict`;
-
       const response = await fetch('/api/admin/add-admin', {
         method: 'POST',
         headers: {
@@ -314,9 +307,6 @@ export default function AdminSettings({ currentUser }: AdminSettingsProps) {
       if (newEmails.length === 0) {
         throw new Error("Semua email sudah terdaftar sebagai admin");
       }
-
-      // Ensure the user-email cookie is set
-      document.cookie = `user-email=${adminEmail}; path=/; max-age=3600; SameSite=Strict`;
 
       // Add each admin in sequence
       let successCount = 0;
@@ -427,9 +417,6 @@ export default function AdminSettings({ currentUser }: AdminSettingsProps) {
         )
       );
 
-      // Ensure the user-email cookie is set
-      document.cookie = `user-email=${adminEmail}; path=/; max-age=3600; SameSite=Strict`;
-
       const response = await fetch('/api/admin/remove-admin', {
         method: 'POST',
         headers: {
@@ -509,10 +496,7 @@ export default function AdminSettings({ currentUser }: AdminSettingsProps) {
           <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-users"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
           <span>Daftar Admin</span>
         </TabsTrigger>
-        <TabsTrigger value="general" className="flex items-center gap-2 data-[state=active]:bg-primary/10">
-          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-settings"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/></svg>
-          <span>Pengaturan Umum</span>
-        </TabsTrigger>
+
       </TabsList>
 
       {isAuthLoading ? (
@@ -753,135 +737,7 @@ export default function AdminSettings({ currentUser }: AdminSettingsProps) {
         </Card>
           </TabsContent>
 
-      <TabsContent value="general" className="space-y-6">
-        <Card className="border shadow-sm">
-          <CardHeader className="bg-muted/30 pb-4">
-            <CardTitle className="text-xl">Pengaturan Umum</CardTitle>
-                <CardDescription>
-                  Konfigurasi umum aplikasi Desa Pangkalan Baru
-                </CardDescription>
-              </CardHeader>
-          <CardContent className="p-6 space-y-8">
-            {/* Notifications section */}
-            <div>
-              <h3 className="text-base font-medium mb-4 flex items-center gap-2">
-                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-primary"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg>
-                Notifikasi
-              </h3>
-              <div className="space-y-4">
-                <div className="flex items-center justify-between p-4 border rounded-md hover:bg-muted/10 transition-colors">
-                  <div>
-                    <Label htmlFor="email-notifications" className="font-medium">
-                      Notifikasi Email
-                    </Label>
-                    <p className="text-sm text-muted-foreground mt-0.5">
-                      Kirim email pemberitahuan saat ada laporan baru
-                    </p>
-                  </div>
-                  <Switch id="email-notifications" />
-                </div>
-                
-                <div className="flex items-center justify-between p-4 border rounded-md hover:bg-muted/10 transition-colors">
-                  <div>
-                    <Label htmlFor="important-notifications" className="font-medium">
-                      Notifikasi Penting
-                    </Label>
-                    <p className="text-sm text-muted-foreground mt-0.5">
-                      Kirim notifikasi khusus untuk laporan yang ditandai penting
-                    </p>
-                  </div>
-                  <Switch id="important-notifications" />
-                </div>
-              </div>
-            </div>
-            
-            {/* Assignment section */}
-            <div>
-              <h3 className="text-base font-medium mb-4 flex items-center gap-2">
-                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-primary"><path d="m22 9-10 13L2 9l10-5 10 5Z"/><path d="m6 12 6 3 6-3"/></svg>
-                Penugasan
-              </h3>
-              <div className="space-y-4">
-                <div className="flex items-center justify-between p-4 border rounded-md hover:bg-muted/10 transition-colors">
-                  <div>
-                    <Label htmlFor="auto-assign" className="font-medium">
-                      Auto-assign Admin
-                    </Label>
-                    <p className="text-sm text-muted-foreground mt-0.5">
-                      Otomatis tugaskan admin untuk laporan baru secara bergilir
-                    </p>
-                  </div>
-                  <Switch id="auto-assign" />
-                </div>
-                
-                <div className="flex items-center justify-between p-4 border rounded-md hover:bg-muted/10 transition-colors">
-                  <div>
-                    <Label htmlFor="category-based" className="font-medium">
-                      Berbasis Kategori
-                    </Label>
-                    <p className="text-sm text-muted-foreground mt-0.5">
-                      Assign laporan berdasarkan kategori dan spesialisasi admin
-                    </p>
-                  </div>
-                  <Switch id="category-based" />
-                </div>
-              </div>
-            </div>
-            
-            {/* API section */}
-            <div>
-              <h3 className="text-base font-medium mb-4 flex items-center gap-2">
-                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-primary"><path d="M17 6.1H3"/><path d="M21 12.1H3"/><path d="M15.1 18H3"/></svg>
-                API & Integrasi
-              </h3>
-              <div className="space-y-4">
-                <div className="p-4 border rounded-md bg-muted/20">
-                  <div className="flex flex-col space-y-4">
-                    <div>
-                      <Label htmlFor="api-key" className="text-sm font-medium">Kunci API</Label>
-                      <div className="mt-1.5 flex items-center gap-2">
-                        <div className="bg-muted/30 p-2.5 rounded-md border flex-1 font-mono text-xs overflow-hidden">
-                          <span className="text-muted-foreground tracking-wider">••••••••••••••••••••••••••••••••</span>
-                        </div>
-                        <Button variant="outline" size="sm" className="shrink-0">
-                          <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-1"><path d="M12 19l7-7 3 3-7 7-3-3z"/><path d="M18 13l-1.5-7.5L2 2l3.5 14.5L13 18l5-5z"/><path d="m2 2 7.586 7.586"/><circle cx="11" cy="11" r="2"/></svg>
-                          Tampilkan
-                        </Button>
-                      </div>
-                    </div>
-                    <div>
-                      <Label htmlFor="webhook-url" className="text-sm font-medium">Webhook URL</Label>
-                      <div className="mt-1.5 flex items-center gap-2">
-                        <Input 
-                          id="webhook-url" 
-                          placeholder="https://example.com/webhook" 
-                          className="font-mono text-xs" 
-                        />
-                        <Button variant="outline" size="sm" className="shrink-0">
-                          <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-1"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><rect width="8" height="4" x="8" y="2" rx="1" ry="1"/></svg>
-                          Salin
-                        </Button>
-                      </div>
-                    </div>
-                  </div>
-                  <p className="text-xs text-muted-foreground mt-3">
-                    Kunci API digunakan untuk integrasi dengan sistem eksternal. Jangan bagikan kunci ini dengan pihak yang tidak berwenang.
-                  </p>
-                </div>
-              </div>
-            </div>
-              </CardContent>
-          <CardFooter className="border-t bg-muted/10 p-4 flex justify-end gap-3">
-            <Button variant="outline" className="h-9">
-              Batal
-            </Button>
-            <Button className="h-9">
-              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-1.5"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
-              Simpan Pengaturan
-            </Button>
-          </CardFooter>
-            </Card>
-          </TabsContent>
+
     </Tabs>
   );
 } 

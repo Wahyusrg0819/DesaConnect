@@ -23,7 +23,6 @@ const registerSchema = z.object({
 // Login admin
 export async function loginAdmin(formData: FormData): Promise<{ success: boolean; error?: string }> {
   const startTime = Date.now();
-  console.log('[PERF] Starting loginAdmin execution');
   
   try {
     const rawData = {
@@ -31,72 +30,29 @@ export async function loginAdmin(formData: FormData): Promise<{ success: boolean
       password: formData.get('password') as string,
     };
 
-    console.log('[AUTH] Login attempt for email:', rawData.email);
-
     // Validasi input
     const validation = loginSchema.safeParse(rawData);
     if (!validation.success) {
-      console.log('[AUTH] Validation failed:', validation.error.errors);
       return { success: false, error: validation.error.errors.map(e => e.message).join(', ') };
     }
 
     const validatedData = validation.data;
-    console.log('[AUTH] Input validation passed for:', validatedData.email);
 
     // Make sure email is a valid string before checking admin status
     if (!validatedData.email || typeof validatedData.email !== 'string') {
-      console.log('[AUTH] Invalid email type');
       return { success: false, error: 'Email tidak valid' };
     }
-    
-    console.log(`[PERF] Input validation completed in ${Date.now() - startTime}ms`);
 
     // Check admin status first (before any authentication)
-    const adminCheckStart = Date.now();
-    console.log('[AUTH] Starting admin status check for:', validatedData.email);
-    
     const isAdmin = await isAuthorizedAdmin(validatedData.email);
-    console.log(`[AUTH] Admin check completed in ${Date.now() - adminCheckStart}ms, result:`, isAdmin);
     
     if (!isAdmin) {
-      console.log(`[AUTH] ❌ LOGIN FAILED: Email ${validatedData.email} not authorized as admin`);
-      console.log(`[PERF] Login failed: not an admin, total time: ${Date.now() - startTime}ms`);
       return { success: false, error: 'Email tidak terdaftar sebagai admin' };
     }
 
-    console.log(`[AUTH] ✅ Email ${validatedData.email} is authorized as admin`);
-
-    // For development/testing - hardcoded SuperAdmin credentials
-    if (validatedData.email === 'wahyumuliadisiregar@student.uir.ac.id' && 
-        validatedData.password === 'Admin123456') {
-      
-      console.log('[AUTH] Using dev hardcoded credentials for SuperAdmin');
-      
-      try {
-        // Set admin_session cookie
-        const cookieStore = await cookies();
-        cookieStore.set('admin_session', validatedData.email, {
-          httpOnly: true,
-          path: '/',
-          secure: process.env.NODE_ENV === 'production',
-          sameSite: 'lax',
-          maxAge: 60 * 60 * 24, // 1 day in seconds
-        });
-        
-        console.log(`[AUTH] ✅ LOGIN SUCCESS with hardcoded credentials, total time: ${Date.now() - startTime}ms`);
-        return { success: true };
-      } catch (cookieError) {
-        console.error('[AUTH] Error setting admin_session cookie:', cookieError);
-        return { success: false, error: 'Gagal mengatur session' };
-      }
-    }
-
-    // For other admins, create a simplified login (since this is admin-only system)
-    // In a real system, you'd authenticate against Supabase auth or a password database
-    console.log('[AUTH] Processing admin login for authorized email:', validatedData.email);
+    // Set admin session cookie for authorized admin
     
     try {
-      const cookieStart = Date.now();
       // Set admin session cookie for authorized admin
       const cookieStore = await cookies();
       cookieStore.set('admin_session', validatedData.email, {
@@ -107,7 +63,6 @@ export async function loginAdmin(formData: FormData): Promise<{ success: boolean
         maxAge: 60 * 60 * 24, // 1 day in seconds
       });
       
-      console.log(`[AUTH] ✅ LOGIN SUCCESS: Cookie set in ${Date.now() - cookieStart}ms, total login time: ${Date.now() - startTime}ms`);
       return { success: true };
     } catch (cookieError) {
       console.error('[AUTH] Error setting cookie:', cookieError);
@@ -115,7 +70,6 @@ export async function loginAdmin(formData: FormData): Promise<{ success: boolean
     }
   } catch (error: any) {
     console.error('[AUTH] Error in loginAdmin:', error);
-    console.log(`[PERF] Login failed with generic error, total time: ${Date.now() - startTime}ms`);
     return { success: false, error: error.message || 'Terjadi kesalahan saat login' };
   }
 }

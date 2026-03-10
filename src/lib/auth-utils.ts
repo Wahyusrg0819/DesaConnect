@@ -16,12 +16,12 @@ export const isAuthorizedAdmin = async (email: string | null | undefined): Promi
   const normalizedEmail = email.trim().toLowerCase();
   const startTime = Date.now();
 
-  console.log(`[AUTH] Checking admin authorization for: ${normalizedEmail}`);
+  console.log('[AUTH] Checking admin authorization');
 
   // Check cache first
   const cachedResult = adminCache.get(normalizedEmail);
   if (cachedResult && (Date.now() - cachedResult.timestamp) < CACHE_TTL) {
-    console.log(`[PERF] Using cached admin status for ${normalizedEmail}, result: ${cachedResult.isAdmin}, elapsed: ${Date.now() - startTime}ms`);
+    console.log(`[PERF] Using cached admin status, elapsed: ${Date.now() - startTime}ms`);
     return cachedResult.isAdmin;
   }
   
@@ -29,7 +29,7 @@ export const isAuthorizedAdmin = async (email: string | null | undefined): Promi
 
   // Check database only (removed environment variable dependency)
   try {
-    console.log(`[AUTH] Checking database for admin status: ${normalizedEmail}`);
+    console.log(`[AUTH] Checking database for admin status`);
     const dbCheckStart = Date.now();
     
     // Use service role client to bypass RLS for admin checks
@@ -51,12 +51,12 @@ export const isAuthorizedAdmin = async (email: string | null | undefined): Promi
       
     if (!error && data) {
       isAdmin = true;
-      console.log(`[AUTH] ✅ Admin found in database: ${normalizedEmail}, db elapsed: ${Date.now() - dbCheckStart}ms, total: ${Date.now() - startTime}ms`);
+      console.log(`[AUTH] Admin found in database, db elapsed: ${Date.now() - dbCheckStart}ms, total: ${Date.now() - startTime}ms`);
     } else if (error && error.code !== 'PGRST116') { // PGRST116 is "No rows returned" - not really an error
       console.error('[AUTH] Database error checking admin status:', error);
       // Only log real DB errors, not "not found"
     } else {
-      console.log(`[AUTH] ❌ Email not found in database: ${normalizedEmail}`);
+      console.log('[AUTH] Email not found in admin_list');
     }
   } catch (err) {
     console.error('[AUTH] Exception checking admin_list table:', err);
@@ -68,7 +68,7 @@ export const isAuthorizedAdmin = async (email: string | null | undefined): Promi
     timestamp: Date.now() 
   });
   
-  console.log(`[AUTH] Final result for ${normalizedEmail}: ${isAdmin ? '✅ AUTHORIZED' : '❌ NOT AUTHORIZED'}, total elapsed: ${Date.now() - startTime}ms`);
+  console.log(`[AUTH] Admin check result: ${isAdmin ? 'AUTHORIZED' : 'NOT AUTHORIZED'}, total elapsed: ${Date.now() - startTime}ms`);
   return isAdmin;
 };
 
@@ -90,11 +90,11 @@ export async function getSession() {
   // Check for admin_session cookie first (fallback mechanism)
   const adminSessionValue = cookieStore.get('admin_session')?.value;
   if (adminSessionValue) {
-    console.log(`Found admin_session cookie with value: ${adminSessionValue}`);
+    console.log('Found admin_session cookie, verifying');
     // Verify email is still authorized
     const isAdmin = await isAuthorizedAdmin(adminSessionValue);
     if (isAdmin) {
-      console.log('Creating virtual session from admin_session cookie');
+      console.log('Valid admin session from cookie');
       return createVirtualSessionFromCookie(adminSessionValue);
     } else {
       console.warn('Invalid admin_session cookie detected, removing');

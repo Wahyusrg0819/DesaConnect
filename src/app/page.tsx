@@ -1,62 +1,50 @@
 import SubmissionList from '@/components/submissions/submission-list';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Separator } from '@/components/ui/separator';
+import { Card, CardContent } from "@/components/ui/card";
 import { fetchSubmissions, getSubmissionStats } from '@/lib/actions/submissions';
-import { Button } from '@/components/ui/button';
-import Link from 'next/link';
-import Image from 'next/image';
-import { MessageSquarePlus, Activity, ArrowRight, Wrench, BookOpen, Stethoscope, HeartHandshake, Info, CheckCircle2 } from 'lucide-react';
-import { Users, Building, HomeIcon, FileText, ClipboardList, Megaphone } from 'lucide-react';
-import Script from 'next/script';
+import { Megaphone, Activity } from 'lucide-react';
 import PublicLayout from '@/components/layout/public-layout';
 import { Hero } from '@/components/ui/hero';
 import { HowItWorks } from '@/components/ui/how-it-works';
 import { Stats } from '@/components/ui/stats';
 
-// Preload critical font
+import { CATEGORIES } from '@/lib/constants';
+
 export const metadata = {
-  other: {
-    'google-font-preconnect': {
-      url: 'https://fonts.gstatic.com',
-      crossOrigin: 'anonymous',
-    },
-  },
+  title: 'Desa Pangkalan Baru - Platform Aspirasi Masyarakat',
+  description: 'Platform aspirasi dan keluhan masyarakat untuk kemajuan Desa Pangkalan Baru',
 };
 
 export default async function Home({
   searchParams,
 }: {
-  searchParams?: { [key: string]: string | string[] | undefined };
+  searchParams?: Promise<{ [key: string]: string | string[] | undefined }>;
 }) {
-  // Create a properly awaited searchParams object
-  const awaitedSearchParams = await Promise.resolve(searchParams || {});
-  
-  // Extract parameters after awaiting
-  const category = typeof awaitedSearchParams.category === 'string' 
-    ? awaitedSearchParams.category 
+  const awaitedSearchParams = await searchParams ?? {};
+
+  const category = typeof awaitedSearchParams.category === 'string'
+    ? awaitedSearchParams.category
     : undefined;
-    
-  const status = typeof awaitedSearchParams.status === 'string' 
-    ? awaitedSearchParams.status 
+
+  const status = typeof awaitedSearchParams.status === 'string'
+    ? awaitedSearchParams.status
     : undefined;
-    
-  const sortBy = typeof awaitedSearchParams.sortBy === 'string' 
-    ? awaitedSearchParams.sortBy 
+
+  const sortBy = typeof awaitedSearchParams.sortBy === 'string'
+    ? awaitedSearchParams.sortBy
     : 'date_desc';
-    
-  const search = typeof awaitedSearchParams.search === 'string' 
-    ? awaitedSearchParams.search 
+
+  const search = typeof awaitedSearchParams.search === 'string'
+    ? awaitedSearchParams.search
     : undefined;
-    
-  const page = typeof awaitedSearchParams.page === 'string' 
-    ? parseInt(awaitedSearchParams.page, 10) 
+
+  const page = typeof awaitedSearchParams.page === 'string'
+    ? parseInt(awaitedSearchParams.page, 10)
     : 1;
-    
-  const limit = typeof awaitedSearchParams.limit === 'string' 
-    ? parseInt(awaitedSearchParams.limit, 10) 
+
+  const limit = typeof awaitedSearchParams.limit === 'string'
+    ? parseInt(awaitedSearchParams.limit, 10)
     : 10;
 
-  // Create params object after individual extraction
   const params = {
     category,
     status,
@@ -66,167 +54,86 @@ export default async function Home({
     limit
   };
 
-  // Fetch submissions based on parameters
-  const { submissions, totalCount: oldTotalCount, totalPages } = await fetchSubmissions(params);
+  const { submissions, totalCount, totalPages } = await fetchSubmissions(params);
 
-  // Fetch global stats (sinkron dengan Supabase)
   const statsResult = await getSubmissionStats();
-  const stats = statsResult.success && statsResult.stats ? statsResult.stats : { total: 0, byStatus: {}, byCategory: {} };
+  const stats = statsResult.success && statsResult.stats
+    ? statsResult.stats
+    : { total: 0, byStatus: {}, byCategory: {} };
 
-  const categories = ['Infrastructure', 'Education', 'Health', 'Social Welfare', 'Other']; // Example categories
-  const statuses = ['Pending', 'In Progress', 'Resolved'];
-
-  // Category icons mapping based on blueprint
-  const getCategoryIcon = (category: string) => {
-    switch(category) {
-      case 'Infrastructure': return <Wrench className="h-6 w-6" />;
-      case 'Education': return <BookOpen className="h-6 w-6" />;
-      case 'Health': return <Stethoscope className="h-6 w-6" />;
-      case 'Social Welfare': return <HeartHandshake className="h-6 w-6" />;
-      default: return <Info className="h-6 w-6" />;
-    }
-  };
-
-  // JSON-LD structured data for organization
-  const organizationJsonLd = {
-    "@context": "https://schema.org",
-    "@type": "GovernmentOrganization",
-    "name": "Desa Pangkalan Baru",
-    "url": "https://desaconnect.id",
-    "logo": "https://desaconnect.id/icons/icon-192x192.png",
-    "description": "Platform aspirasi dan keluhan masyarakat untuk Desa Pangkalan Baru",
-    "address": {
-      "@type": "PostalAddress",
-      "addressLocality": "Pangkalan Baru",
-      "addressRegion": "Indonesia",
-      "addressCountry": "ID"
-    },
-    "contactPoint": {
-      "@type": "ContactPoint",
-      "telephone": "+6282112345678",
-      "contactType": "customer service",
-      "email": "info@desaconnect.id",
-      "availableLanguage": "Indonesian"
-    },
-    "sameAs": [
-      "https://facebook.com/desaconnect",
-      "https://instagram.com/desaconnect",
-      "https://twitter.com/desaconnect"
-    ]
-  };
-
-  // JSON-LD structured data for WebApplication
-  const applicationJsonLd = {
-    "@context": "https://schema.org",
-    "@type": "WebApplication",
-    "name": "Desa Pangkalan Baru",
-    "applicationCategory": "GovernmentApplication",
-    "operatingSystem": "All",
-    "offers": {
-      "@type": "Offer",
-      "price": "0",
-      "priceCurrency": "IDR"
-    }
-  };
+  const categories = [...CATEGORIES];
+  const statuses = ['Menunggu', 'Diproses', 'Selesai'];
 
   return (
     <PublicLayout>
-      <div className="flex flex-col min-h-screen">
-        {/* Add JSON-LD structured data */}
-        <script
-          type="application/ld+json"
-          dangerouslySetInnerHTML={{ __html: JSON.stringify(organizationJsonLd) }}
-        />
-        <script
-          type="application/ld+json"
-          dangerouslySetInnerHTML={{ __html: JSON.stringify(applicationJsonLd) }}
-        />
-        
-        {/* Hero Section - Modern and Animated */}
-        <Hero 
-          title="Selamat Datang di Desa Pangkalan Baru"
-          subtitle="Platform aspirasi dan keluhan untuk membangun Desa Pangkalan Baru yang lebih baik."
-          badge="Platform Digital Desa"
-          actions={[
-            {
-              label: "Buat Laporan",
-              href: "/submit",
-              variant: "default"
-            },
-            {
-              label: "Lacak Laporan",
-              href: "/track",
-              variant: "outline"
-            }
-          ]}
-          className="bg-background"
-        />
+      <Hero
+        title="Selamat Datang di Desa Pangkalan Baru"
+        subtitle="Platform aspirasi dan keluhan untuk membangun desa yang lebih baik"
+        badge="Platform Digital Desa"
+        actions={[
+          { label: "Buat Laporan", href: "/submit", variant: "default" },
+          { label: "Lacak Laporan", href: "/track", variant: "outline" }
+        ]}
+      />
 
-        {/* Section Cara Kerja - Modern and Animated */}
-        <HowItWorks />
+      <HowItWorks />
 
-        {/* Stats Section - Modern and Animated */}
-        <Stats 
-          total={stats.total} 
-          processing={stats.byStatus['in progress'] || 0} 
-          completed={stats.byStatus['resolved'] || 0} 
-        />
+      <Stats
+        total={stats.total}
+        processing={stats.byStatus['in progress'] || 0}
+        completed={stats.byStatus['resolved'] || 0}
+      />
 
-        {/* Recent Submissions Section - Optimized with lazy loading */}
-        <section className="py-12 md:py-20 bg-gray-50">
-          <div className="max-w-6xl mx-auto px-4 md:px-6 lg:px-8">
-            <div className="mb-8 md:mb-12 text-center md:text-left">
-              <h2 className="text-2xl md:text-3xl font-bold text-gray-900 mb-2 md:mb-4">Laporan Terbaru</h2>
-              <p className="text-gray-600 text-sm md:text-base">Lihat laporan terbaru dari masyarakat Desa Pangkalan Baru</p>
-            </div>
-            
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-8 mb-6 md:mb-8">
-              <Card className="bg-gradient-to-br from-[#2E7D32]/5 to-white border-0 shadow-lg hover:shadow-xl transition-all overflow-hidden rounded-xl">
-                <CardContent className="p-4 md:p-6 flex flex-col sm:flex-row items-start sm:items-center gap-4 md:gap-6">
-                  <div className="rounded-full bg-[#2E7D32]/10 p-3 md:p-4 flex-shrink-0">
-                    <Megaphone className="h-6 w-6 md:h-8 md:w-8 text-[#2E7D32]" />
-                  </div>
-                  <div className="flex-1">
-                    <h3 className="text-lg md:text-xl font-semibold mb-1 md:mb-2">Buat Laporan Baru</h3>
-                    <p className="text-gray-600 text-sm md:text-base">Sampaikan aspirasi atau keluhan Anda untuk Desa yang lebih baik</p>
-                  </div>
-                </CardContent>
-              </Card>
-
-              <Card className="bg-gradient-to-br from-[#0D47A1]/5 to-white border-0 shadow-lg hover:shadow-xl transition-all overflow-hidden rounded-xl">
-                <CardContent className="p-4 md:p-6 flex flex-col sm:flex-row items-start sm:items-center gap-4 md:gap-6">
-                  <div className="rounded-full bg-[#0D47A1]/10 p-3 md:p-4 flex-shrink-0">
-                    <Activity className="h-6 w-6 md:h-8 md:w-8 text-[#0D47A1]" />
-                  </div>
-                  <div className="flex-1">
-                    <h3 className="text-lg md:text-xl font-semibold mb-1 md:mb-2">Lacak Laporan</h3>
-                    <p className="text-gray-600 text-sm md:text-base">Pantau status dan perkembangan laporan Anda</p>
-                  </div>
-                </CardContent>
-              </Card>
-            </div>
-
-            {/* Dynamically load SubmissionList with reduced initial priority */}
-            <div className="submission-list-container">
-              <SubmissionList 
-                submissions={submissions}
-                categories={categories}
-                statuses={statuses}
-                currentPage={params.page}
-                totalPages={totalPages}
-                totalCount={oldTotalCount}
-                limit={params.limit}
-                currentFilters={{ 
-                  category: params.category, 
-                  status: params.status, 
-                  sortBy: params.sortBy, 
-                  search: params.search 
-                }}
-              />
-            </div>
+      <section className="py-12 bg-secondary/30">
+        <div className="max-w-6xl mx-auto px-4">
+          <div className="mb-8">
+            <h2 className="text-2xl font-bold mb-2">Laporan Terbaru</h2>
+            <p className="text-muted-foreground">Lihat laporan terbaru dari masyarakat</p>
           </div>
-        </section>
-      </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
+            <Card>
+              <CardContent className="p-6 flex items-center gap-4">
+                <div className="p-3 rounded-sm bg-primary/10">
+                  <Megaphone className="h-6 w-6 text-primary" />
+                </div>
+                <div>
+                  <h3 className="font-semibold mb-1">Buat Laporan Baru</h3>
+                  <p className="text-sm text-muted-foreground">Sampaikan aspirasi atau keluhan Anda</p>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardContent className="p-6 flex items-center gap-4">
+                <div className="p-3 rounded-sm bg-primary/10">
+                  <Activity className="h-6 w-6 text-primary" />
+                </div>
+                <div>
+                  <h3 className="font-semibold mb-1">Lacak Laporan</h3>
+                  <p className="text-sm text-muted-foreground">Pantau status laporan Anda</p>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+
+          <SubmissionList
+            submissions={submissions}
+            categories={categories}
+            statuses={statuses}
+            currentPage={params.page}
+            totalPages={totalPages}
+            totalCount={totalCount}
+            limit={params.limit}
+            currentFilters={{
+              category: params.category,
+              status: params.status,
+              sortBy: params.sortBy,
+              search: params.search
+            }}
+          />
+        </div>
+      </section>
     </PublicLayout>
   );
 }

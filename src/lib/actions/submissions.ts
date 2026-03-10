@@ -1,29 +1,17 @@
 "use server";
 
 import { z } from "zod";
-import type { Submission, SubmissionDocument, InternalComment } from '@/lib/types'; // Import InternalComment from types
+import type { Submission, InternalComment } from '@/lib/types';
+import { STATUS_MAP, STATUSES } from '@/lib/constants';
+import type { SubmissionStatus } from '@/lib/constants';
 import { promises as fs } from 'fs';
 import path from 'path';
-import { supabase } from '@/lib/supabase'; // Import Supabase client
-import { v4 as uuidv4 } from 'uuid'; // Import untuk membuat UUID
-
-// Add type definitions at the top of the file after imports
-type SubmissionStatus = 'pending' | 'in progress' | 'resolved';
-type DisplayStatus = 'Pending' | 'In Progress' | 'Resolved';
-
-// Status mapping constant
-const STATUS_MAP: Record<string, SubmissionStatus> = {
-  'Pending': 'pending',
-  'In Progress': 'in progress',
-  'Resolved': 'resolved',
-  'pending': 'pending',
-  'in progress': 'in progress',
-  'resolved': 'resolved'
-} as const;
+import { supabase } from '@/lib/supabase';
+import { v4 as uuidv4 } from 'uuid';
 
 // Validate if a status string is a valid SubmissionStatus
 function isValidStatus(status: string): status is SubmissionStatus {
-  return ['pending', 'in progress', 'resolved'].includes(status.toLowerCase());
+  return (STATUSES as readonly string[]).includes(status.toLowerCase());
 }
 
 // --- Zod Schema for Input Validation ---
@@ -87,9 +75,9 @@ function convertJsonToInternalComments(comments: any): InternalComment[] {
   if (!Array.isArray(comments)) return [];
   
   return comments.map(comment => ({
+    id: comment.id || '',
     text: comment.text || '',
-    author: comment.author || '',
-    createdAt: comment.createdAt || new Date().toISOString()
+    timestamp: comment.timestamp || new Date().toISOString()
   }));
 }
 

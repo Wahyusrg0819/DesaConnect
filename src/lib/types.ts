@@ -1,8 +1,9 @@
 // Define the structure for an internal comment (used by admins)
+// Must match the JSONB shape stored in the database: { id, text, timestamp }
 export interface InternalComment {
+  id: string;
   text: string;
-  author: string; // Admin name or ID
-  createdAt: string; // ISO date string
+  timestamp: string; // ISO date string
 }
 
 // Define the main Submission type (the shape we want for the frontend)
@@ -33,29 +34,4 @@ export interface SupabaseSubmission {
   file_url?: string;
   priority: string;
   internal_comments: InternalComment[];
-}
-
-// Keep MongoDB types for backward compatibility if needed
-import { Document, Types } from 'mongoose';
-
-// This interface represents the structure of the document as it comes from Mongoose
-export interface SubmissionDocument extends Document {
-  name?: string;
-  contactInfo?: string;
-  category: string;
-  description: string;
-  createdAt: Date; // Mongoose returns Date objects by default
-  referenceId: string;
-  status: 'pending' | 'in progress' | 'resolved'; // Mongoose schema has lowercase enum
-  fileUrl?: string | null;
-  priority: 'Urgent' | 'Regular';
-  internalComments?: {
-      text: string;
-      author: string;
-      createdAt: Date; // Dates within sub-documents are also Date objects
-      _id: Types.ObjectId; // Mongoose adds _id to sub-documents
-  }[];
-  // Mongoose Document also includes _id (as ObjectId) and __v
-  _id: Types.ObjectId;
-  __v?: number; // __v is also typically present
 }

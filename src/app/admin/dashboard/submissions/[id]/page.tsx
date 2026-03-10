@@ -79,8 +79,8 @@ export default async function SubmissionDetailPage({
   params, 
   searchParams
 }: { 
-  params: { id: string },
-  searchParams: { updated?: string } 
+  params: Promise<{ id: string }>,
+  searchParams: Promise<{ updated?: string }>
 }) {
   // Proteksi halaman admin
   await protectAdminRoute();

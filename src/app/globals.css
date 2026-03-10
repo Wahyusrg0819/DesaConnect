@@ -8,66 +8,65 @@ body {
 
 @layer base {
   :root {
-    /* Indonesian Government Village Website Colors - Professional & Trustworthy */
-    --background: 0 0% 98%;
-    --foreground: 222 47% 15%;
+    --background: 140 20% 98%;
+    --foreground: 220 30% 12%;
     --card: 0 0% 100%;
-    --card-foreground: 222 47% 15%;
+    --card-foreground: 220 30% 12%;
     --popover: 0 0% 100%;
-    --popover-foreground: 222 47% 15%;
-    /* Government Green - official Indonesian government color */
-    --primary: 150 60% 30%;
+    --popover-foreground: 220 30% 12%;
+    /* Fresh emerald green, modern representation of gov */
+    --primary: 153 60% 38%;
     --primary-foreground: 0 0% 100%;
-    --secondary: 40 20% 96%;
-    --secondary-foreground: 222 47% 15%;
-    --muted: 40 20% 94%;
-    --muted-foreground: 215 16% 45%;
-    /* Warm accent for actions */
-    --accent: 35 80% 50%;
-    --accent-foreground: 0 0% 100%;
+    --secondary: 153 15% 95%;
+    --secondary-foreground: 153 60% 15%;
+    --muted: 210 20% 96%;
+    --muted-foreground: 215 16% 40%;
+    /* Warm amber accent for visibility */
+    --accent: 38 92% 50%;
+    --accent-foreground: 220 30% 12%;
     --destructive: 0 84% 60%;
     --destructive-foreground: 0 0% 100%;
-    --border: 40 20% 85%;
-    --input: 40 20% 85%;
-    --ring: 150 60% 30%;
-    --radius: 0.25rem;
-    --sidebar-background: 0 0% 96%;
-    --sidebar-foreground: 222 47% 15%;
-    --sidebar-primary: 150 60% 30%;
+    --border: 214 30% 90%;
+    --input: 214 30% 90%;
+    --ring: 153 60% 38%;
+    --radius: 0.75rem;
+    --sidebar-background: 153 10% 96%;
+    --sidebar-foreground: 220 30% 12%;
+    --sidebar-primary: 153 60% 38%;
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 40 20% 94%;
-    --sidebar-accent-foreground: 222 47% 15%;
-    --sidebar-border: 40 20% 85%;
-    --sidebar-ring: 150 60% 30%;
+    --sidebar-accent: 153 15% 90%;
+    --sidebar-accent-foreground: 220 30% 12%;
+    --sidebar-border: 214 30% 90%;
+    --sidebar-ring: 153 60% 38%;
   }
   .dark {
-    --background: 222 47% 10%;
-    --foreground: 40 20% 95%;
-    --card: 222 47% 13%;
-    --card-foreground: 40 20% 95%;
-    --popover: 222 47% 13%;
-    --popover-foreground: 40 20% 95%;
-    --primary: 150 60% 40%;
+    --background: 220 30% 8%;
+    --foreground: 210 20% 98%;
+    --card: 220 30% 12%;
+    --card-foreground: 210 20% 98%;
+    --popover: 220 30% 12%;
+    --popover-foreground: 210 20% 98%;
+    --primary: 153 50% 45%;
     --primary-foreground: 0 0% 100%;
-    --secondary: 222 47% 15%;
-    --secondary-foreground: 40 20% 95%;
-    --muted: 222 47% 15%;
-    --muted-foreground: 215 16% 60%;
-    --accent: 35 80% 55%;
+    --secondary: 220 30% 15%;
+    --secondary-foreground: 210 20% 98%;
+    --muted: 220 30% 15%;
+    --muted-foreground: 215 16% 65%;
+    --accent: 38 92% 55%;
     --accent-foreground: 0 0% 100%;
-    --destructive: 0 62% 30%;
-    --destructive-foreground: 0 0% 100%;
-    --border: 222 47% 18%;
-    --input: 222 47% 18%;
-    --ring: 150 60% 40%;
-    --sidebar-background: 222 47% 10%;
-    --sidebar-foreground: 40 20% 95%;
-    --sidebar-primary: 150 60% 40%;
+    --destructive: 0 62% 40%;
+    --destructive-foreground: 210 20% 98%;
+    --border: 220 30% 18%;
+    --input: 220 30% 18%;
+    --ring: 153 50% 45%;
+    --sidebar-background: 220 30% 8%;
+    --sidebar-foreground: 210 20% 98%;
+    --sidebar-primary: 153 50% 45%;
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 222 47% 15%;
-    --sidebar-accent-foreground: 40 20% 95%;
-    --sidebar-border: 222 47% 18%;
-    --sidebar-ring: 150 60% 40%;
+    --sidebar-accent: 220 30% 15%;
+    --sidebar-accent-foreground: 210 20% 98%;
+    --sidebar-border: 220 30% 18%;
+    --sidebar-ring: 153 50% 45%;
   }
 }
 
@@ -88,5 +87,18 @@ body {
   @keyframes fadeIn {
     from { opacity: 0; }
     to { opacity: 1; }
+  }
+  .bg-grid-pattern {
+    background-image: 
+      linear-gradient(to right, hsl(var(--border)) 1px, transparent 1px),
+      linear-gradient(to bottom, hsl(var(--border)) 1px, transparent 1px);
+    background-size: 2rem 2rem;
+    background-position: center center;
+  }
+  .glass {
+    @apply bg-background/80 backdrop-blur-md border-b border-border;
+  }
+  .glass-card {
+    @apply bg-card/60 backdrop-blur-sm border border-border shadow-sm;
   }
 }

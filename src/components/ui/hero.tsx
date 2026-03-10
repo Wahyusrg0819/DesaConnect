@@ -27,33 +27,47 @@ export function Hero({
   return (
     <section
       className={cn(
-        "relative py-16 md:py-24 bg-secondary/30 border-b border-border",
+        "relative py-24 md:py-32 overflow-hidden bg-background border-b border-border",
         className
       )}
       {...props}
     >
-      <div className="container mx-auto px-4">
-        <div className="max-w-3xl mx-auto text-center">
+      {/* Background purely decorative */}
+      <div className="absolute inset-0 bg-grid-pattern opacity-[0.03] pointer-events-none"></div>
+      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full md:w-[800px] h-[300px] bg-primary/20 blur-[120px] rounded-full pointer-events-none -z-10"></div>
+      
+      <div className="container mx-auto px-4 relative z-10">
+        <div className="max-w-4xl mx-auto text-center animate-fade-in">
           {badge && (
-            <div className="mb-6">
-              <span className="inline-flex items-center px-3 py-1 rounded-sm bg-primary/10 text-primary text-sm font-medium">
+            <div className="mb-8">
+              <span className="inline-flex items-center px-4 py-1.5 rounded-full bg-primary/10 border border-primary/20 text-primary text-sm font-semibold tracking-wide shadow-sm">
                 {badge}
               </span>
             </div>
           )}
 
-          <h1 className="text-3xl md:text-5xl font-bold mb-4 text-foreground">
+          <h1 className="text-4xl md:text-6xl lg:text-7xl font-extrabold mb-6 tracking-tight text-foreground bg-clip-text text-transparent bg-gradient-to-br from-foreground to-foreground/80">
             {title}
           </h1>
 
-          <p className="text-lg md:text-xl text-muted-foreground mb-8 max-w-xl mx-auto">
+          <p className="text-xl md:text-2xl text-muted-foreground mb-10 max-w-2xl mx-auto leading-relaxed">
             {subtitle}
           </p>
 
           {actions && actions.length > 0 && (
-            <div className="flex flex-wrap justify-center gap-3">
+            <div className="flex flex-col sm:flex-row justify-center gap-4">
               {actions.map((action, index) => (
-                <Button key={index} variant={action.variant || "default"} asChild>
+                <Button 
+                  key={index} 
+                  variant={action.variant || "default"} 
+                  size="lg"
+                  className={cn(
+                    "rounded-full px-8 h-14 text-lg font-medium transition-all duration-300",
+                    action.variant === "default" && "shadow-lg shadow-primary/30 hover:shadow-primary/50 hover:-translate-y-1",
+                    action.variant !== "default" && "hover:bg-secondary"
+                  )}
+                  asChild
+                >
                   <Link href={action.href}>
                     {action.label}
                   </Link>

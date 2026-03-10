@@ -10,19 +10,18 @@ interface AdminLayoutProps {
 
 export default function AdminLayout({ children, currentUser }: AdminLayoutProps) {
   const pathname = usePathname();
-  
-  // Pages where the admin header should NOT be shown
+
   const hideHeaderOnPages = ['/admin/login', '/admin/register'];
   const shouldShowHeader = !hideHeaderOnPages.includes(pathname);
-  
+
   return (
-    <div className="min-h-screen bg-gray-50 flex flex-col">
+    <div className="min-h-screen bg-background flex flex-col">
       {shouldShowHeader && <AdminHeader userEmail={currentUser?.email} />}
-      
+
       <main className="flex-grow">
         {shouldShowHeader ? (
-          <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-4">
-            <div className="bg-white rounded-lg shadow-sm">
+          <div className="max-w-7xl mx-auto px-6 py-4">
+            <div className="bg-card border rounded-sm">
               {children}
             </div>
           </div>

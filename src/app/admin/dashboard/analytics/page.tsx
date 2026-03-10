@@ -14,32 +14,6 @@ export const metadata: Metadata = {
   description: "Analisis dan grafik laporan masyarakat Desa Pangkalan Baru",
 };
 
-// Helper untuk menghasilkan data chart per bulan (contoh data)
-function generateMonthlyData(stats: any) {
-  const currentDate = new Date();
-  const months = [
-    'Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Ags', 'Sep', 'Okt', 'Nov', 'Des'
-  ];
-  
-  // Untuk contoh data, gunakan angka acak berdasarkan total laporan
-  const data = months.map((month, index) => {
-    const normalizedValue = Math.floor(stats.total * Math.random() * 0.4);
-    const pending = Math.floor(normalizedValue * 0.3);
-    const inProgress = Math.floor(normalizedValue * 0.4);
-    const resolved = normalizedValue - pending - inProgress;
-    
-    return {
-      name: month,
-      total: normalizedValue,
-      pending: pending,
-      inProgress: inProgress,
-      resolved: resolved
-    };
-  });
-  
-  return data;
-}
-
 // Fungsi untuk mengubah data kategori menjadi format pie chart
 function prepareCategoryData(categories: Record<string, number>) {
   return Object.entries(categories).map(([name, value]) => ({
@@ -76,7 +50,7 @@ export default async function AnalyticsPage() {
   // Menghasilkan data untuk charts - gunakan data tren bulanan asli jika ada
   const monthlyData = stats.monthlyTrends && stats.monthlyTrends.length > 0 
     ? stats.monthlyTrends 
-    : generateMonthlyData(stats);
+    : [];
   
   const categoryData = prepareCategoryData(stats.byCategory);
   

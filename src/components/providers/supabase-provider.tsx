@@ -4,7 +4,7 @@ import { createContext, useContext, useEffect, useState } from 'react';
 import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
 import { ensureTablesExist } from '@/lib/supabase';
 import type { SupabaseClient, User } from '@supabase/supabase-js';
-import type { Database } from '@/lib/database.types';
+import type { Database } from '@/types/supabase';
 import GlobalLoading from "@/components/ui/global-loading";
 
 type SupabaseContext = {

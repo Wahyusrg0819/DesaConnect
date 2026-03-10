@@ -3,9 +3,9 @@ import { getSubmissionByReferenceId } from '@/lib/actions/submissions';
 
 export async function GET(
   request: Request,
-  { params }: { params: { referenceId: string } }
+  { params }: { params: Promise<{ referenceId: string }> }
 ) {
-  const { referenceId } = params;
+  const { referenceId } = await params;
 
   try {
     // Gunakan server action Supabase

@@ -39,31 +39,36 @@ export default function Header() {
   }, []);
 
   return (
-    <header className="bg-white border-b border-border sticky top-0 z-50">
-      <nav className="max-w-6xl mx-auto px-6 py-3 flex justify-between items-center" aria-label="Main navigation">
-        <Link href="/" className="text-lg font-semibold flex items-center gap-2" aria-label="Desa Pangkalan Baru Home">
-          <div className="flex items-center justify-center" aria-hidden="true">
+    <header className="glass sticky top-0 z-50 transition-all duration-300">
+      <nav className="max-w-6xl mx-auto px-6 py-4 flex justify-between items-center" aria-label="Main navigation">
+        <Link href="/" className="text-xl font-bold flex items-center gap-3 group" aria-label="Desa Pangkalan Baru Home">
+          <div className="flex items-center justify-center p-1.5 rounded-xl bg-primary/10 group-hover:bg-primary/20 transition-colors shadow-sm" aria-hidden="true">
             <Image
               src="/images/300_kamparkab.webp"
               alt="Logo Kabupaten Kampar"
-              width={32}
-              height={32}
+              width={36}
+              height={36}
               className="object-contain"
               priority
             />
           </div>
-          <span className="text-primary">
-            Desa Pangkalan Baru
-          </span>
+          <div className="flex flex-col">
+            <span className="text-primary font-bold tracking-tight">
+              Desa Pangkalan Baru
+            </span>
+            <span className="text-[11px] font-semibold text-muted-foreground uppercase tracking-widest mt-0.5">
+              Layanan Aspirasi
+            </span>
+          </div>
         </Link>
 
         {/* Desktop Navigation */}
-        <div className="hidden md:flex items-center gap-2">
+        <div className="hidden md:flex items-center gap-3 bg-white/50 px-2 py-1.5 rounded-full border border-border shadow-sm">
           {NAV_ITEMS.map((item) => (
             <Link href={item.href} passHref key={item.href}>
-              <Button variant={item.variant} size="sm">
+              <Button variant={item.variant === 'default' ? 'default' : 'ghost'} size="sm" className={item.variant !== 'default' ? 'rounded-full hover:bg-primary/10' : 'rounded-full shadow-md hover:shadow-lg transition-all'}>
                 <item.icon className="mr-2 h-4 w-4" aria-hidden="true" />
-                <span>{item.label}</span>
+                <span className="font-medium">{item.label}</span>
               </Button>
             </Link>
           ))}
@@ -71,9 +76,9 @@ export default function Header() {
 
         {/* Mobile Menu Button */}
         <Button 
-          variant="ghost" 
+          variant="outline" 
           size="icon" 
-          className="md:hidden"
+          className="md:hidden rounded-lg bg-white/80 border-border shadow-sm"
           onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
           aria-expanded={mobileMenuOpen}
           aria-label={mobileMenuOpen ? "Tutup Menu" : "Buka Menu"}

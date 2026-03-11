@@ -461,7 +461,7 @@ export default function SubmissionList({
 
   const getCategoryIcon = (category: string) => {
     const Icon = categoryIcons[category] || categoryIcons['Other'];
-    return <Icon className="h-5 w-5 text-[#2E7D32]" />;
+    return <Icon className="h-5 w-5 text-primary" />;
   };
 
   return (
@@ -472,10 +472,10 @@ export default function SubmissionList({
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5, ease: "easeOut" }}
       >
-        <Card className="shadow-lg rounded-xl border border-gray-100/50 overflow-hidden bg-white/95 backdrop-blur-sm transition-all duration-300 hover:shadow-xl hover:bg-white">
-          <CardHeader className="pb-3 border-b border-[#E8F5E9] bg-gradient-to-r from-[#E8F5E9] via-white to-white">
-            <CardTitle className="text-lg md:text-xl font-semibold flex items-center gap-2 md:gap-3 text-[#1B5E20]">
-              <Filter className="h-5 w-5 md:h-6 md:w-6 text-[#4CAF50]"/> 
+        <Card className="border border-border rounded-md bg-card shadow-none">
+          <CardHeader className="pb-3 border-b border-border bg-muted/30">
+            <CardTitle className="text-lg md:text-xl font-semibold flex items-center gap-2 md:gap-3 text-foreground">
+              <Filter className="h-5 w-5 md:h-6 md:w-6 text-primary"/>
               <span>Filter Laporan</span>
               {isLoading && (
                 <motion.div
@@ -483,7 +483,7 @@ export default function SubmissionList({
                   animate={{ opacity: 1 }}
                   className="ml-auto"
                 >
-                  <Loader2 className="h-4 w-4 md:h-5 md:w-5 animate-spin text-[#4CAF50]" />
+                  <Loader2 className="h-4 w-4 md:h-5 md:w-5 animate-spin text-primary" />
                 </motion.div>
               )}
             </CardTitle>
@@ -493,12 +493,12 @@ export default function SubmissionList({
               {/* Search Input with immediate feedback */}
               <form onSubmit={handleSearchSubmit} className="w-full">
                 <div className="relative group">
-                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400 transition-colors duration-200 group-hover:text-[#4CAF50]" />
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground transition-colors duration-200 group-hover:text-primary" />
                   <Input
                     placeholder="Cari berdasarkan kata kunci..."
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
-                    className="pl-10 w-full rounded-lg border-[#E8F5E9] focus-visible:ring-[#4CAF50]/30 transition-all duration-200 bg-[#F9FDF9] hover:bg-white focus:bg-white shadow-sm text-sm md:text-base"
+                    className="pl-10 w-full border-border bg-background hover:bg-background focus:bg-background text-sm md:text-base"
                   />
                 </div>
               </form>
@@ -506,9 +506,9 @@ export default function SubmissionList({
               <div className="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-4">
                 {/* Category Filter with active state indication */}
                 <div>
-                  <label htmlFor="category-select" className="text-sm font-medium text-gray-500 mb-1.5 block">
+                  <label htmlFor="category-select" className="text-sm font-medium text-muted-foreground mb-1.5 block">
                     Kategori {selectedCategory !== 'all' && (
-                      <span className="inline-flex items-center text-[#2E7D32] bg-[#E8F5E9] px-2 py-0.5 rounded-full text-xs ml-2">
+                      <span className="inline-flex items-center text-primary bg-secondary px-2 py-0.5 rounded-sm text-xs ml-2 border border-border">
                         {selectedCategory}
                       </span>
                     )}
@@ -522,19 +522,19 @@ export default function SubmissionList({
                   >
                     <SelectTrigger 
                       id="category-select" 
-                      className="w-full rounded-lg border-[#F0F0F0] bg-gray-50 hover:bg-white transition-all duration-200 focus:ring-[#2E7D32]/20"
+                      className="w-full border-border bg-background hover:bg-muted/40 transition-colors duration-200"
                     >
                       <SelectValue placeholder="Semua Kategori" />
                     </SelectTrigger>
-                    <SelectContent className="rounded-lg border-[#F0F0F0] shadow-lg">
-                      <SelectItem value="all" className="focus:bg-[#E8F5E9] focus:text-[#2E7D32]">
+                    <SelectContent className="border-border bg-popover text-popover-foreground">
+                      <SelectItem value="all">
                         Semua Kategori
                       </SelectItem>
                       {categories.map((cat) => (
                         <SelectItem 
                           key={cat} 
                           value={cat} 
-                          className="flex items-center focus:bg-[#E8F5E9] focus:text-[#2E7D32]"
+                          className="flex items-center"
                         >
                           <div className="flex items-center gap-2">
                             {getCategoryIcon(cat)}
@@ -548,13 +548,13 @@ export default function SubmissionList({
 
                 {/* Status Filter */}
                 <div>
-                  <label htmlFor="status-select" className="text-sm font-medium text-gray-600 mb-2 flex items-center">
-                    <AlertCircle className="h-4 w-4 mr-1.5 text-[#4CAF50]" />
+                  <label htmlFor="status-select" className="text-sm font-medium text-muted-foreground mb-2 flex items-center">
+                    <AlertCircle className="h-4 w-4 mr-1.5 text-primary" />
                     Status {selectedStatus !== 'all' && (
                       <motion.span 
                         initial={{ opacity: 0, scale: 0.9 }}
                         animate={{ opacity: 1, scale: 1 }}
-                        className="inline-flex items-center text-[#1B5E20] bg-[#E8F5E9] px-2 py-0.5 rounded-full text-xs ml-2 border border-[#4CAF50]/20"
+                        className="inline-flex items-center text-primary bg-secondary px-2 py-0.5 rounded-sm text-xs ml-2 border border-border"
                       >
                         {selectedStatus}
                       </motion.span>
@@ -569,14 +569,14 @@ export default function SubmissionList({
                   >
                     <SelectTrigger 
                       id="status-select" 
-                      className="w-full rounded-lg border-[#E8F5E9] bg-[#F9FDF9] hover:bg-white transition-all duration-200 focus:ring-[#4CAF50]/30 shadow-sm"
+                      className="w-full border-border bg-background hover:bg-muted/40 transition-colors duration-200"
                     >
                       <SelectValue placeholder="Semua Status" />
                     </SelectTrigger>
-                    <SelectContent className="rounded-lg border-[#E8F5E9] shadow-lg bg-white/95 backdrop-blur-sm">
-                      <SelectItem value="all" className="focus:bg-[#E8F5E9] focus:text-[#1B5E20] hover:bg-[#E8F5E9]/50">
+                    <SelectContent className="border-border bg-popover text-popover-foreground">
+                      <SelectItem value="all">
                         <div className="flex items-center gap-2">
-                          <AlertCircle className="h-4 w-4 text-[#4CAF50]" />
+                          <AlertCircle className="h-4 w-4 text-primary" />
                           <span>Semua Status</span>
                         </div>
                       </SelectItem>
@@ -584,7 +584,6 @@ export default function SubmissionList({
                         <SelectItem 
                           key={stat} 
                           value={stat}
-                          className="focus:bg-[#E8F5E9] focus:text-[#1B5E20] hover:bg-[#E8F5E9]/50"
                         >
                           <div className="flex items-center gap-2">
                             {getStatusIcon(stat.toLowerCase())}
@@ -603,7 +602,7 @@ export default function SubmissionList({
                   type="button"
                   onClick={handleResetFilters}
                   variant="outline"
-                  className="border-gray-200 text-gray-700 hover:bg-gray-50 hover:border-gray-300 transition-all duration-200 flex items-center justify-center gap-2 w-full sm:w-auto"
+                  className="border-border text-foreground hover:bg-muted transition-colors duration-200 flex items-center justify-center gap-2 w-full sm:w-auto"
                   disabled={isLoading || (selectedCategory === 'all' && selectedStatus === 'all' && !searchTerm && selectedSortBy === 'date_desc')}
                 >
                   <RefreshCw className="h-4 w-4" />
@@ -613,7 +612,7 @@ export default function SubmissionList({
                 <Button 
                   type="button"
                   onClick={() => handleFilterChange(true)}
-                  className="bg-[#2E7D32] hover:bg-[#1B5E20] text-white flex items-center justify-center gap-2 transition-all duration-200 shadow-sm hover:shadow w-full sm:w-auto"
+                  className="flex items-center justify-center gap-2 w-full sm:w-auto"
                   disabled={isLoading}
                 >
                   <Filter className="h-4 w-4" />
@@ -627,25 +626,25 @@ export default function SubmissionList({
               </div>
             </div>
           </CardContent>
-          <CardFooter className="border-t border-[#F0F0F0] bg-gradient-to-r from-[#f8f9fa] to-white py-3">
+          <CardFooter className="border-t border-border bg-muted/20 py-3">
             <div className="flex items-center gap-2 w-full">
-              <Sparkles className="h-4 w-4 text-[#4CAF50] flex-shrink-0" />
-              <span className="text-xs md:text-sm text-gray-600">
+              <Sparkles className="h-4 w-4 text-primary flex-shrink-0" />
+              <span className="text-xs md:text-sm text-muted-foreground">
                 Menampilkan {submissions.length} dari {totalCount} laporan
                 {(selectedCategory !== 'all' || selectedStatus !== 'all' || searchTerm) && (
                   <span className="block mt-1 md:inline md:ml-1">
                     {selectedCategory !== 'all' && (
-                      <span className="inline-flex items-center text-[#2E7D32] text-xs">
+                      <span className="inline-flex items-center text-primary text-xs">
                         • Kategori: {selectedCategory}
                       </span>
                     )}
                     {selectedStatus !== 'all' && (
-                      <span className="inline-flex items-center text-[#0D47A1] text-xs ml-1">
+                      <span className="inline-flex items-center text-primary text-xs ml-1">
                         • Status: {selectedStatus}
                       </span>
                     )}
                     {searchTerm && (
-                      <span className="inline-flex items-center text-gray-600 text-xs ml-1">
+                      <span className="inline-flex items-center text-muted-foreground text-xs ml-1">
                         • Pencarian: "{searchTerm}"
                       </span>
                     )}
@@ -664,10 +663,10 @@ export default function SubmissionList({
         transition={{ duration: 0.5, delay: 0.2 }}
       >
         {isLoading ? (
-          <div className="flex items-center justify-center py-12 md:py-16 bg-white/50 rounded-xl border border-gray-100 shadow-sm mx-2 md:mx-0">
+          <div className="flex items-center justify-center py-12 md:py-16 bg-muted/20 rounded-md border border-border shadow-none mx-2 md:mx-0">
             <div className="flex flex-col items-center">
-              <Loader2 className="h-8 w-8 md:h-10 md:w-10 text-[#2E7D32] animate-spin mb-3" />
-              <span className="text-gray-600 font-medium text-sm md:text-base">Memuat data laporan...</span>
+              <Loader2 className="h-8 w-8 md:h-10 md:w-10 text-primary animate-spin mb-3" />
+              <span className="text-muted-foreground font-medium text-sm md:text-base">Memuat data laporan...</span>
             </div>
           </div>
         ) : submissions.length === 0 ? (
@@ -675,10 +674,10 @@ export default function SubmissionList({
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
             transition={{ duration: 0.3 }}
-            className="flex flex-col items-center justify-center py-12 md:py-16 text-center bg-white rounded-xl border border-gray-100 shadow-sm mx-2 md:mx-0"
+            className="flex flex-col items-center justify-center py-12 md:py-16 text-center bg-card rounded-md border border-border shadow-none mx-2 md:mx-0"
           >
             <motion.div 
-              className="bg-gray-50 p-3 md:p-4 rounded-full mb-3 md:mb-4"
+              className="bg-muted p-3 md:p-4 rounded-md mb-3 md:mb-4"
               animate={{ 
                 scale: [1, 1.1, 1],
                 rotate: [0, 5, -5, 0]
@@ -689,10 +688,10 @@ export default function SubmissionList({
                 repeatType: "reverse"
               }}
             >
-              <AlertCircle className="h-10 w-10 md:h-12 md:w-12 text-[#4CAF50]" />
+              <AlertCircle className="h-10 w-10 md:h-12 md:w-12 text-primary" />
             </motion.div>
-            <h3 className="text-lg md:text-xl font-semibold text-[#1B5E20] mb-2">Tidak Ada Laporan Ditemukan</h3>
-            <p className="text-gray-500 max-w-md text-sm md:text-base px-4">
+            <h3 className="text-lg md:text-xl font-semibold text-foreground mb-2">Tidak Ada Laporan Ditemukan</h3>
+            <p className="text-muted-foreground max-w-md text-sm md:text-base px-4">
               Tidak ada laporan yang sesuai dengan kriteria pencarian Anda. Coba ubah filter atau istilah pencarian.
             </p>
           </motion.div>
@@ -707,7 +706,7 @@ export default function SubmissionList({
                 whileHover={{ y: -4 }}
                 className="transform transition-all duration-300"
               >
-                <Card className="overflow-hidden shadow-sm hover:shadow-md transition-all duration-300 border-l-4 border-l-[#2E7D32] rounded-xl bg-white">
+                <Card className="overflow-hidden shadow-none hover:bg-muted/20 transition-colors duration-200 border border-border border-l-4 border-l-primary rounded-md bg-card">
                   <div className="grid grid-cols-1 lg:grid-cols-[1fr_auto] gap-0">
                     <div className="p-4 md:p-5 lg:p-6">
                       <div className="flex flex-wrap items-center gap-2 mb-3">
@@ -723,7 +722,7 @@ export default function SubmissionList({
                         
                         <Badge 
                           variant="outline" 
-                          className="border-gray-200 bg-gray-50 text-gray-700 hover:bg-gray-100 transition-colors duration-200 text-xs md:text-sm"
+                          className="border-border bg-muted/40 text-foreground hover:bg-muted transition-colors duration-200 text-xs md:text-sm"
                         >
                           <div className="flex items-center gap-1.5">
                             {getCategoryIcon(submission.category)}
@@ -734,7 +733,7 @@ export default function SubmissionList({
                         
                         <Badge 
                           variant="outline" 
-                          className="border-gray-200 bg-gray-50 text-gray-500 hover:bg-gray-100 transition-colors duration-200 text-xs md:text-sm"
+                          className="border-border bg-muted/40 text-muted-foreground hover:bg-muted transition-colors duration-200 text-xs md:text-sm"
                         >
                           <div className="flex items-center gap-1.5">
                             <CalendarDays className="h-3 w-3" />
@@ -754,7 +753,7 @@ export default function SubmissionList({
                         </Badge>
                       </div>
                       
-                      <h3 className="text-gray-800 font-semibold mb-3 flex flex-col sm:flex-row sm:items-center text-base md:text-lg">
+                      <h3 className="text-foreground font-semibold mb-3 flex flex-col sm:flex-row sm:items-center text-base md:text-lg">
                         <span className="mr-0 sm:mr-2">Laporan ID: {submission.referenceId}</span>
                         {submission.priority === "Urgent" && (
                           <Badge className="bg-red-100 text-red-800 border-red-200 animate-pulse mt-1 sm:mt-0 w-fit">
@@ -765,28 +764,28 @@ export default function SubmissionList({
                       
                       <Accordion type="single" collapsible className="border-b-0">
                         <AccordionItem value="description" className="border-b-0">
-                          <AccordionTrigger className="text-xs md:text-sm py-2 px-0 font-medium text-[#0D47A1] hover:text-[#0A3880] hover:no-underline transition-all duration-200 group">
+                          <AccordionTrigger className="text-xs md:text-sm py-2 px-0 font-medium text-primary hover:text-primary hover:no-underline transition-colors duration-200 group">
                             <div className="flex items-center">
                               <span>Lihat Detail Laporan</span>
-                              <ChevronRight className="h-3 w-3 md:h-4 md:w-4 ml-1 text-[#0D47A1] group-hover:translate-x-1 transition-transform duration-200" />
+                              <ChevronRight className="h-3 w-3 md:h-4 md:w-4 ml-1 text-primary group-hover:translate-x-1 transition-transform duration-200" />
                             </div>
                           </AccordionTrigger>
-                          <AccordionContent className="text-gray-700 whitespace-pre-line text-sm md:text-base">
-                            <div className="bg-gradient-to-r from-gray-50 to-white p-3 md:p-4 rounded-md border border-gray-100 my-2 shadow-inner">
+                          <AccordionContent className="text-foreground whitespace-pre-line text-sm md:text-base">
+                            <div className="bg-muted/30 p-3 md:p-4 rounded-md border border-border my-2">
                               {submission.description.length > 200 
                                 ? `${submission.description.substring(0, 200)}...` 
                                 : submission.description
                               }
                             </div>
                             
-                            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mt-4 pt-3 border-t border-gray-100 gap-2">
-                              <div className="flex items-center text-gray-500 text-xs md:text-sm bg-gray-50 px-2 py-1 rounded-md">
-                                <MapPin className="h-3 w-3 md:h-3.5 md:w-3.5 mr-1 text-[#2E7D32]" /> 
+                            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mt-4 pt-3 border-t border-border gap-2">
+                              <div className="flex items-center text-muted-foreground text-xs md:text-sm bg-muted/40 px-2 py-1 rounded-md">
+                                <MapPin className="h-3 w-3 md:h-3.5 md:w-3.5 mr-1 text-primary" /> 
                                 Desa Pangkalan Baru
                               </div>
                               
-                              <div className="flex items-center gap-1 text-xs md:text-sm text-gray-500 bg-gray-50 px-2 py-1 rounded-md">
-                                <MessageSquare className="h-3 w-3 md:h-3.5 md:w-3.5 text-[#0D47A1]" />
+                              <div className="flex items-center gap-1 text-xs md:text-sm text-muted-foreground bg-muted/40 px-2 py-1 rounded-md">
+                                <MessageSquare className="h-3 w-3 md:h-3.5 md:w-3.5 text-primary" />
                                 <span>
                                   {submission.internalComments?.length || 0} komentar
                                 </span>
@@ -799,15 +798,15 @@ export default function SubmissionList({
                       {/* Progress Indicator */}
                       <div className="mt-4 pt-2">
                         <div className="flex items-center justify-between mb-2">
-                          <span className="text-xs md:text-sm font-medium text-gray-700">
+                          <span className="text-xs md:text-sm font-medium text-foreground">
                             Status Penanganan
                           </span>
-                          <span className="text-xs md:text-sm font-medium text-gray-700">
+                          <span className="text-xs md:text-sm font-medium text-foreground">
                             {submission.status === 'pending' ? '0%' : 
                              submission.status === 'in progress' ? '50%' : '100%'}
                           </span>
                         </div>
-                        <div className="w-full bg-gray-100 rounded-full h-2 md:h-2.5 shadow-inner">
+                        <div className="w-full bg-muted rounded-full h-2 md:h-2.5">
                           <motion.div 
                             initial={{ width: 0 }}
                             animate={{ 
@@ -826,11 +825,11 @@ export default function SubmissionList({
                     </div>
                     
                     {/* Action Buttons - Mobile friendly */}
-                    <div className="bg-gradient-to-b from-gray-50 to-white flex flex-col justify-center items-center py-4 md:py-5 px-4 md:px-6 border-t lg:border-t-0 lg:border-l border-gray-200">
+                    <div className="bg-muted/20 flex flex-col justify-center items-center py-4 md:py-5 px-4 md:px-6 border-t lg:border-t-0 lg:border-l border-border">
                       <Button 
                         asChild 
                         variant="default"
-                        className="w-full bg-[#0D47A1] hover:bg-[#0A3880] text-white transition-all duration-300 shadow-sm hover:shadow font-medium text-sm md:text-base"
+                        className="w-full font-medium text-sm md:text-base"
                       >
                         <Link href={`/track?id=${submission.referenceId}`} className="flex items-center justify-center gap-1">
                           <span className="hidden sm:inline">Lacak Status</span>
@@ -856,17 +855,17 @@ export default function SubmissionList({
           transition={{ duration: 0.4, delay: 0.3 }}
         >
           <div className="flex flex-col items-center gap-2">
-            <p className="text-xs md:text-sm text-gray-500 mb-1 text-center px-4">
-              Menampilkan halaman <span className="font-medium text-gray-800">{currentPage}</span> dari <span className="font-medium text-gray-800">{totalPages}</span>
+            <p className="text-xs md:text-sm text-muted-foreground mb-1 text-center px-4">
+              Menampilkan halaman <span className="font-medium text-foreground">{currentPage}</span> dari <span className="font-medium text-foreground">{totalPages}</span>
             </p>
-            <Pagination className="shadow-sm bg-white rounded-lg p-1 border border-[#E8F5E9] w-fit">
+            <Pagination className="bg-card rounded-md p-1 border border-border w-fit">
               <PaginationContent className="gap-1 md:gap-2">
                 <PaginationItem>
                   <PaginationPrevious
                     href={currentPage > 1 ? `${pathname}?${createQueryString({ page: currentPage - 1, category: selectedCategory, status: selectedStatus, search: searchTerm })}` : '#'}
                     aria-disabled={currentPage <= 1}
                     tabIndex={currentPage <= 1 ? -1 : undefined}
-                    className={`transition-all duration-200 rounded-lg border-[#E8F5E9] hover:bg-[#E8F5E9] hover:text-[#1B5E20] ${currentPage <= 1 ? "pointer-events-none opacity-50" : ""} text-[#2E7D32] text-xs md:text-sm px-2 md:px-3`}
+                    className={`transition-colors duration-200 rounded-md border-border hover:bg-muted hover:text-foreground ${currentPage <= 1 ? "pointer-events-none opacity-50" : ""} text-foreground text-xs md:text-sm px-2 md:px-3`}
                     onClick={(e) => { 
                       if (currentPage <= 1) {
                         e.preventDefault();
@@ -891,7 +890,7 @@ export default function SubmissionList({
                       href={`${pathname}?${createQueryString({ page: page, category: selectedCategory, status: selectedStatus, search: searchTerm })}`}
                       isActive={currentPage === page}
                       aria-current={currentPage === page ? "page" : undefined}
-                      className={`transition-all duration-200 rounded-lg border-[#E8F5E9] ${currentPage === page ? 'bg-[#E8F5E9] text-[#1B5E20] font-medium border-[#4CAF50]' : 'text-gray-700 hover:bg-[#E8F5E9] hover:text-[#1B5E20]'} text-xs md:text-sm px-2 md:px-3 min-w-[32px] md:min-w-[36px]`}
+                      className={`transition-colors duration-200 rounded-md border-border ${currentPage === page ? 'bg-secondary text-secondary-foreground font-medium' : 'text-foreground hover:bg-muted hover:text-foreground'} text-xs md:text-sm px-2 md:px-3 min-w-[32px] md:min-w-[36px]`}
                       onClick={(e) => {
                         e.preventDefault();
                         handlePageChange(page);
@@ -914,7 +913,7 @@ export default function SubmissionList({
                     href={currentPage < totalPages ? `${pathname}?${createQueryString({ page: currentPage + 1, category: selectedCategory, status: selectedStatus, search: searchTerm })}` : '#'}
                     aria-disabled={currentPage >= totalPages}
                     tabIndex={currentPage >= totalPages ? -1 : undefined}
-                    className={`transition-all duration-200 rounded-lg border-[#E8F5E9] hover:bg-[#E8F5E9] hover:text-[#1B5E20] ${currentPage >= totalPages ? "pointer-events-none opacity-50" : ""} text-[#2E7D32] text-xs md:text-sm px-2 md:px-3`}
+                    className={`transition-colors duration-200 rounded-md border-border hover:bg-muted hover:text-foreground ${currentPage >= totalPages ? "pointer-events-none opacity-50" : ""} text-foreground text-xs md:text-sm px-2 md:px-3`}
                     onClick={(e) => { 
                       if (currentPage >= totalPages) {
                         e.preventDefault(); 

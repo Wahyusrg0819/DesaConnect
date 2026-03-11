@@ -5,6 +5,7 @@ import Image from 'next/image';
 import { Button } from '@/components/ui/button';
 import { Home, MessageSquarePlus, Menu, X, FileSearch } from 'lucide-react';
 import { useState, useEffect } from 'react';
+import ThemeToggle from '@/components/layout/theme-toggle';
 
 const NAV_ITEMS = [
   {
@@ -72,28 +73,31 @@ export default function Header() {
               </Button>
             </Link>
           ))}
+          <ThemeToggle showLabel />
         </div>
 
-        {/* Mobile Menu Button */}
-        <Button 
-          variant="outline" 
-          size="icon" 
-          className="md:hidden"
-          onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-          aria-expanded={mobileMenuOpen}
-          aria-label={mobileMenuOpen ? "Tutup Menu" : "Buka Menu"}
-        >
-          {mobileMenuOpen ? (
-            <X className="h-5 w-5" aria-hidden="true" />
-          ) : (
-            <Menu className="h-5 w-5" aria-hidden="true" />
-          )}
-        </Button>
+        <div className="md:hidden flex items-center gap-2">
+          <ThemeToggle />
+          <Button 
+            variant="outline" 
+            size="icon"
+            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+            aria-expanded={mobileMenuOpen}
+            aria-label={mobileMenuOpen ? "Tutup Menu" : "Buka Menu"}
+          >
+            {mobileMenuOpen ? (
+              <X className="h-5 w-5" aria-hidden="true" />
+            ) : (
+              <Menu className="h-5 w-5" aria-hidden="true" />
+            )}
+          </Button>
+        </div>
       </nav>
 
       {/* Mobile Navigation */}
       {mobileMenuOpen && (
         <div className="md:hidden border-t border-border bg-background px-4 py-3 space-y-2">
+          <ThemeToggle showLabel className="w-full justify-center" />
           {NAV_ITEMS.map((item) => (
             <Link href={item.href} passHref key={item.href} onClick={() => setMobileMenuOpen(false)}>
               <Button variant={item.variant} className="w-full justify-start">

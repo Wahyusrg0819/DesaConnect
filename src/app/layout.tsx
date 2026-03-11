@@ -5,6 +5,7 @@ import Header from '@/components/layout/header';
 import Footer from '@/components/layout/footer';
 import SupabaseProvider from '@/components/providers/supabase-provider';
 import ServiceWorkerProvider from '@/components/providers/service-worker-provider';
+import ThemeProvider from '@/components/providers/theme-provider';
 import { metadata, viewport } from './metadata';
 
 // Configure Roboto font
@@ -21,24 +22,34 @@ export default function RootLayout({
 }: {
   children: React.ReactNode;
 }) {
+  const themeScript = `(() => {
+    try {
+      const theme = localStorage.getItem('desaconnect-theme');
+      const resolvedTheme = theme === 'dark' ? 'dark' : 'light';
+      document.documentElement.classList.toggle('dark', resolvedTheme === 'dark');
+    } catch {
+      document.documentElement.classList.remove('dark');
+    }
+  })();`;
+
   return (
-    <html lang="id" className={roboto.className}>
+    <html lang="id" className={roboto.className} suppressHydrationWarning>
       <head>
         <link rel="manifest" href="/manifest.json" />
-        <meta name="theme-color" content="#2E7D32" />
         <link rel="apple-touch-icon" href="/images/300_kamparkab.webp?v=2" />
-        {/* Add additional icon sizes for apple devices */}
         <link rel="icon" href="/favicon.ico?v=2" type="image/x-icon" />
+        <script dangerouslySetInnerHTML={{ __html: themeScript }} />
       </head>
       <body className="min-h-screen flex flex-col" suppressHydrationWarning>
-        <SupabaseProvider>
-          <ServiceWorkerProvider />
-          <div className="flex flex-col flex-grow">
-            {/* Conditionally render Header and Footer if NOT in admin section */}
-            {children}
-            <Toaster />
-          </div>
-        </SupabaseProvider>
+        <ThemeProvider>
+          <SupabaseProvider>
+            <ServiceWorkerProvider />
+            <div className="flex flex-col flex-grow">
+              {children}
+              <Toaster />
+            </div>
+          </SupabaseProvider>
+        </ThemeProvider>
       </body>
     </html>
   );
